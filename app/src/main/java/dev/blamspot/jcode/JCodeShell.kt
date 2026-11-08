@@ -2,6 +2,7 @@ package dev.blamspot.jcode
 import androidx.compose.foundation.isSystemInDarkTheme
 import dev.blamspot.jcode.core.editor.EditorLanguageAction
 import dev.blamspot.jcode.core.distro.DistroService
+import dev.blamspot.jcode.core.distro.DistroServiceLocator
 import dev.blamspot.jcode.core.editor.decor.Layer
 import dev.blamspot.jcode.design.CompactContextMenu
 import dev.blamspot.jcode.design.CompactDestructiveButton
@@ -2202,6 +2203,7 @@ private fun JCodeShell(
     val devicePlacedInDrawer = virtualDevice.inDrawer && VirtualDeviceBridge.isAvailable
     val deviceStopped = virtualDevice.stopped
     val deviceInDrawer = devicePlacedInDrawer && !deviceStopped
+    val distroService = DistroServiceLocator.distroService(LocalContext.current)
     val portraitRightSidebarTabs = remember(developerModeEnabled, deviceInDrawer) {
         RightPanelTab.entries
             .filter {
@@ -4088,7 +4090,7 @@ private fun JCodeShell(
                     WorkbenchRightSidebar(
                         selected = rightPanelSelection,
                         vsixExtensions = vsixExtensions,
-                        distroService = viewModel.distroService,
+                        distroService = distroService,
                         devicePanel = devicePanel,
                         selectedProject = selectedProject,
                         terminalSessionIds = terminalSessionIds,
@@ -4180,7 +4182,7 @@ private fun JCodeShell(
                         WorkbenchRightSidebar(
                             selected = rightPanelSelection.clampedTo(portraitRightSidebarTabs),
                             vsixExtensions = vsixExtensions,
-                            distroService = viewModel.distroService,
+                            distroService = distroService,
                             devicePanel = devicePanel,
                             selectedProject = selectedProject,
                             terminalSessionIds = terminalSessionIds,
