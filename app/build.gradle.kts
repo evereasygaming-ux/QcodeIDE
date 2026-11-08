@@ -86,7 +86,7 @@ val jcodeUpdateChannel: String = if (jcodeIdSuffix == ".beta") "beta" else "stab
  */
 val jcodeApplicationId: String =
     (project.findProperty("jcodeApplicationId") as? String)?.trim()?.takeIf { it.isNotBlank() }
-        ?: "dev.blamspot.jcode"
+        ?: "dev.qcode.ide"
 
 android {
     namespace = "dev.blamspot.jcode"
@@ -103,7 +103,7 @@ android {
 
         // Launcher name (AndroidManifest android:label="${appLabel}"). The Beta build overrides this
         // to "JCode.beta" in the release block below.
-        manifestPlaceholders["appLabel"] = "JCode"
+        manifestPlaceholders["appLabel"] = "QCode"
 
         // Launcher icon (AndroidManifest android:icon/roundIcon). Every build sits on the same
         // tile; Debug and Beta swap in an adaptive icon whose mark is hollow instead (Beta's J,
@@ -129,7 +129,7 @@ android {
             // Dev builds install as a separate app (dev.blamspot.jcode.debug / "JCode (debug)") so an
             // `installDebug` never overwrites an installed release or beta build.
             applicationIdSuffix = ".debug"
-            manifestPlaceholders["appLabel"] = "JCode (debug)"
+            manifestPlaceholders["appLabel"] = "QCode (debug)"
             manifestPlaceholders["appIcon"] = "@mipmap/ic_launcher_debug"
             manifestPlaceholders["appIconRound"] = "@mipmap/ic_launcher_debug_round"
         }
@@ -143,7 +143,7 @@ android {
             // ("JCode (beta)") so the Beta APK never overwrites an installed release build.
             if (jcodeIdSuffix.isNotEmpty()) {
                 applicationIdSuffix = jcodeIdSuffix
-                manifestPlaceholders["appLabel"] = "JCode (${jcodeIdSuffix.removePrefix(".")})"
+                manifestPlaceholders["appLabel"] = "QCode (${jcodeIdSuffix.removePrefix(".")})"
                 manifestPlaceholders["appIcon"] = "@mipmap/ic_launcher_beta"
                 manifestPlaceholders["appIconRound"] = "@mipmap/ic_launcher_beta_round"
             }

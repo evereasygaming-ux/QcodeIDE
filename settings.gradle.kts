@@ -18,7 +18,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "JCode"
+rootProject.name = "QCode"
 
 include(":app")
 
