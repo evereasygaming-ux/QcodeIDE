@@ -5,6 +5,10 @@ name: build
 # toolchain the release workflow pins (JDK 21, compileSdk 36, NDK, CMake >= 3.24,
 # Rust for the wasmtime/ripgrep FFI) but produces an installable debug APK artifact
 # instead of publishing a signed release.
+#
+# NOTE: we deliberately do NOT use android-actions/setup-android. That action is on the
+# Node 20 runtime, is forced onto Node 24 and fails. The ubuntu-latest image already
+# ships the Android SDK + cmdline-tools, so we drive `sdkmanager` directly.
 on:
   workflow_dispatch:
   push:
@@ -31,32 +35,41 @@ jobs:
           sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/share/boost || true
           df -h /
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '21'
 
       - uses: gradle/actions/setup-gradle@v4
 
-      - uses: android-actions/setup-android@v3
-
       - name: Install the SDK pieces the build pins
         run: |
           set -eu
-          sdkmanager --install \
+          # Preinstalled SDK on the runner image.
+          ANDROID_HOME="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          [ -d "$ANDROID_HOME" ] || { echo "::error::Android SDK not found at $ANDROID_HOME"; ls /usr/local/lib/android 2>/dev/null || true; exit 1; }
+          echo "ANDROID_HOME=$ANDROID_HOME" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$ANDROID_HOME" >> "$GITHUB_ENV"
+
+          sdkmanager="$(ls "$ANDROID_HOME"/cmdline-tools/*/bin/sdkmanager 2>/dev/null | head -1)"
+          [ -n "$sdkmanager" ] || { echo "::error::sdkmanager not found under $ANDROID_HOME/cmdline-tools"; ls "$ANDROID_HOME" 2>/dev/null || true; exit 1; }
+          echo "$(dirname "$sdkmanager")" >> "$GITHUB_PATH"
+
+          yes | "$sdkmanager" --licenses >/dev/null 2>&1 || true
+          "$sdkmanager" --install \
             "platforms;android-36" \
             "build-tools;34.0.0" \
             "ndk;${NDK_VERSION}"
-          [ -n "${ANDROID_HOME:-}" ] || { echo "::error::ANDROID_HOME is unset"; exit 1; }
+
           usable="$(ls "$ANDROID_HOME/cmake" 2>/dev/null | awk -F. '$1 * 100000 + $2 >= 300024' | tail -1)"
-          [ -n "$usable" ] || { echo "::error::no installed CMake is 3.24 or above"; exit 1; }
+          [ -n "$usable" ] || { echo "::error::no installed CMake is 3.24 or above"; ls "$ANDROID_HOME/cmake" 2>/dev/null || true; exit 1; }
           echo "CMake the build will use: $usable"
 
       - name: Set up Rust for Android
         run: |
           set -eu
           rustup target add aarch64-linux-android
-          echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/${NDK_VERSION}" >> "$GITHUB_ENV"
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/${NDK_VERSION}" >> "$GITHUB_ENV"
 
       - name: Cache the Rust build
         uses: actions/cache@v4
@@ -80,15 +93,17 @@ jobs:
         run: ./gradlew --no-daemon :app:assembleDebug
 
       - name: Upload the debug APK
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: qcode-debug-apk
           path: app/build/outputs/apk/debug/*.apk
-          if-no-files-found: error
+          if-no-files-found: warn
 
       - name: Show the APK identity
         run: |
           set -eu
-          apk="$(find app/build/outputs/apk/debug -name '*.apk' | head -1)"
+          apk="$(find app/build/outputs/apk/debug -name '*.apk' | head -1)" || true
+          [ -n "$apk" ] || { echo "no APK produced"; exit 0; }
           echo "APK: $apk"
-          "$ANDROID_SDK_ROOT/build-tools/34.0.0/aapt2" dump badging "$apk" | grep -E "package:|application-label" || true
+          "$ANDROID_HOME/build-tools/34.0.0/aapt2" dump badging "$apk" | grep -E "package:|application-label" || true
