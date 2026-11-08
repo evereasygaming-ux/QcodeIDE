@@ -56,6 +56,7 @@ import dev.blamspot.jcode.design.Space
 import dev.blamspot.jcode.design.StrokeWidth
 import dev.blamspot.jcode.design.jcIcon
 import dev.blamspot.jcode.design.LocalCutoutSetting
+import dev.blamspot.jcode.design.LocalSyntaxPalette
 import dev.blamspot.jcode.design.LocalMarkdownPreviewSetting
 import dev.blamspot.jcode.findActivity
 import dev.blamspot.jcode.design.JCodeSemanticColors
@@ -119,7 +120,8 @@ fun MarkdownPreviewPage(
     val findVisibleState = rememberUpdatedState(findVisible)
     val findQueryState = rememberUpdatedState(findQuery)
 
-    val palette = if (dark) TokenPalette.DARK else TokenPalette.LIGHT
+    val syntaxPalette = LocalSyntaxPalette.current
+    val palette = remember(syntaxPalette) { TokenPalette.from(syntaxPalette) }
     val packResolver = remember(languagePacks) {
         { name: String -> languagePacks.firstNotNullOfOrNull { it.languageFor(name) } }
     }

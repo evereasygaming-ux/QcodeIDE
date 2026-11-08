@@ -21,24 +21,144 @@ data class ThemeBundle(
     val light: ColorScheme,
     val darkSemantic: JCodeSemanticColors,
     val lightSemantic: JCodeSemanticColors,
+    val darkSyntax: SyntaxPalette = DefaultDarkSyntax,
+    val lightSyntax: SyntaxPalette = DefaultLightSyntax,
+    val darkAnsi: AnsiPalette = DefaultDarkAnsi,
+    val lightAnsi: AnsiPalette = DefaultLightAnsi,
 ) {
     fun colorScheme(darkTheme: Boolean): ColorScheme = if (darkTheme) dark else light
     fun semanticColors(darkTheme: Boolean): JCodeSemanticColors = if (darkTheme) darkSemantic else lightSemantic
+    fun syntaxPalette(darkTheme: Boolean): SyntaxPalette = if (darkTheme) darkSyntax else lightSyntax
+    fun ansiPalette(darkTheme: Boolean): AnsiPalette = if (darkTheme) darkAnsi else lightAnsi
 }
 
 object ThemeBundleRegistry {
     val builtIns: List<ThemeBundle> = listOf(
+        terminalBundle,
         catppuccinBundle,
         pierreDarkBundle,
         nightOwlBundle,
     )
 
-    val default: ThemeBundle get() = pierreDarkBundle
+    val default: ThemeBundle get() = terminalBundle
 
     fun byId(id: String?): ThemeBundle = builtIns.firstOrNull { it.id == id } ?: default
 }
 
 // --- Built-in bundles ------------------------------------------------------------------------
+
+// Terminal — QCode's default. A flat near-black/near-white canvas with the sixteen ANSI colors
+// doing all the talking: the editor, the terminal grid and the UI chrome share one palette, so a
+// program's output and its source read as the same system. No gradients, no bitmaps.
+private val terminalNormalDark = listOf(
+    Color(0xFF1A1A1A), Color(0xFFE06C75), Color(0xFF98C379), Color(0xFFE5C07B),
+    Color(0xFF61AFEF), Color(0xFFC678DD), Color(0xFF56B6C2), Color(0xFFDCDFE4),
+)
+private val terminalBrightDark = listOf(
+    Color(0xFF5C6370), Color(0xFFFF7B86), Color(0xFFB5E890), Color(0xFFFFD68A),
+    Color(0xFF8CC8FF), Color(0xFFE2A6FF), Color(0xFF7FD6E0), Color(0xFFFFFFFF),
+)
+private val terminalNormalLight = listOf(
+    Color(0xFF383A42), Color(0xFFE45649), Color(0xFF50A14F), Color(0xFFC18401),
+    Color(0xFF4078F2), Color(0xFFA626A4), Color(0xFF0184BC), Color(0xFFA0A1A7),
+)
+private val terminalBrightLight = listOf(
+    Color(0xFF4F525E), Color(0xFFE06C75), Color(0xFF98C379), Color(0xFFE5C07B),
+    Color(0xFF61AFEF), Color(0xFFC678DD), Color(0xFF56B6C2), Color(0xFFFFFFFF),
+)
+
+private val terminalBundle = ThemeBundle(
+    id = "terminal",
+    name = "Terminal",
+    description = "Flat ANSI palette shared by editor, terminal and chrome.",
+    author = "QCode",
+    dark = darkColorScheme(
+        primary = Color(0xFF61AFEF),
+        onPrimary = Color(0xFF1A1A1A),
+        primaryContainer = Color(0xFF2C313A),
+        onPrimaryContainer = Color(0xFFDCDFE4),
+        secondary = Color(0xFFC678DD),
+        onSecondary = Color(0xFF1A1A1A),
+        tertiary = Color(0xFF56B6C2),
+        onTertiary = Color(0xFF1A1A1A),
+        background = Color(0xFF1A1A1A),
+        onBackground = Color(0xFFDCDFE4),
+        surface = Color(0xFF202020),
+        onSurface = Color(0xFFDCDFE4),
+        surfaceVariant = Color(0xFF2C313A),
+        onSurfaceVariant = Color(0xFFABB2BF),
+    ),
+    light = lightColorScheme(
+        primary = Color(0xFF4078F2),
+        onPrimary = Color(0xFFFFFFFF),
+        primaryContainer = Color(0xFFD6E4FF),
+        onPrimaryContainer = Color(0xFF1A1A1A),
+        secondary = Color(0xFFA626A4),
+        onSecondary = Color(0xFFFFFFFF),
+        tertiary = Color(0xFF0184BC),
+        onTertiary = Color(0xFFFFFFFF),
+        background = Color(0xFFFAFAFA),
+        onBackground = Color(0xFF383A42),
+        surface = Color(0xFFF0F0F0),
+        onSurface = Color(0xFF383A42),
+        surfaceVariant = Color(0xFFE5E5E6),
+        onSurfaceVariant = Color(0xFF5C6370),
+    ),
+    darkSemantic = JCodeSemanticColors(
+        success = Color(0xFF98C379), onSuccess = Color(0xFF1A1A1A),
+        warning = Color(0xFFE5C07B), onWarning = Color(0xFF1A1A1A),
+        info = Color(0xFF56B6C2), onInfo = Color(0xFF1A1A1A),
+    ),
+    lightSemantic = JCodeSemanticColors(
+        success = Color(0xFF50A14F), onSuccess = Color(0xFFFFFFFF),
+        warning = Color(0xFFC18401), onWarning = Color(0xFFFFFFFF),
+        info = Color(0xFF0184BC), onInfo = Color(0xFFFFFFFF),
+    ),
+    darkSyntax = SyntaxPalette(
+        keyword = Color(0xFFC678DD),
+        type = Color(0xFF56B6C2),
+        string = Color(0xFF98C379),
+        comment = Color(0xFF5C6370),
+        number = Color(0xFFE5C07B),
+        function = Color(0xFF61AFEF),
+        variable = Color(0xFFDCDFE4),
+        constant = Color(0xFFD19A66),
+        property = Color(0xFF56B6C2),
+        operator = Color(0xFFABB2BF),
+        annotation = Color(0xFFE5C07B),
+    ),
+    lightSyntax = SyntaxPalette(
+        keyword = Color(0xFFA626A4),
+        type = Color(0xFF0184BC),
+        string = Color(0xFF50A14F),
+        comment = Color(0xFFA0A1A7),
+        number = Color(0xFFC18401),
+        function = Color(0xFF4078F2),
+        variable = Color(0xFF383A42),
+        constant = Color(0xFF986801),
+        property = Color(0xFF0184BC),
+        operator = Color(0xFF5C6370),
+        annotation = Color(0xFFC18401),
+    ),
+    darkAnsi = AnsiPalette(
+        normal = terminalNormalDark,
+        bright = terminalBrightDark,
+        foreground = Color(0xFFDCDFE4),
+        background = Color(0xFF1A1A1A),
+        cursor = Color(0xFF61AFEF),
+        selection = Color(0x6461AFEF),
+        selectionHandle = Color(0xFF61AFEF),
+    ),
+    lightAnsi = AnsiPalette(
+        normal = terminalNormalLight,
+        bright = terminalBrightLight,
+        foreground = Color(0xFF383A42),
+        background = Color(0xFFFAFAFA),
+        cursor = Color(0xFF4078F2),
+        selection = Color(0x644078F2),
+        selectionHandle = Color(0xFF4078F2),
+    ),
+)
 
 // Catppuccin — Mocha (dark) / Latte (light).
 private val catppuccinBundle = ThemeBundle(

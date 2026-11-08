@@ -29,9 +29,9 @@ object SettingsDefaults {
     const val TRASH_RETENTION_DAYS = 30
     const val RESPECT_DEVICE_CUTOUT = false
     const val MARKDOWN_WRAP_PORTRAIT = true
-    const val EDITOR_FONT_SIZE = 14f
+    const val EDITOR_FONT_SIZE = 12f
     const val EDITOR_WORD_WRAP = false
-    const val TERMINAL_FONT_SIZE = 13f
+    const val TERMINAL_FONT_SIZE = 11f
 
     /** Percent, because an extension's text size is its own choice and this scales it. */
     const val EXTENSION_FONT_SCALE = 100

@@ -21,7 +21,6 @@ import androidx.compose.ui.platform.InterceptPlatformTextInput
 import androidx.compose.ui.platform.PlatformTextInputMethodRequest
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import dev.blamspot.jcode.adaptive.rememberJCodeWindowInfo
 import dev.blamspot.jcode.design.DensityMode
 import dev.blamspot.jcode.design.FileIconSetRegistry
 import dev.blamspot.jcode.design.UiIconSetRegistry
@@ -151,8 +150,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 private fun JCodeRoot(viewModel: MainViewModel) {
-    val windowInfo by rememberJCodeWindowInfo()
-    val densityMode = if (windowInfo.hasPhysicalKeyboard) DensityMode.Compact else DensityMode.Comfortable
+    val densityMode = DensityMode.Compact
     val themeMode by viewModel.themeMode.collectAsStateWithLifecycle()
     val themeBundleId by viewModel.themeBundleId.collectAsStateWithLifecycle()
     val themeBundle = ThemeBundleRegistry.byId(themeBundleId)

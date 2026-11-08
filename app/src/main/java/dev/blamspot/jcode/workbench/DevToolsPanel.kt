@@ -43,7 +43,6 @@ import android.webkit.WebStorage
 import androidx.compose.material3.Icon
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.produceState
-import androidx.compose.ui.graphics.luminance
 import dev.blamspot.jcode.design.IconSize
 import dev.blamspot.jcode.design.Radius
 import dev.blamspot.jcode.design.Space
@@ -56,6 +55,7 @@ import dev.blamspot.jcode.design.CompactContextMenu
 import dev.blamspot.jcode.design.ContextAction
 import dev.blamspot.jcode.design.JCodeIcon
 import dev.blamspot.jcode.design.LocalTerminalFontSizeSetting
+import dev.blamspot.jcode.design.LocalSyntaxPalette
 import dev.blamspot.jcode.design.JCodeTheme
 import dev.blamspot.jcode.design.ManagerFilterChip
 import dev.blamspot.jcode.design.jcIcon
@@ -1913,11 +1913,8 @@ private fun CodeListing(
     listState: LazyListState = rememberLazyListState(),
     highlightLine: Int = 0,
 ) {
-    val palette = if (MaterialTheme.colorScheme.background.luminance() < 0.5f) {
-        TokenPalette.DARK
-    } else {
-        TokenPalette.LIGHT
-    }
+    val syntaxPalette = LocalSyntaxPalette.current
+    val palette = remember(syntaxPalette) { TokenPalette.from(syntaxPalette) }
     val lines by produceState(initialValue = emptyList<AnnotatedString>(), body, fileName, palette) {
         // Every stage is off the main thread. Tokenizing a page bundle is hundreds of milliseconds
         // of work, and doing it in composition is an ANR rather than a slow frame.

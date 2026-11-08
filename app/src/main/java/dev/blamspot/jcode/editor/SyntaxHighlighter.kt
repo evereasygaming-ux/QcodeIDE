@@ -3,7 +3,9 @@ package dev.blamspot.jcode.editor
 import dev.blamspot.jcode.core.buffer.NativeHighlighter
 import dev.blamspot.jcode.core.buffer.Snapshot
 import dev.blamspot.jcode.core.editor.decor.ColoredSpan
+import dev.blamspot.jcode.design.SyntaxPalette
 import dev.blamspot.jcode.feature.marketplace.LanguagePack
+import androidx.compose.ui.graphics.toArgb
 import java.util.WeakHashMap
 
 /** Token colors for syntax highlighting; chosen per light/dark theme. */
@@ -21,6 +23,21 @@ data class TokenPalette(
     val annotation: Int,
 ) {
     companion object {
+        /** Theme-driven palette: the editor follows whichever bundle is selected. */
+        fun from(palette: SyntaxPalette): TokenPalette = TokenPalette(
+            keyword = palette.keyword.toArgb(),
+            type = palette.type.toArgb(),
+            string = palette.string.toArgb(),
+            comment = palette.comment.toArgb(),
+            number = palette.number.toArgb(),
+            function = palette.function.toArgb(),
+            variable = palette.variable.toArgb(),
+            constant = palette.constant.toArgb(),
+            property = palette.property.toArgb(),
+            operator = palette.operator.toArgb(),
+            annotation = palette.annotation.toArgb(),
+        )
+
         val DARK = TokenPalette(
             keyword = 0xFFCBA6F7.toInt(),
             type = 0xFF89DCEB.toInt(),

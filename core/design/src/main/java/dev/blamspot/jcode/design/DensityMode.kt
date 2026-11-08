@@ -7,4 +7,4 @@ enum class DensityMode {
     Comfortable,
 }
 
-val LocalDensityMode = compositionLocalOf { DensityMode.Comfortable }
+val LocalDensityMode = compositionLocalOf { DensityMode.Compact }

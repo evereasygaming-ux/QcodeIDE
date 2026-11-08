@@ -26,7 +26,7 @@ private val JCodeTypography = Typography(
 @Composable
 fun M3Theme(
     themeMode: ThemeMode = ThemeMode.System,
-    densityMode: DensityMode = DensityMode.Comfortable,
+    densityMode: DensityMode = DensityMode.Compact,
     themeBundle: ThemeBundle = ThemeBundleRegistry.default,
     uiIconSet: UiIconSet = UiIconSetRegistry.default,
     fileIconSet: FileIconSet? = null,
@@ -40,6 +40,8 @@ fun M3Theme(
     CompositionLocalProvider(
         LocalDensityMode provides densityMode,
         LocalSemanticColors provides themeBundle.semanticColors(darkTheme),
+        LocalSyntaxPalette provides themeBundle.syntaxPalette(darkTheme),
+        LocalAnsiPalette provides themeBundle.ansiPalette(darkTheme),
         LocalUiIconSet provides uiIconSet,
         LocalFileIconSet provides fileIconSet,
     ) {

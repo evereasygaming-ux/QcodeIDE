@@ -182,6 +182,21 @@ class TerminalView @JvmOverloads constructor(
     })
 
     // Rendering
+    // Theme colors applied by the host through setTerminalColors. Defaults match the xterm palette
+    // below so a view drawn before configuration looks like a stock terminal.
+    private var defaultForeground = Color.WHITE
+    private var defaultBackground = Color.BLACK
+    private var cursorColor = Color.WHITE
+    // Last applied theme, so the recomposition-driven update path can skip a no-op recolor instead
+    // of re-recording the whole grid every frame.
+    private val appliedAnsi = IntArray(16)
+    private var appliedForeground = Int.MIN_VALUE
+    private var appliedBackground = Int.MIN_VALUE
+    private var appliedCursor = Int.MIN_VALUE
+    private var appliedSelection = Int.MIN_VALUE
+    private var appliedSelectionHandle = Int.MIN_VALUE
+    private var colorsApplied = false
+
     private val textPaint = Paint().apply {
         color = Color.WHITE
         textSize = 30f
@@ -222,7 +237,7 @@ class TerminalView @JvmOverloads constructor(
         }
     }
 
-    private val selectionColorArgb = Color.argb(100, 59, 130, 246) // Blue selection highlight
+    private var selectionColorArgb = Color.argb(100, 59, 130, 246) // Blue selection highlight
     private val selectionBgPaint = Paint().apply {
         color = selectionColorArgb
         style = Paint.Style.FILL
@@ -1124,6 +1139,48 @@ class TerminalView @JvmOverloads constructor(
     }
 
     /**
+     * Apply the selected theme's ANSI palette plus default foreground/background/cursor and the
+     * selection tint. Only colors 0-15 are overridden; the xterm 256-color cube and grayscale ramp
+     * stay standard, as every terminal expects them to.
+     */
+    fun setTerminalColors(
+        ansi: IntArray,
+        foreground: Int,
+        background: Int,
+        cursor: Int,
+        selection: Int,
+        selectionHandle: Int,
+    ) {
+        if (ansi.size < 16) return
+        if (colorsApplied &&
+            appliedForeground == foreground &&
+            appliedBackground == background &&
+            appliedCursor == cursor &&
+            appliedSelection == selection &&
+            appliedSelectionHandle == selectionHandle &&
+            (0 until 16).all { appliedAnsi[it] == ansi[it] }
+        ) {
+            return
+        }
+        for (i in 0 until 16) colorPalette[i] = ansi[i]
+        ansi.copyInto(appliedAnsi, 0, 0, 16)
+        appliedForeground = foreground
+        appliedBackground = background
+        appliedCursor = cursor
+        appliedSelection = selection
+        appliedSelectionHandle = selectionHandle
+        colorsApplied = true
+        defaultForeground = foreground
+        defaultBackground = background
+        cursorColor = cursor
+        selectionColorArgb = selection
+        selectionBgPaint.color = selection
+        handlePaint.color = selectionHandle
+        invalidateGrid()
+        invalidate()
+    }
+
+    /**
      * The grid this view's pixels can actually show, or null before layout (or before the cell has
      * been measured). This is the ONLY authority on a session's size: whatever it returns is what
      * both the parser grid and the PTY winsize must be set to, or the child draws to a width the
@@ -1291,7 +1348,7 @@ class TerminalView @JvmOverloads constructor(
     /** Draw the cell grid (backgrounds + glyphs), batching same-attribute cells into single ops. */
     private fun drawGrid(canvas: Canvas, parser: VtParser) {
         // Draw background
-        bgPaint.color = Color.BLACK
+        bgPaint.color = defaultBackground
         canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), bgPaint)
 
         // One JNI crossing for the whole visible grid (readScreen) instead of one per row: the
@@ -1306,15 +1363,15 @@ class TerminalView @JvmOverloads constructor(
         // Raw SGR colors of a cell (before inverse/selection): bg 0 = default (transparent over
         // the black canvas), fg defaults to white.
         fun sgrBg(base: Int): Int = when (VtParser.metaBgMode(buf[base + 3])) {
-            1 -> buf[base + 2].let { if (it in 0..255) colorPalette[it] else Color.BLACK }
+            1 -> buf[base + 2].let { if (it in 0..255) colorPalette[it] else defaultBackground }
             2 -> buf[base + 2].let { Color.rgb((it shr 16) and 0xFF, (it shr 8) and 0xFF, it and 0xFF) }
             else -> 0
         }
 
         fun sgrFg(base: Int): Int = when (VtParser.metaFgMode(buf[base + 3])) {
-            1 -> buf[base + 1].let { if (it in 0..255) colorPalette[it] else Color.WHITE }
+            1 -> buf[base + 1].let { if (it in 0..255) colorPalette[it] else defaultForeground }
             2 -> buf[base + 1].let { Color.rgb((it shr 16) and 0xFF, (it shr 8) and 0xFF, it and 0xFF) }
-            else -> Color.WHITE
+            else -> defaultForeground
         }
 
         // Effective glyph color after SGR 7 inverse and SGR 2 dim. htop's selection bar, less's
@@ -1323,7 +1380,7 @@ class TerminalView @JvmOverloads constructor(
         fun effFg(base: Int): Int {
             val attrs = VtParser.metaAttrs(buf[base + 3])
             var color = if ((attrs and VtParser.ATTR_INVERSE) != 0) {
-                sgrBg(base).let { if (it == 0) Color.BLACK else it }
+                sgrBg(base).let { if (it == 0) defaultBackground else it }
             } else {
                 sgrFg(base)
             }
@@ -1462,15 +1519,15 @@ class TerminalView @JvmOverloads constructor(
                 val buf = rowBufFor(parser)
                 val filled = parser.readRow(cursorRow, buf)
                 var cp = ' '.code
-                var blockColor = Color.WHITE
-                var glyphColor = Color.BLACK
+                var blockColor = cursorColor
+                var glyphColor = defaultBackground
                 var blockCells = 1
                 if (cursorCol < filled) {
                     val base = cursorCol * VtParser.CELL_STRIDE
                     cp = buf[base]
                     val meta = buf[base + 3]
-                    val rawFg = resolveCellColor(buf[base + 1], VtParser.metaFgMode(meta), Color.WHITE)
-                    val rawBg = resolveCellColor(buf[base + 2], VtParser.metaBgMode(meta), Color.BLACK)
+                    val rawFg = resolveCellColor(buf[base + 1], VtParser.metaFgMode(meta), defaultForeground)
+                    val rawBg = resolveCellColor(buf[base + 2], VtParser.metaBgMode(meta), defaultBackground)
                     val inverse = (VtParser.metaAttrs(meta) and VtParser.ATTR_INVERSE) != 0
                     blockColor = if (inverse) rawBg else rawFg
                     glyphColor = if (inverse) rawFg else rawBg

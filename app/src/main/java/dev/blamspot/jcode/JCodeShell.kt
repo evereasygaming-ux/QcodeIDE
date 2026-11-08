@@ -153,6 +153,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.isCtrlPressed
@@ -236,6 +237,8 @@ import dev.blamspot.jcode.workbench.ExtensionDevState
 import dev.blamspot.jcode.workbench.LocalExtensionDevState
 import dev.blamspot.jcode.design.MarkdownPreviewSetting
 import dev.blamspot.jcode.design.ThemeMode
+import dev.blamspot.jcode.design.LocalAnsiPalette
+import dev.blamspot.jcode.design.LocalSyntaxPalette
 import dev.blamspot.jcode.feature.editor.pane.EditorGroup
 import dev.blamspot.jcode.feature.editor.pane.EditorMenuContribution
 import dev.blamspot.jcode.feature.editor.pane.EditorMenuExtras
@@ -2249,12 +2252,14 @@ private fun JCodeShell(
     val highlightTab = editorGroup.activeTab
     // previewMode is a key (not just a guard) so flipping back to source restarts the effect and
     // re-runs one highlight pass over whatever the buffer holds by then.
-    LaunchedEffect(highlightTab?.id, highlightTab?.previewMode, activeLanguageExtensions, editorDark) {
+    val syntaxPalette = LocalSyntaxPalette.current
+    val tokenPalette = remember(syntaxPalette) { TokenPalette.from(syntaxPalette) }
+    LaunchedEffect(highlightTab?.id, highlightTab?.previewMode, activeLanguageExtensions, tokenPalette) {
         val state = highlightTab?.editorState ?: return@LaunchedEffect
         if (highlightTab.previewMode) return@LaunchedEffect
         val fileName = highlightTab.filePath.name
         val lang = activeLanguageExtensions.firstNotNullOfOrNull { ext -> ext.languageFor(fileName) }
-        val palette = if (editorDark) TokenPalette.DARK else TokenPalette.LIGHT
+        val palette = tokenPalette
         state.snapshot.collectLatest { snap ->
             // Debounce: collectLatest cancels this wait on the next keystroke, so a typing burst
             // pays for one highlight pass of the final text instead of one per keystroke.
@@ -5658,6 +5663,13 @@ private fun TerminalSidebarContent(
                 }
                 if (view.isFocused) extraKeys.target = adapter
             }
+            val ansiPalette = LocalAnsiPalette.current
+            val ansiColors = remember(ansiPalette) { ansiPalette.toArgbArray() }
+            val ansiForeground = ansiPalette.foreground.toArgb()
+            val ansiBackground = ansiPalette.background.toArgb()
+            val ansiCursor = ansiPalette.cursor.toArgb()
+            val ansiSelection = ansiPalette.selection.toArgb()
+            val ansiSelectionHandle = ansiPalette.selectionHandle.toArgb()
             Box(modifier = Modifier.fillMaxSize()) {
                 terminalSessionIds.forEach { sessionId ->
                     val session = terminalSessionFor(sessionId) ?: return@forEach
@@ -5668,6 +5680,10 @@ private fun TerminalSidebarContent(
                                 TerminalView(ctx).apply {
                                     setFontSize(terminalFontPx)
                                     setTypeface(terminalTypeface)
+                                    setTerminalColors(
+                                        ansiColors, ansiForeground, ansiBackground,
+                                        ansiCursor, ansiSelection, ansiSelectionHandle,
+                                    )
                                     onTapToken = tapConfig.onToken
                                     onContextMenu = { x, y -> termMenu = TerminalMenuRequest(x, y, this) }
                                     onPasteImage = tapConfig.onPasteImage
@@ -5682,6 +5698,10 @@ private fun TerminalSidebarContent(
                                 // unchanged size must not churn every recomposition.
                                 if (view.getFontSize() != terminalFontPx) view.setFontSize(terminalFontPx)
                                 view.setTypeface(terminalTypeface)
+                                view.setTerminalColors(
+                                    ansiColors, ansiForeground, ansiBackground,
+                                    ansiCursor, ansiSelection, ansiSelectionHandle,
+                                )
                                 view.onTapToken = tapConfig.onToken
                                 view.onContextMenu = { x, y -> termMenu = TerminalMenuRequest(x, y, view) }
                                 view.onPasteImage = tapConfig.onPasteImage
