@@ -23,12 +23,12 @@ data class UpdateInfo(
 )
 
 /**
- * Checks the public GitHub releases of the JCode repo for a newer version than this build.
+ * Checks the public GitHub releases of the QCode repo for a newer version than this build.
  *
  * ### Two channels, because there are two apps
  *
- * A Beta build is not the release app with a label on it — it is `dev.blamspot.jcode.beta`, its own
- * `applicationId`, installed alongside `dev.blamspot.jcode` with its own data. So "is there an update?" is
+ * A Beta build is not the release app with a label on it — it is `dev.qcode.ide.beta`, its own
+ * `applicationId`, installed alongside `dev.qcode.ide` with its own data. So "is there an update?" is
  * a different question per channel, and answering it with the other channel's APK would install a
  * *different application* rather than update this one.
  *
@@ -46,13 +46,13 @@ data class UpdateInfo(
  * Network and parsing failures return null (offline / rate-limited / no releases) — never throws.
  */
 object UpdateChecker {
-    private const val REPO = "https://api.github.com/repos/blamspotdev/j-code-android"
+    private const val REPO = "https://api.github.com/repos/evereasygaming-ux/QcodeIDE"
     private const val LATEST_RELEASE_API = "$REPO/releases/latest"
 
     /** Enough to reach back past a run of previews to the last final. */
     private const val RELEASE_LIST_API = "$REPO/releases?per_page=30"
     private const val RELEASES_PAGE =
-        "https://github.com/blamspotdev/j-code-android/releases/latest"
+        "https://github.com/evereasygaming-ux/QcodeIDE/releases/latest"
 
     const val CHANNEL_BETA = "beta"
 

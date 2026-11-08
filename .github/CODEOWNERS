@@ -1,5 +1,5 @@
-/.github/workflows/ @blamspotdev
-/.github/CODEOWNERS @blamspotdev @janrick123
-/.gitignore @blamspotdev @janrick123
-/scripts/ @blamspotdev @janrick123
-/docs/ @blamspotdev @janrick123
+/.github/workflows/ @evereasygaming-ux
+/.github/CODEOWNERS @evereasygaming-ux
+/.gitignore @evereasygaming-ux
+/scripts/ @evereasygaming-ux
+/docs/ @evereasygaming-ux

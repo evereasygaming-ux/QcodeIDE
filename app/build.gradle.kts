@@ -126,7 +126,7 @@ android {
 
     buildTypes {
         debug {
-            // Dev builds install as a separate app (dev.blamspot.jcode.debug / "JCode (debug)") so an
+            // Dev builds install as a separate app (dev.qcode.ide.debug / "QCode (debug)") so an
             // `installDebug` never overwrites an installed release or beta build.
             applicationIdSuffix = ".debug"
             manifestPlaceholders["appLabel"] = "QCode (debug)"
@@ -139,7 +139,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            // Side-by-side Beta: a distinct applicationId (dev.blamspot.jcode.beta) + launcher label
+            // Side-by-side Beta: a distinct applicationId (dev.qcode.ide.beta) + launcher label
             // ("JCode (beta)") so the Beta APK never overwrites an installed release build.
             if (jcodeIdSuffix.isNotEmpty()) {
                 applicationIdSuffix = jcodeIdSuffix

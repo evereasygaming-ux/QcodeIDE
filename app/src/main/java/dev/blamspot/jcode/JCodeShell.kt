@@ -669,7 +669,7 @@ fun JCodeApp(
     val updateContext = LocalContext.current
     val openReleasePage: () -> Unit = {
         val url = updateInfo?.releaseUrl
-            ?: "https://github.com/blamspotdev/j-code-android/releases/latest"
+            ?: "https://github.com/evereasygaming-ux/QcodeIDE/releases/latest"
         runCatching {
             updateContext.startActivity(
                 Intent(Intent.ACTION_VIEW, Uri.parse(url))
