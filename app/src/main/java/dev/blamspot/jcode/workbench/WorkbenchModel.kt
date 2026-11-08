@@ -245,6 +245,8 @@ internal enum class RightPanelTab(
     Terminal("Terminal", JCodeIcon.Terminal, enabled = true),
     Output("Output", JCodeIcon.Logs, enabled = true),
     Problems("Issues", JCodeIcon.Problems, enabled = true),
+    /** Agentic chat (Claude Code / Antigravity) running inside the Linux environment. */
+    Agent("Agent", JCodeIcon.Chat, enabled = true),
     DebugConsole("Debug", JCodeIcon.Debug, enabled = true),
     Tasks("Tasks", JCodeIcon.Tasks, enabled = true),
     /** Built-in browser DevTools (console / network / elements); only shown once the in-app browser

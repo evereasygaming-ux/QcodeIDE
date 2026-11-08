@@ -1,6 +1,7 @@
 package dev.blamspot.jcode
 import androidx.compose.foundation.isSystemInDarkTheme
 import dev.blamspot.jcode.core.editor.EditorLanguageAction
+import dev.blamspot.jcode.core.distro.DistroService
 import dev.blamspot.jcode.core.editor.decor.Layer
 import dev.blamspot.jcode.design.CompactContextMenu
 import dev.blamspot.jcode.design.CompactDestructiveButton
@@ -43,6 +44,8 @@ import dev.blamspot.jcode.design.LocalExtraKeysState
 import dev.blamspot.jcode.design.RestoreSessionSetting
 import dev.blamspot.jcode.design.TabCloseButtonSetting
 import dev.blamspot.jcode.editor.SyntaxHighlighter
+import dev.blamspot.jcode.feature.agent.AgentController
+import dev.blamspot.jcode.feature.agent.AgentPane
 import dev.blamspot.jcode.editor.TokenPalette
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -4085,6 +4088,7 @@ private fun JCodeShell(
                     WorkbenchRightSidebar(
                         selected = rightPanelSelection,
                         vsixExtensions = vsixExtensions,
+                        distroService = viewModel.distroService,
                         devicePanel = devicePanel,
                         selectedProject = selectedProject,
                         terminalSessionIds = terminalSessionIds,
@@ -4176,6 +4180,7 @@ private fun JCodeShell(
                         WorkbenchRightSidebar(
                             selected = rightPanelSelection.clampedTo(portraitRightSidebarTabs),
                             vsixExtensions = vsixExtensions,
+                            distroService = viewModel.distroService,
                             devicePanel = devicePanel,
                             selectedProject = selectedProject,
                             terminalSessionIds = terminalSessionIds,
@@ -4985,6 +4990,7 @@ private fun terminalTabLabel(raw: String?): String {
 private fun WorkbenchRightSidebar(
     selected: RightPanelSelection,
     vsixExtensions: List<dev.blamspot.jcode.feature.marketplace.InstalledExtension>,
+    distroService: DistroService,
     /**
      * The virtual device, when it belongs in this drawer rather than in an editor tab — null when it
      * does not, which is also what hides its tab.
@@ -5014,6 +5020,16 @@ private fun WorkbenchRightSidebar(
     onStopRun: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    // One chat per drawer lifetime: kept across tab switches, closed (and its process killed) when
+    // the drawer leaves composition.
+    val agentScope = rememberCoroutineScope()
+    val agentController = remember(distroService) {
+        AgentRuntime.createClaudeController(distroService, agentScope)
+    }
+    DisposableEffect(agentController) {
+        onDispose { agentController.close() }
+    }
+
     // Fully opaque: any translucency lets bright editor text ghost through the panel content
     // (clearly visible on OLED), and every tab's text then sits on an unstable background.
     Surface(
@@ -5092,6 +5108,7 @@ private fun WorkbenchRightSidebar(
             } else {
                 WorkbenchRightSidebarBody(
                     tab = (selected as? RightPanelSelection.Builtin)?.tab ?: RightPanelTab.Terminal,
+                    agentController = agentController,
                     devicePanel = devicePanel,
                     selectedProject = selectedProject,
                     terminalSessionIds = terminalSessionIds,
@@ -5263,6 +5280,7 @@ private fun VsixTitleActionsMenu(extension: dev.blamspot.jcode.feature.marketpla
 @Composable
 private fun WorkbenchRightSidebarBody(
     tab: RightPanelTab,
+    agentController: AgentController,
     /** See [WorkbenchRightSidebar]'s parameter of the same name. */
     devicePanel: (@Composable (Modifier) -> Unit)?,
     selectedProject: Project?,
@@ -5313,6 +5331,9 @@ private fun WorkbenchRightSidebarBody(
         }
         RightPanelTab.Problems -> {
             IssuesSidebarContent(modifier = modifier)
+        }
+        RightPanelTab.Agent -> {
+            AgentPane(controller = agentController, modifier = modifier)
         }
         RightPanelTab.DebugConsole -> {
             DebugConsoleSidebarContent(modifier = modifier)

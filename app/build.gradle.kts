@@ -216,6 +216,7 @@ dependencies {
     implementation(project(":core:config"))
     implementation(project(":core:ext-api"))
     implementation(project(":core:diag"))
+    implementation(project(":core:agent"))
 
     // Feature modules
     implementation(project(":feature:explorer"))
@@ -226,6 +227,7 @@ dependencies {
     implementation(project(":feature:lsp-manager"))
     implementation(project(":feature:marketplace"))
     implementation(project(":feature:onboarding"))
+    implementation(project(":feature:agent"))
 
     // Native modules
     implementation(project(":native:buffer"))

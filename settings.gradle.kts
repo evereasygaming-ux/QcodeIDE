@@ -38,6 +38,7 @@ include(":core:search")
 include(":core:config")
 include(":core:ext-api")
 include(":core:diag")
+include(":core:agent")
 
 // Feature modules
 include(":feature:explorer")
@@ -48,6 +49,7 @@ include(":feature:sdk-manager")
 include(":feature:lsp-manager")
 include(":feature:marketplace")
 include(":feature:onboarding")
+include(":feature:agent")
 
 // Native modules
 include(":native:buffer")
