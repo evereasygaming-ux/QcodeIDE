@@ -5025,8 +5025,9 @@ private fun WorkbenchRightSidebar(
     // One chat per drawer lifetime: kept across tab switches, closed (and its process killed) when
     // the drawer leaves composition.
     val agentScope = rememberCoroutineScope()
-    val agentController = remember(distroService) {
-        AgentRuntime.createClaudeController(distroService, agentScope)
+    val agentContext = LocalContext.current.applicationContext
+    val agentController = remember(agentContext, distroService) {
+        AgentRuntime.createClaudeController(agentContext, distroService, agentScope)
     }
     DisposableEffect(agentController) {
         onDispose { agentController.close() }

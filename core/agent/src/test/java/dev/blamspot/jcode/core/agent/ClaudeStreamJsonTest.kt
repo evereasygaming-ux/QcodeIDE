@@ -127,4 +127,43 @@ class ClaudeStreamJsonTest {
         assertTrue(encoded.contains("\"toolUseID\":\"tu_1\""))
         assertTrue(encoded.contains("\"updatedInput\":{\"command\":\"ls\"}"))
     }
+
+    @Test
+    fun `streamed text is not repeated by the completed message`() {
+        val session = ClaudeStreamSession()
+        assertTrue(session.parse(MESSAGE_START).isEmpty())
+        assertEquals("Hel", assertIs<AgentEvent.AssistantText>(session.parse(textDelta("Hel")).single()).text)
+        assertEquals("lo", assertIs<AgentEvent.AssistantText>(session.parse(textDelta("lo")).single()).text)
+        val completed = session.parse(assistantText("Hello"))
+        assertTrue(completed.none { it is AgentEvent.AssistantText })
+    }
+
+    @Test
+    fun `each new message streams again`() {
+        val session = ClaudeStreamSession()
+        session.parse(MESSAGE_START)
+        session.parse(textDelta("first"))
+        session.parse(assistantText("first"))
+        session.parse(MESSAGE_START)
+        assertEquals("sec", assertIs<AgentEvent.AssistantText>(session.parse(textDelta("sec")).single()).text)
+        assertTrue(session.parse(assistantText("second")).none { it is AgentEvent.AssistantText })
+    }
+
+    @Test
+    fun `completed text still arrives when the cli sends no deltas`() {
+        val session = ClaudeStreamSession()
+        val events = session.parse(assistantText("Hi"))
+        assertEquals("Hi", assertIs<AgentEvent.AssistantText>(events.single()).text)
+    }
+
+    private fun textDelta(text: String): String =
+        """{"type":"stream_event","event":{"type":"content_block_delta","delta":{"type":"text_delta","text":"$text"}}}"""
+
+    private fun assistantText(text: String): String =
+        """{"type":"assistant","message":{"content":[{"type":"text","text":"$text"}]}}"""
+
+    private companion object {
+        const val MESSAGE_START =
+            """{"type":"stream_event","event":{"type":"message_start","message":{}}}"""
+    }
 }

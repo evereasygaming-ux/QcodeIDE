@@ -27,24 +27,31 @@ object ClaudeStreamJson {
 
     private val json = Json { ignoreUnknownKeys = true; isLenient = true }
 
-    /** Parse one stdout line into zero or more UI events. */
-    fun parse(line: String): List<AgentEvent> {
-        if (line.isBlank()) return emptyList()
-        val obj = runCatching { json.parseToJsonElement(line) as? JsonObject }.getOrNull()
-            ?: return emptyList()
-        return when (obj.str("type")) {
-            "system" -> if (obj.str("subtype") == "init") {
-                listOf(AgentEvent.Session(obj.str("session_id").orEmpty(), obj.str("model")))
-            } else {
-                emptyList()
-            }
-            "assistant" -> parseAssistant(obj)
-            "user" -> parseUser(obj)
-            "stream_event" -> parseStreamEvent(obj)
-            "result" -> parseResult(obj)
-            "control_request" -> parsePermission(obj)
-            else -> emptyList()
+    /** Parse one stdout line into zero or more UI events, without any cross-line state. */
+    fun parse(line: String): List<AgentEvent> = objectOf(line)?.let(::parseObject).orEmpty()
+
+    internal fun objectOf(line: String): JsonObject? {
+        if (line.isBlank()) return null
+        return runCatching { json.parseToJsonElement(line) as? JsonObject }.getOrNull()
+    }
+
+    internal fun typeOf(obj: JsonObject): String? = obj.str("type")
+
+    internal fun streamEventTypeOf(obj: JsonObject): String? =
+        (obj["event"] as? JsonObject)?.str("type")
+
+    internal fun parseObject(obj: JsonObject): List<AgentEvent> = when (obj.str("type")) {
+        "system" -> if (obj.str("subtype") == "init") {
+            listOf(AgentEvent.Session(obj.str("session_id").orEmpty(), obj.str("model")))
+        } else {
+            emptyList()
         }
+        "assistant" -> parseAssistant(obj)
+        "user" -> parseUser(obj)
+        "stream_event" -> parseStreamEvent(obj)
+        "result" -> parseResult(obj)
+        "control_request" -> parsePermission(obj)
+        else -> emptyList()
     }
 
     /** The `user` frame the CLI's `--input-format stream-json` mode expects. */

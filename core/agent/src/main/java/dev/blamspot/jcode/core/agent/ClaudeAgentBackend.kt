@@ -58,6 +58,7 @@ class ClaudeAgentBackend(
 
         val produced = AtomicBoolean(false)
         val stderr = StringBuilder()
+        val parser = ClaudeStreamSession()
 
         launch(Dispatchers.IO) {
             runCatching {
@@ -80,7 +81,7 @@ class ClaudeAgentBackend(
             try {
                 process.inputStream.bufferedReader().useLines { lines ->
                     for (line in lines) {
-                        for (event in ClaudeStreamJson.parse(line)) {
+                        for (event in parser.parse(line)) {
                             produced.set(true)
                             if (event is AgentEvent.PermissionRequest) {
                                 // Register before emitting so a fast approval cannot race the await.
@@ -158,6 +159,7 @@ class ClaudeAgentBackend(
             "--verbose",
             "--input-format", "stream-json",
             "--permission-prompt-tool", "stdio",
+            "--include-partial-messages",
             "--replay-user-messages",
             "--setting-sources=user,project,local",
             "--thinking-display", "summarized",

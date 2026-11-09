@@ -56,6 +56,7 @@ fun AgentPane(controller: AgentController, modifier: Modifier = Modifier) {
         onStop = controller::stop,
         onApprove = controller::approvePending,
         onSelectModel = controller::selectModel,
+        onNewChat = controller::clearChat,
         modifier = modifier,
     )
 }
@@ -67,6 +68,7 @@ fun AgentPane(
     onStop: () -> Unit,
     onApprove: (Boolean) -> Unit,
     onSelectModel: (String) -> Unit,
+    onNewChat: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val listState = rememberLazyListState()
@@ -75,7 +77,7 @@ fun AgentPane(
     }
 
     Column(modifier.fillMaxSize()) {
-        AgentHeader(state = state, onSelectModel = onSelectModel)
+        AgentHeader(state = state, onSelectModel = onSelectModel, onNewChat = onNewChat)
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
 
         LazyColumn(
@@ -116,7 +118,11 @@ fun AgentPane(
 }
 
 @Composable
-private fun AgentHeader(state: AgentUiState, onSelectModel: (String) -> Unit) {
+private fun AgentHeader(
+    state: AgentUiState,
+    onSelectModel: (String) -> Unit,
+    onNewChat: () -> Unit,
+) {
     Row(
         modifier = Modifier.fillMaxWidth().padding(start = 12.dp, end = 4.dp, top = 6.dp, bottom = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -140,6 +146,9 @@ private fun AgentHeader(state: AgentUiState, onSelectModel: (String) -> Unit) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(Modifier.width(8.dp))
+        }
+        if (state.messages.isNotEmpty() && !state.isStreaming) {
+            TextButton(onClick = onNewChat) { Text("New") }
         }
         ModelPicker(state.models, state.model, onSelectModel)
     }
@@ -221,7 +230,7 @@ private fun AssistantMessage(message: AgentMessage) {
                 text = message.text,
                 style = MaterialTheme.typography.bodyMedium,
             )
-            message.isStreaming -> Text(
+            message.isStreaming && message.thinking.isBlank() -> Text(
                 text = "Thinking…",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,

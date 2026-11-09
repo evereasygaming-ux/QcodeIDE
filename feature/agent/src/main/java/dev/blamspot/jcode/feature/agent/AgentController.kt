@@ -7,8 +7,10 @@ import dev.blamspot.jcode.core.agent.AgentMessage
 import dev.blamspot.jcode.core.agent.AgentModel
 import dev.blamspot.jcode.core.agent.AgentRequest
 import dev.blamspot.jcode.core.agent.AgentRole
+import dev.blamspot.jcode.core.agent.AgentSavedChat
 import dev.blamspot.jcode.core.agent.AgentToolCall
 import dev.blamspot.jcode.core.agent.AgentToolStatus
+import dev.blamspot.jcode.core.agent.AgentChatStore
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -40,9 +42,19 @@ data class AgentUiState(
 class AgentController(
     private val backend: AgentBackend,
     private val scope: CoroutineScope,
+    private val store: AgentChatStore? = null,
 ) {
+    private val saved = store?.load()
     private val _state = MutableStateFlow(
-        AgentUiState(kind = backend.kind, models = backend.availableModels()),
+        AgentUiState(
+            kind = backend.kind,
+            models = backend.availableModels(),
+            model = saved?.model ?: "default",
+            messages = saved?.messages.orEmpty().map {
+                if (it.isStreaming) it.copy(isStreaming = false) else it
+            },
+            sessionId = saved?.sessionId,
+        ),
     )
     val state: StateFlow<AgentUiState> = _state.asStateFlow()
 
@@ -50,6 +62,7 @@ class AgentController(
 
     fun selectModel(id: String) {
         _state.update { it.copy(model = id) }
+        persist()
     }
 
     /** Start a turn. Ignored while another turn is running or when [prompt] is blank. */
@@ -68,6 +81,7 @@ class AgentController(
                 pendingApproval = null,
             )
         }
+        persist()
 
         val request = AgentRequest(
             prompt = text,
@@ -86,6 +100,7 @@ class AgentController(
             } finally {
                 finishStreaming(assistantId)
                 _state.update { it.copy(isStreaming = false) }
+                persist()
             }
         }
     }
@@ -97,6 +112,7 @@ class AgentController(
         turn = null
         _state.value.messages.filter { it.isStreaming }.forEach { finishStreaming(it.id) }
         _state.update { it.copy(isStreaming = false, pendingApproval = null) }
+        persist()
     }
 
     /** Answer the pending tool-permission prompt. */
@@ -107,10 +123,27 @@ class AgentController(
             it.copy(status = if (allow) AgentToolStatus.APPROVED else AgentToolStatus.DENIED)
         }
         _state.update { it.copy(pendingApproval = null) }
+        persist()
+    }
+
+    /** Start over: drop the feed and the CLI session so the next prompt begins a fresh chat. */
+    fun clearChat() {
+        stop()
+        _state.update {
+            it.copy(
+                messages = emptyList(),
+                sessionId = null,
+                error = null,
+                inputTokens = 0,
+                outputTokens = 0,
+            )
+        }
+        store?.clear()
     }
 
     fun close() {
         stop()
+        persistNow()
         backend.close()
     }
 
@@ -197,4 +230,21 @@ class AgentController(
     private fun finishStreaming(id: String) {
         updateMessage(id) { it.copy(isStreaming = false) }
     }
+
+    private fun snapshot(): AgentSavedChat = _state.value.run {
+        AgentSavedChat(
+            messages = messages.map { if (it.isStreaming) it.copy(isStreaming = false) else it },
+            sessionId = sessionId,
+            model = model,
+        )
+    }
+
+    private fun persist() {
+        val store = store ?: return
+        // Small JSON file, written only at turn boundaries / model changes — synchronous keeps the
+        // ordering obvious and avoids a queued write resurrecting a chat that was just cleared.
+        store.save(snapshot())
+    }
+
+    private fun persistNow() = persist()
 }

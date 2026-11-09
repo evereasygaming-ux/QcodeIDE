@@ -1,16 +1,22 @@
 package dev.blamspot.jcode.core.agent
 
+import kotlinx.serialization.Serializable
+
 /** Which agent backend a chat is talking to. */
+@Serializable
 enum class AgentKind(val label: String) {
     AGY("Antigravity"),
     CLAUDE("Claude Code"),
 }
 
+@Serializable
 enum class AgentRole { USER, ASSISTANT, TOOL }
 
+@Serializable
 enum class AgentToolStatus { PENDING, APPROVED, DENIED, RUNNING, COMPLETED, FAILED }
 
 /** One tool invocation an agent asked for, shown as a card in the chat. */
+@Serializable
 data class AgentToolCall(
     val id: String,
     val name: String,
@@ -21,6 +27,7 @@ data class AgentToolCall(
 )
 
 /** One message in the chat feed. [isStreaming] marks the assistant message currently being written. */
+@Serializable
 data class AgentMessage(
     val id: String,
     val role: AgentRole,
@@ -31,6 +38,7 @@ data class AgentMessage(
 )
 
 /** A model the selected backend offers. [id] is what the CLI is given (or "default"). */
+@Serializable
 data class AgentModel(val id: String, val label: String)
 
 /** One turn request. [resumeSessionId] continues an existing CLI session when the backend supports it. */

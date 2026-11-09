@@ -1,10 +1,13 @@
 package dev.blamspot.jcode
 
+import android.content.Context
+import dev.blamspot.jcode.core.agent.AgentChatStore
 import dev.blamspot.jcode.core.agent.AgentProcessLauncher
 import dev.blamspot.jcode.core.agent.ClaudeAgentBackend
 import dev.blamspot.jcode.core.distro.DistroService
 import dev.blamspot.jcode.feature.agent.AgentController
 import kotlinx.coroutines.CoroutineScope
+import java.io.File
 
 /**
  * Builds agent backends on top of the embedded Linux runtime.
@@ -15,7 +18,11 @@ import kotlinx.coroutines.CoroutineScope
  */
 object AgentRuntime {
 
-    fun createClaudeController(distroService: DistroService, scope: CoroutineScope): AgentController {
+    fun createClaudeController(
+        context: Context,
+        distroService: DistroService,
+        scope: CoroutineScope,
+    ): AgentController {
         val user = distroService.environmentState.value.runtime.user
         // The CLI may be installed through npm, the native installer, or a distro package; prepend
         // the usual per-user and global bin directories so all three resolve.
@@ -41,6 +48,10 @@ object AgentRuntime {
                 )
             }
         }
-        return AgentController(ClaudeAgentBackend(launcher), scope)
+        return AgentController(
+            backend = ClaudeAgentBackend(launcher),
+            scope = scope,
+            store = AgentChatStore(File(context.filesDir, "agent/chat.json")),
+        )
     }
 }
