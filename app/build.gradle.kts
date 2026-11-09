@@ -88,6 +88,39 @@ val jcodeApplicationId: String =
     (project.findProperty("jcodeApplicationId") as? String)?.trim()?.takeIf { it.isNotBlank() }
         ?: "dev.qcode.ide"
 
+// The Agy HTTP/WebSocket bridge is a Go program vendored at agent/bridge (GPL-3.0, see that
+// directory's upstream). It is cross-compiled for Android/arm64 and shipped as an asset, then
+// extracted into the guest rootfs at runtime — /storage is mounted noexec, so it cannot run
+// from there. `go` must be on PATH (CI installs it with actions/setup-go).
+val agyBridgeOutDir = layout.buildDirectory.dir("generated/agyBridge")
+
+val buildAgyBridge = tasks.register<Exec>("buildAgyBridge") {
+    val bridgeSourceDir = rootProject.layout.projectDirectory.dir("agent/bridge")
+    val outputFile = agyBridgeOutDir.get().file("agent/agy_ide_bridge").asFile
+
+    workingDir = bridgeSourceDir.asFile
+    environment("GOOS", "android")
+    environment("GOARCH", "arm64")
+    environment("CGO_ENABLED", "0")
+    environment("GOFLAGS", "-trimpath")
+    commandLine(
+        "go", "build", "-trimpath", "-ldflags=-s -w",
+        "-o", outputFile.absolutePath,
+        "."
+    )
+
+    inputs.dir(bridgeSourceDir)
+    outputs.file(outputFile)
+
+    doFirst {
+        outputFile.parentFile.mkdirs()
+    }
+}
+
+tasks.named("preBuild") {
+    dependsOn(buildAgyBridge)
+}
+
 android {
     namespace = "dev.blamspot.jcode"
     compileSdk = 36
@@ -122,6 +155,11 @@ android {
         ndk {
             abiFilters.add("arm64-v8a")
         }
+    }
+
+    sourceSets.getByName("main") {
+        // Merges the cross-compiled bridge in as assets/agent/agy_ide_bridge.
+        assets.srcDir(agyBridgeOutDir)
     }
 
     buildTypes {
