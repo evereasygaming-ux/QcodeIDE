@@ -3,6 +3,7 @@ package dev.blamspot.jcode
 import android.content.Context
 import dev.blamspot.jcode.core.agent.AgentChatStore
 import dev.blamspot.jcode.core.agent.AgentKind
+import dev.blamspot.jcode.core.agent.AgyAcpBackend
 import dev.blamspot.jcode.core.agent.AgentProcessLauncher
 import dev.blamspot.jcode.core.agent.ClaudeAgentBackend
 import dev.blamspot.jcode.core.distro.DistroService
@@ -50,7 +51,10 @@ object AgentRuntime {
             }
         }
         val storeDir = File(context.filesDir, "agent")
-        val agyBackend = AgyAgentBackend(AgyBridgeRuntime(context, distroService, scope))
+        val agyBackend = AgyAcpBackend(
+            launcher = launcher,
+            defaultWorkdir = distroService.environmentState.value.runtime.workdir,
+        )
         return AgentController(
             backends = linkedMapOf(
                 AgentKind.CLAUDE to ClaudeAgentBackend(launcher),
