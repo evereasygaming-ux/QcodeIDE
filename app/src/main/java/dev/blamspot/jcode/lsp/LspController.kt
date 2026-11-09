@@ -552,7 +552,7 @@ class LspController(
         const val DETACHED_TOKEN_TIMEOUT_MS = 4_000L
 
         /** Marks a URI as belonging to no file — see [detachedSemanticTokens]. */
-        const val DETACHED_DIR = "/.jcode-detached/"
+        const val DETACHED_DIR = "/.qcode-detached/"
     }
 }
 

@@ -1329,10 +1329,10 @@ entries:
       runs in a proot Ubuntu 24.04 (aarch64) userland. Hard constraints:
       - Projects live under /workspace (a FUSE mount). It is noexec and has no symlink support: never
         execute compiled binaries from it and never create node_modules there. Use ext4 instead,
-        e.g. $HOME/.jcode-run/<project>/.
+        e.g. $HOME/.qcode-run/<project>/.
       - HOME=/root, USER=root, TMPDIR=/tmp. No systemd, no GUI, no Docker, no x86 emulation.
       - .NET: export DOTNET_GCHeapHardLimit=0x40000000 before any dotnet command.
-      - The IDE runs projects via .jcode/run.yaml (name, readyPort, terminals: label+command list);
+      - The IDE runs projects via .qcode/run.yaml (name, readyPort, terminals: label+command list);
         keep it working when you change how a project runs.
       - Dev servers should bind 127.0.0.1; the IDE opens the device browser against localhost.
       - The screen is small and builds are slow: keep output short, prefer incremental commands.

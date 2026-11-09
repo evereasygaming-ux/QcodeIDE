@@ -123,7 +123,7 @@ class SetupTerminalRunner(
         asUser: String,
         token: String,
     ): String? {
-        val guestScript = "/tmp/.jcode-task-$token.sh"
+        val guestScript = "/tmp/.qcode-task-$token.sh"
         val runtimeUser = distroService.environmentState.value.runtime.user
         val body = buildString {
             append("echo '== ").append(label.replace("'", "")).append(" =='\n")

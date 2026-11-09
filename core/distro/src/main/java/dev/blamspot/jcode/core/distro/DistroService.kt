@@ -634,7 +634,7 @@ class DistroService(
         if (probes.any { it.updateCheckScript.contains("apt list") }) refreshAptListsIfStale()
 
         val distroId = _environmentState.value.runtime.selectedDistro.id
-        val scriptFile = File(rootfsManager.getRootfsPath(distroId), "tmp/.jcode-verify-${System.nanoTime()}.sh")
+        val scriptFile = File(rootfsManager.getRootfsPath(distroId), "tmp/.qcode-verify-${System.nanoTime()}.sh")
         val batch = runCatching {
             scriptFile.parentFile?.mkdirs()
             scriptFile.writeText(
@@ -2479,7 +2479,7 @@ class DistroService(
             __jc_apt_run() {
               __ja_a=${'$'}1; __ja_b=${'$'}2; __ja_l=${'$'}3; shift 3
               __ja_mid=${'$'}(( (__ja_a + __ja_b) / 2 ))
-              rm -f /tmp/.jcode-apt-rc
+              rm -f /tmp/.qcode-apt-rc
               # Status-Fd MUST NOT be 1. Combined with Dpkg::Use-Pty=0 (no pty, so dpkg inherits our
               # stdout) apt claims fd 1 as its status channel while dpkg hands the same descriptor to
               # maintainer scripts, and their first write to stdout fails with EIO. That kills the
@@ -2488,7 +2488,7 @@ class DistroService(
               # harmless; it is the pair that breaks. Status goes to fd 3 and is folded back into the
               # same pipe by `3>&1`, so the reader below still sees one merged stream.
               { sudo apt-get -y -o APT::Status-Fd=3 -o Dpkg::Use-Pty=0 "${'$'}@" 2>&1 3>&1
-                echo "__jcrc:${'$'}?" > /tmp/.jcode-apt-rc
+                echo "__jcrc:${'$'}?" > /tmp/.qcode-apt-rc
               } | while IFS= read -r __ja_line; do
                 case "${'$'}__ja_line" in
                   dlstatus:*|pmstatus:*)
@@ -2507,8 +2507,8 @@ class DistroService(
                 esac
               done
               jcode_progress "${'$'}__ja_b" "${'$'}__ja_l"
-              __ja_rc=${'$'}(sed -n 's/^__jcrc://p' /tmp/.jcode-apt-rc 2>/dev/null)
-              rm -f /tmp/.jcode-apt-rc
+              __ja_rc=${'$'}(sed -n 's/^__jcrc://p' /tmp/.qcode-apt-rc 2>/dev/null)
+              rm -f /tmp/.qcode-apt-rc
               return "${'$'}{__ja_rc:-0}"
             }
             jcode_apt() {

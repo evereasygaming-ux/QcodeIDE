@@ -20,7 +20,7 @@ enum class ExplorerExcludeEffect { GreyOut, Hide }
 class ExplorerHiddenSetting(
     val mode: ExplorerHiddenMode = ExplorerHiddenMode.HideSpecifiedAndInjected,
     val effect: ExplorerExcludeEffect = ExplorerExcludeEffect.GreyOut,
-    val specifiedRaw: String = ".jcode",
+    val specifiedRaw: String = ".qcode\n.jcode",
     val onSetMode: (ExplorerHiddenMode) -> Unit = {},
     val onSetEffect: (ExplorerExcludeEffect) -> Unit = {},
     val onSetSpecifiedRaw: (String) -> Unit = {},

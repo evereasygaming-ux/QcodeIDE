@@ -47,7 +47,7 @@ fun BuildConfigPage(
     ) {
         Text("Build configuration", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.SemiBold)
         Text(
-            "A build task for publish/deployment. Stored in this project's .jcode/run.yaml.",
+            "A build task for publish/deployment. Stored in this project's .qcode/run.yaml.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -60,7 +60,7 @@ fun BuildConfigPage(
         )
         SettingsTextFieldRow(
             label = "Command (bash)",
-            supporting = "Runs in a dedicated terminal — e.g. dotnet publish -c Release -o \"\$HOME/.jcode-build/out\".",
+            supporting = "Runs in a dedicated terminal — e.g. dotnet publish -c Release -o \"\$HOME/.qcode-build/out\".",
             value = command,
             onValueChange = { command = it; dirty = true },
             singleLine = false,

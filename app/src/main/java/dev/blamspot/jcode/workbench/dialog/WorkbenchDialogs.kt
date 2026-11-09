@@ -64,7 +64,7 @@ internal fun OpenFolderTypeDialog(
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(Space.md)) {
                 Text(
-                    "\"$folderName\" has no .jcode config yet. Is it a Project or a Workspace?",
+                    "\"$folderName\" has no .qcode config yet. Is it a Project or a Workspace?",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

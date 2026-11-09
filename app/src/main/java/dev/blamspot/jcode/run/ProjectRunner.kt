@@ -26,7 +26,7 @@ import kotlinx.coroutines.withContext
  * right-drawer terminal (so e.g. an ASP.NET backend and a Vite frontend run side by side in dev).
  * Recipes are **self-healing**: a partially-scaffolded project (server but no client) is repaired in
  * the run terminal rather than failing. Front-end installs/builds happen in the runtime's ext4 home
- * (`$HOME/.jcode-run/<name>`) because the FUSE `/workspace` mount has no symlinks, so `node_modules`
+ * (`$HOME/.qcode-run/<name>`) because the FUSE `/workspace` mount has no symlinks, so `node_modules`
  * cannot live there. The .NET build output likewise goes to ext4 because `/workspace` is noexec.
  *
  * proot shares the app process's network stack, so a server bound to `0.0.0.0:<port>` in the guest
@@ -642,7 +642,7 @@ object ProjectRunner {
     private fun dotnetPublishCommand(csprojGuest: String, stageName: String): String = buildString {
         appendLine("clear"); appendLine("set -e")
         appendLine("CSPROJ=\"$csprojGuest\"")
-        appendLine("OUT=\"\$HOME/.jcode-build/$stageName\"")
+        appendLine("OUT=\"\$HOME/.qcode-build/$stageName\"")
         appendLine("echo '== QCode: dotnet publish (Release) =='")
         appendLine("rm -rf \"\$OUT\"")
         appendLine("dotnet publish \"\$CSPROJ\" -c Release -o \"\$OUT\" --nologo")
@@ -652,7 +652,7 @@ object ProjectRunner {
     private fun npmBuildCommand(dirGuest: String, stageName: String): String = buildString {
         appendLine("clear"); appendLine("set -e")
         appendLine("SRC=\"$dirGuest\"")
-        appendLine("STAGE=\"\$HOME/.jcode-build/$stageName\"")
+        appendLine("STAGE=\"\$HOME/.qcode-build/$stageName\"")
         appendLine("echo '== QCode: npm run build =='")
         appendLine("export npm_config_fund=false npm_config_audit=false")
         appendLine("rm -rf \"\$STAGE\" && mkdir -p \"\$STAGE\" && cp -a \"\$SRC/.\" \"\$STAGE/\"")
@@ -684,7 +684,7 @@ object ProjectRunner {
 
     /**
      * Prepare the terminal command that runs [terminal]. Its script body is written to the project's
-     * `.jcode/run-<label>.sh` and invoked with a single `bash <path>` line, so the interactive shell
+     * `.qcode/run-<label>.sh` and invoked with a single `bash <path>` line, so the interactive shell
      * doesn't echo the whole script back with `>` continuation prompts. The script is read, not
      * executed, so the noexec `/workspace` mount is fine. Falls back to an inline heredoc if the
      * script can't be written.
@@ -700,12 +700,12 @@ object ProjectRunner {
         val scriptName = "run-${sanitizeStageName(terminal.label)}.sh"
         if (hostDir != null) {
             val written = runCatching {
-                val dir = File(hostDir, ".jcode").apply { if (!exists()) mkdirs() }
+                val dir = File(hostDir, ".qcode").apply { if (!exists()) mkdirs() }
                 File(dir, scriptName).writeText(terminal.command)
             }.isSuccess
             if (written) {
                 val guestDir = project.distroBindTarget.trimEnd('/')
-                return "${prefix}bash \"$guestDir/.jcode/$scriptName\""
+                return "${prefix}bash \"$guestDir/.qcode/$scriptName\""
             }
         }
         return "${prefix}bash <<'JCRUN'\n${terminal.command}\nJCRUN"
@@ -767,7 +767,7 @@ object ProjectRunner {
 
     // --- command builders -------------------------------------------------
 
-    // Each recipe is a self-contained bash script (run via `bash .jcode/run-<label>.sh`). `set -e`
+    // Each recipe is a self-contained bash script (run via `bash .qcode/run-<label>.sh`). `set -e`
     // aborts on the first failing step. $PROJ/$STAGE/$TFM are expanded by the guest bash at run time.
 
     /** Pick the newest installed .NET SDK's major version → e.g. `net10.0`, falling back to net8.0. */
@@ -782,7 +782,7 @@ object ProjectRunner {
             appendLine("clear")
             appendLine("set -e")
             appendLine("PROJ=\"$projectDir\"")
-            appendLine("SRV=\"\$HOME/.jcode-run/$stageName-server\"")
+            appendLine("SRV=\"\$HOME/.qcode-run/$stageName-server\"")
             appendLine("echo '== QCode: Server (ASP.NET Core - Development) =='")
             appendLine(SELECT_TFM)
             appendLine("echo \"[setup] Target framework: \$TFM\"")
@@ -818,8 +818,8 @@ object ProjectRunner {
             appendLine("set -e")
             appendLine("CSPROJ=\"$csprojGuest\"")
             appendLine("CLIENT=\"$clientDir\"")
-            appendLine("SRV=\"\$HOME/.jcode-run/$serverStage\"")
-            appendLine("STAGE=\"\$HOME/.jcode-run/$clientStage\"")
+            appendLine("SRV=\"\$HOME/.qcode-run/$serverStage\"")
+            appendLine("STAGE=\"\$HOME/.qcode-run/$clientStage\"")
             appendLine("WWWROOT=\"\$(dirname \"\$CSPROJ\")/wwwroot\"")
             appendLine("echo '== QCode: ASP.NET Core (single endpoint — client built into wwwroot) =='")
             appendLine("echo '[1/3] Building client (npm run build) on ext4...'")
@@ -844,13 +844,13 @@ object ProjectRunner {
             appendLine("set -e")
             appendLine("PROJ=\"$projectDir\"")
             appendLine("CLIENT=\"$clientDir\"")
-            appendLine("STAGE=\"\$HOME/.jcode-run/$stageName-client\"")
+            appendLine("STAGE=\"\$HOME/.qcode-run/$stageName-client\"")
             appendLine("echo '== QCode: Client (Vite dev server) =='")
             appendLine("export npm_config_fund=false npm_config_audit=false")
             // Self-heal: scaffold a Vite React app if the client has no package.json yet.
             appendLine("if [ ! -f \"\$CLIENT/package.json\" ]; then")
             appendLine("  echo '[setup] No client found - scaffolding Vite React (TypeScript)...'")
-            appendLine("  TMP=\"\$HOME/.jcode-run/.new-$stageName\"")
+            appendLine("  TMP=\"\$HOME/.qcode-run/.new-$stageName\"")
             appendLine("  rm -rf \"\$TMP\" && mkdir -p \"\$TMP\" && cd \"\$TMP\"")
             appendLine("  CI=1 npm create vite@latest app -- --template react-ts </dev/null")
             appendLine("  ( cd \"\$TMP/app\" && tar --exclude=node_modules --exclude=dist -cf - . ) | ( mkdir -p \"\$CLIENT\" && cd \"\$CLIENT\" && tar -xf - )")
@@ -872,7 +872,7 @@ object ProjectRunner {
             appendLine("clear")
             appendLine("set -e")
             appendLine("CSPROJ=\"$csprojGuest\"")
-            appendLine("OUT=\"\$HOME/.jcode-run/$stageName\"")
+            appendLine("OUT=\"\$HOME/.qcode-run/$stageName\"")
             appendLine("echo '== QCode: .NET (dotnet build + run) =='")
             appendLine("echo '[1/2] Building (dotnet build, $config)...'")
             appendLine("rm -rf \"\$OUT\"")
@@ -894,7 +894,7 @@ object ProjectRunner {
             appendLine("clear")
             appendLine("set -e")
             appendLine("SRC=\"$dirGuest\"")
-            appendLine("STAGE=\"\$HOME/.jcode-run/$stageName\"")
+            appendLine("STAGE=\"\$HOME/.qcode-run/$stageName\"")
             appendLine("echo '== QCode: npm run $script =='")
             appendLine("export npm_config_fund=false npm_config_audit=false")
             appendLine("echo '[1/2] Staging + installing deps (npm install)...'")

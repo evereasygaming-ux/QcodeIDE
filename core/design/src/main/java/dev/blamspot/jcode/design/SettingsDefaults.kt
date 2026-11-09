@@ -22,7 +22,7 @@ object SettingsDefaults {
     val HEADER_ACTION_BUTTON = HeaderActionButton.Terminal
     val HIDDEN_ROOT_MODE = ExplorerHiddenMode.HideSpecifiedAndInjected
     val EXCLUDE_EFFECT = ExplorerExcludeEffect.GreyOut
-    const val HIDDEN_ROOT_PATTERNS = ".jcode"
+    const val HIDDEN_ROOT_PATTERNS = ".qcode\n.jcode"
 
     // On by default: a delete the user cannot take back is the surprising behaviour, not the safe one.
     const val TRASH_ENABLED = true

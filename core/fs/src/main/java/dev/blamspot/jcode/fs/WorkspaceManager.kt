@@ -70,6 +70,7 @@ class WorkspaceManager @Inject constructor(
             // so if the root has flipped to ext4 without first re-anchoring workspaces.rootPath, it
             // would create a NEW empty Default Workspace and orphan every existing project.
             migrateProjectsToExt4IfNeeded()
+            migrateLegacyConfigDirs()
             val workspace = ensureDefaultWorkspace()
             _breadcrumb.value = listOf(WorkspaceCrumb(workspace.id, workspace.name))
             currentWorkspaceId.value = workspace.id
@@ -155,6 +156,45 @@ class WorkspaceManager @Inject constructor(
         Unit
     }
 
+    private suspend fun migrateLegacyConfigDirs() = withContext(Dispatchers.IO) {
+        val dirs = buildSet {
+            workspaceDao.getAllWorkspaces().forEach { add(it.rootPath) }
+            workspaceDao.getAllProjects()
+                .filter { it.kind == ProjectKind.Local }
+                .forEach { add(it.location) }
+            workspaceDao.getAllRecents()
+                .filter { it.kind == ProjectKind.Local }
+                .forEach { add(it.uri) }
+        }
+        dirs.forEach { path -> runCatching { migrateLegacyConfigDir(File(path)) } }
+    }
+
+    private fun migrateLegacyConfigDir(dir: File) {
+        val legacyDir = File(dir, ".jcode")
+        val currentDir = File(dir, ".qcode")
+        if (legacyDir.isDirectory) {
+            val migrated = if (!currentDir.exists() && legacyDir.renameTo(currentDir)) {
+                true
+            } else {
+                legacyDir.copyRecursively(currentDir, overwrite = false) { _, _ ->
+                    kotlin.io.OnErrorAction.SKIP
+                }
+            }
+            if (migrated && currentDir.exists()) legacyDir.deleteRecursively()
+        }
+        val legacyWorkspace = File(dir, ".jcode-workspace.yaml")
+        if (legacyWorkspace.isFile) {
+            val currentWorkspace = File(dir, ".qcode-workspace.yaml")
+            if (!currentWorkspace.exists()) legacyWorkspace.renameTo(currentWorkspace)
+        }
+    }
+
+    private suspend fun migrateLegacyConfig(path: FsPath) {
+        if (path is FsPath.Local) {
+            withContext(Dispatchers.IO) { migrateLegacyConfigDir(path.file) }
+        }
+    }
+
     /**
      * Re-resolve the storage roots after a runtime storage-permission grant. The roots are cached
      * from before the grant (the shared /QCode location was unwritable then, so the app-private
@@ -216,6 +256,7 @@ class WorkspaceManager @Inject constructor(
 
     suspend fun addFolder(path: FsPath): Project {
         validateWritable(path)
+        migrateLegacyConfig(path)
         createProjectScaffold(path)
         return registerProject(path)
     }
@@ -223,7 +264,7 @@ class WorkspaceManager @Inject constructor(
     /**
      * Create a typed top-level folder under the local projects root and register it. A
      * [WorkspaceNodeType.Workspace] is a plain container; a [WorkspaceNodeType.Project] records its
-     * [templateId] in `.jcode/<name>.yaml`. The returned project carries the derived type/template
+     * [templateId] in `.qcode/<name>.yaml`. The returned project carries the derived type/template
      * and its `distroBindTarget` (the runtime path templates scaffold into).
      */
     suspend fun createNode(
@@ -271,7 +312,7 @@ class WorkspaceManager @Inject constructor(
      * Move an already-populated staged folder (e.g. a clone from the /sources staging dir) under
      * [workspaceId]'s base dir and register it there as [nodeType]. The folder name is uniquified on
      * collision ("-1", "-2", …). Same-filesystem rename is attempted first; a copy+delete fallback
-     * covers the (unexpected) cross-device case. The type is upserted into the folder's `.jcode`
+     * covers the (unexpected) cross-device case. The type is upserted into the folder's `.qcode`
      * config rather than written over it — a cloned repo may ship one, and its settings are the
      * user's, not ours to drop.
      */
@@ -423,7 +464,7 @@ class WorkspaceManager @Inject constructor(
         return false
     }
 
-    /** True if the folder is tagged as a Workspace container in its `.jcode` config. */
+    /** True if the folder is tagged as a Workspace container in its `.qcode` config. */
     suspend fun isWorkspaceFolder(path: FsPath): Boolean = withContext(Dispatchers.IO) {
         parseNodeMeta(readFolderConfig(path)).first == WorkspaceNodeType.Workspace
     }
@@ -434,24 +475,26 @@ class WorkspaceManager @Inject constructor(
      * Local path we can manage as a container (e.g. a non-primary SAF tree).
      */
     suspend fun enterFolderAsWorkspace(path: FsPath): Long? {
+        migrateLegacyConfig(path)
         setFolderType(path, WorkspaceNodeType.Workspace)
         val folder = (resolveManageable(path) as? FsPath.Local)?.file ?: return null
         return enterWorkspaceFolder(folder, folder.name)
     }
 
-    /** Rename a Local project folder (and its `.jcode/<name>.yaml`) and update the DB row. */
+    /** Rename a Local project folder (and its `.qcode/<name>.yaml`) and update the DB row. */
     suspend fun renameProject(projectId: Long, newName: String): Boolean = withContext(Dispatchers.IO) {
         val entity = workspaceDao.getProject(projectId) ?: return@withContext false
         if (entity.kind != ProjectKind.Local) return@withContext false
         val sanitized = sanitizedFolderName(newName)
         if (sanitized == entity.name) return@withContext false
         val oldDir = File(entity.location)
+        migrateLegacyConfigDir(oldDir)
         val newDir = File(oldDir.parentFile, sanitized)
         if (newDir.exists()) return@withContext false
         if (!oldDir.renameTo(newDir)) return@withContext false
 
-        val jcodeDir = File(newDir, ".jcode")
-        File(jcodeDir, "${oldDir.name}.yaml").takeIf { it.isFile }?.renameTo(File(jcodeDir, "$sanitized.yaml"))
+        val configDir = File(newDir, ".qcode")
+        File(configDir, "${oldDir.name}.yaml").takeIf { it.isFile }?.renameTo(File(configDir, "$sanitized.yaml"))
 
         workspaceDao.updateProject(projectId, sanitized, newDir.absolutePath)
         nodeMetaCache.remove(oldDir.absolutePath)
@@ -588,18 +631,18 @@ class WorkspaceManager @Inject constructor(
     private suspend fun createProjectScaffold(path: FsPath) {
         when (path) {
             is FsPath.Local -> withContext(Dispatchers.IO) {
-                val jcodeDir = File(path.file, ".jcode").apply { mkdirs() }
+                val configDir = File(path.file, ".qcode").apply { mkdirs() }
                 val configFileName = "${path.file.name}.yaml"
-                File(jcodeDir, configFileName).takeIf { !it.exists() }?.writeText("name: ${path.file.name}\n")
+                File(configDir, configFileName).takeIf { !it.exists() }?.writeText("name: ${path.file.name}\n")
             }
 
             is FsPath.Saf -> withContext(Dispatchers.IO) {
                 val tree = androidx.documentfile.provider.DocumentFile.fromTreeUri(context, path.uri)
                     ?: error("Unable to open SAF tree: ${path.uri}")
-                val jcodeDir = tree.findFile(".jcode") ?: tree.createDirectory(".jcode")
+                val configDir = tree.findFile(".qcode") ?: tree.createDirectory(".qcode")
                 val folderName = tree.name ?: "External Folder"
                 val configFileName = "$folderName.yaml"
-                val projectFile = jcodeDir?.findFile(configFileName) ?: jcodeDir?.createFile("application/x-yaml", configFileName)
+                val projectFile = configDir?.findFile(configFileName) ?: configDir?.createFile("application/x-yaml", configFileName)
                 context.contentResolver.openOutputStream(projectFile?.uri ?: error("Unable to create $configFileName"), "wt")?.use { stream ->
                     stream.write("name: $folderName\n".toByteArray())
                 }
@@ -612,14 +655,14 @@ class WorkspaceManager @Inject constructor(
         nodeType: WorkspaceNodeType,
         templateId: String?,
     ) = withContext(Dispatchers.IO) {
-        val jcodeDir = File(dir, ".jcode").apply { mkdirs() }
+        val configDir = File(dir, ".qcode").apply { mkdirs() }
         val typeValue = if (nodeType == WorkspaceNodeType.Workspace) "workspace" else "project"
         val content = buildString {
             append("name: ${dir.name}\n")
             append("type: $typeValue\n")
             if (templateId != null) append("template: $templateId\n")
         }
-        File(jcodeDir, "${dir.name}.yaml").writeText(content)
+        File(configDir, "${dir.name}.yaml").writeText(content)
         nodeMetaCache.remove(dir.absolutePath)
     }
 
@@ -645,10 +688,10 @@ class WorkspaceManager @Inject constructor(
             ?: "project"
     }
 
-    // --- Folder type detection + assignment (.jcode is the source of truth; not stored in the DB) ---
+    // --- Folder type detection + assignment (.qcode is the source of truth; not stored in the DB) ---
 
     /** Derived (nodeType, templateId) per project location. The workspace flow re-derives node types
-     *  on every emission; caching keeps the (flaky, IPC-bound) SAF `.jcode` read from running each
+     *  on every emission; caching keeps the (flaky, IPC-bound) SAF `.qcode` read from running each
      *  time, so a folder's type stays stable instead of flickering. Invalidated whenever we write it. */
     private val nodeMetaCache = java.util.concurrent.ConcurrentHashMap<String, Pair<WorkspaceNodeType, String?>>()
 
@@ -673,9 +716,10 @@ class WorkspaceManager @Inject constructor(
         content.lineSequence().none { it.trimStart().startsWith("type:") }
     }
 
-    /** Stamp `type:` into `.jcode/<name>.yaml` (creating it if needed) then register the opened folder. */
+    /** Stamp `type:` into `.qcode/<name>.yaml` (creating it if needed) then register the opened folder. */
     suspend fun addFolderWithType(path: FsPath, nodeType: WorkspaceNodeType): Project {
         validateWritable(path)
+        migrateLegacyConfig(path)
         setFolderType(path, nodeType)
         return registerProject(path).copy(nodeType = nodeType)
     }
@@ -685,7 +729,7 @@ class WorkspaceManager @Inject constructor(
         when (path) {
             is FsPath.Local -> {
                 val dir = path.file
-                val configFile = File(dir, ".jcode/${dir.name}.yaml")
+                val configFile = File(dir, ".qcode/${dir.name}.yaml")
                 configFile.parentFile?.mkdirs()
                 val existing = if (configFile.isFile) configFile.readText() else "name: ${dir.name}\n"
                 configFile.writeText(upsertTypeLine(existing, typeValue))
@@ -695,13 +739,20 @@ class WorkspaceManager @Inject constructor(
                 val tree = androidx.documentfile.provider.DocumentFile.fromTreeUri(context, path.uri)
                     ?: return@withContext
                 val folderName = tree.name ?: "External Folder"
-                val jcodeDir = tree.findFile(".jcode") ?: tree.createDirectory(".jcode") ?: return@withContext
-                val configFile = jcodeDir.findFile("$folderName.yaml")
-                    ?: jcodeDir.createFile("application/x-yaml", "$folderName.yaml")
+                val configDir = tree.findFile(".qcode") ?: tree.createDirectory(".qcode") ?: return@withContext
+                val legacyDir = tree.findFile(".jcode")
+                val configFile = configDir.findFile("$folderName.yaml")
+                    ?: configDir.createFile("application/x-yaml", "$folderName.yaml")
                     ?: return@withContext
                 val existing = runCatching {
                     context.contentResolver.openInputStream(configFile.uri)?.use { it.readBytes().toString(Charsets.UTF_8) }
-                }.getOrNull()?.takeIf { it.isNotBlank() } ?: "name: $folderName\n"
+                }.getOrNull()?.takeIf { it.isNotBlank() }
+                    ?: runCatching {
+                        legacyDir?.findFile("$folderName.yaml")?.let { file ->
+                            context.contentResolver.openInputStream(file.uri)?.use { it.readBytes().toString(Charsets.UTF_8) }
+                        }
+                    }.getOrNull()?.takeIf { it.isNotBlank() }
+                    ?: "name: $folderName\n"
                 context.contentResolver.openOutputStream(configFile.uri, "wt")?.use { stream ->
                     stream.write(upsertTypeLine(existing, typeValue).toByteArray())
                 }
@@ -710,7 +761,7 @@ class WorkspaceManager @Inject constructor(
         nodeMetaCache.remove(path.locationKey())
     }
 
-    /** Replace an existing `type:` line, or append one, preserving the rest of the `.jcode` config. */
+    /** Replace an existing `type:` line, or append one, preserving the rest of the `.qcode` config. */
     private fun upsertTypeLine(content: String, typeValue: String): String {
         if (content.lineSequence().any { it.trimStart().startsWith("type:") }) {
             return content.lineSequence().joinToString("\n") { line ->
@@ -721,16 +772,21 @@ class WorkspaceManager @Inject constructor(
         return (if (base.isEmpty()) "" else "$base\n") + "type: $typeValue\n"
     }
 
-    /** Read the raw `.jcode/<name>.yaml` for a folder (Local file or SAF tree), or null if absent. */
+    /** Read the raw `.qcode/<name>.yaml` for a folder (Local file or SAF tree), or null if absent. */
     private fun readFolderConfig(path: FsPath): String? = when (path) {
-        is FsPath.Local -> File(path.file, ".jcode/${path.file.name}.yaml")
-            .takeIf { it.isFile }
-            ?.let { runCatching { it.readText() }.getOrNull() }
+        is FsPath.Local -> {
+            val configFile = File(path.file, ".qcode/${path.file.name}.yaml")
+                .takeIf { it.isFile }
+                ?: File(path.file, ".jcode/${path.file.name}.yaml").takeIf { it.isFile }
+            configFile?.let { runCatching { it.readText() }.getOrNull() }
+        }
 
         is FsPath.Saf -> {
             val tree = androidx.documentfile.provider.DocumentFile.fromTreeUri(context, path.uri)
             val folderName = tree?.name ?: "External Folder"
-            tree?.findFile(".jcode")?.findFile("$folderName.yaml")?.let { file ->
+            val configFile = tree?.findFile(".qcode")?.findFile("$folderName.yaml")
+                ?: tree?.findFile(".jcode")?.findFile("$folderName.yaml")
+            configFile?.let { file ->
                 runCatching {
                     context.contentResolver.openInputStream(file.uri)?.use { it.readBytes().toString(Charsets.UTF_8) }
                 }.getOrNull()

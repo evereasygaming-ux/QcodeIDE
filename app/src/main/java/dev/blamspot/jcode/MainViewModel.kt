@@ -1237,11 +1237,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private val explorerHiddenPatternsKey = stringPreferencesKey("explorer_hidden_root_patterns")
     val explorerHiddenPatterns: StateFlow<String> = uiPreferences.data
-        .map { prefs -> prefs[explorerHiddenPatternsKey] ?: SettingsDefaults.HIDDEN_ROOT_PATTERNS }
+        .map { prefs -> normalizeExplorerHiddenPatterns(prefs[explorerHiddenPatternsKey]) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SettingsDefaults.HIDDEN_ROOT_PATTERNS)
 
+    private fun normalizeExplorerHiddenPatterns(raw: String?): String {
+        val value = raw ?: return SettingsDefaults.HIDDEN_ROOT_PATTERNS
+        return if (value.trim() == ".jcode") SettingsDefaults.HIDDEN_ROOT_PATTERNS else value
+    }
+
     fun setExplorerHiddenPatterns(raw: String) {
-        viewModelScope.launch { uiPreferences.edit { it[explorerHiddenPatternsKey] = raw } }
+        viewModelScope.launch {
+            uiPreferences.edit { it[explorerHiddenPatternsKey] = normalizeExplorerHiddenPatterns(raw) }
+        }
     }
 
     private val trashEnabledKey = booleanPreferencesKey("trash_enabled")
@@ -4392,7 +4399,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun savePastedImage(uri: android.net.Uri): String? {
         val projectDir = (selectedProject.value?.fsPath as? FsPath.Local)?.file ?: return null
         return runCatching {
-            val dir = File(projectDir, ".jcode/pasted-images").apply { mkdirs() }
+            val dir = File(projectDir, ".qcode/pasted-images").apply { mkdirs() }
             val file = File(dir, "paste-${System.currentTimeMillis()}.png")
             appContext.contentResolver.openInputStream(uri)?.use { input ->
                 val bitmap = android.graphics.BitmapFactory.decodeStream(input) ?: return null

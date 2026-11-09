@@ -1325,7 +1325,7 @@ object SettingsFeature {
                 SettingsDropdownRow(
                     label = "Tab coloring",
                     supporting = "Color-code editor file tabs. Long-press a file tab to set its color by hand; " +
-                        "colors are remembered in the project's .jcode. A project can override this default.",
+                        "colors are remembered in the project's .qcode. A project can override this default.",
                     options = TabColoring.entries.map { it.name },
                     selected = tabColoringSetting.mode.name,
                     onSelect = { tabColoringSetting.onChange(TabColoring.valueOf(it)) },
@@ -1405,7 +1405,7 @@ object SettingsFeature {
                     value = hidePatterns,
                     onValueChange = { hidePatterns = it },
                     onCommit = { explorerHiddenSetting.onSetSpecifiedRaw(hidePatterns) },
-                    placeholder = ".jcode",
+                    placeholder = ".qcode",
                     singleLine = false,
                     minLines = 3,
                 )
@@ -1480,8 +1480,8 @@ object SettingsFeature {
             if (query.isBlank()) {
                 Text(
                     text = when (selectedScope) {
-                        ConfigScope.Workspace -> "These settings save to the workspace .jcode and apply across its projects unless a project override exists."
-                        ConfigScope.Project -> "These settings save to the project .jcode and only affect the selected local project."
+                        ConfigScope.Workspace -> "These settings save to the workspace .qcode and apply across its projects unless a project override exists."
+                        ConfigScope.Project -> "These settings save to the project .qcode and only affect the selected local project."
                     },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,

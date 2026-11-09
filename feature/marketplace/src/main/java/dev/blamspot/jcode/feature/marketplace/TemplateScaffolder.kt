@@ -83,7 +83,7 @@ class TemplateScaffolder internal constructor(
             return false
         }
 
-        val staging = "\$HOME/.jcode-staging/${request.projectName}"
+        val staging = "\$HOME/.qcode-staging/${request.projectName}"
         // Each declared input becomes `{{id}}`, taking the user's pick or the template default.
         val inputTokens = template.inputs.associate { input ->
             "{{${input.id}}}" to (request.inputs[input.id] ?: input.defaultValue)

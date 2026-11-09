@@ -63,7 +63,7 @@ fun RunConfigPage(
     ) {
         Text("Build & Run configuration", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.SemiBold)
         Text(
-            "Stored in this project's .jcode/run.yaml.",
+            "Stored in this project's .qcode/run.yaml.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )

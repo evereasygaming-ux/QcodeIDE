@@ -104,7 +104,7 @@ fn search_impl(
     let mut overrides = OverrideBuilder::new(root_path);
     // The ignore crate only skips .git via hidden-file filtering, so exclude it explicitly for the
     // include-hidden case; binary/artifact globs mirror the in-process engine's defaults.
-    for glob in ["!**/.git/**", "!.jcode/trash/**", "!*.class", "!*.jar", "!*.so", "!*.png", "!*.jpg", "!*.gif"] {
+    for glob in ["!**/.git/**", "!.qcode/trash/**", "!.jcode/trash/**", "!*.class", "!*.jar", "!*.so", "!*.png", "!*.jpg", "!*.gif"] {
         let _ = overrides.add(glob);
     }
     for glob in &includes {

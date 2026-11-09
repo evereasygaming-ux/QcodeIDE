@@ -193,7 +193,7 @@ class DebugController(
      *
      * A project's dependencies are almost never importable from the system interpreter: `/workspace`
      * is a noexec FUSE mount, so a venv cannot live beside the source and every run recipe stages to
-     * `$HOME/.jcode-run/<name>…` on ext4 and builds the venv *there* (see `ProjectRunner`). Debugging
+     * `$HOME/.qcode-run/<name>…` on ext4 and builds the venv *there* (see `ProjectRunner`). Debugging
      * against the bare system interpreter therefore ran the right file in the wrong environment and
      * died on the first third-party import — `ModuleNotFoundError: No module named 'flask'` on a
      * project whose Run worked seconds earlier.
@@ -211,9 +211,11 @@ class DebugController(
         val result = runCatching {
             distroService.exec(
                 // Both homes explicitly, as root: `exec` defaults to the `jcode` user but run
-                // terminals are root, so a venv a Run built sits in /root/.jcode-run — which is
+                // terminals are root, so a venv a Run built sits in /root/.qcode-run — which is
                 // mode 700 and unreadable as `jcode`. This only ever lists paths.
-                command = "ls -d /root/.jcode-run/$name*/.venv/lib/python*/site-packages " +
+                command = "ls -d /root/.qcode-run/$name*/.venv/lib/python*/site-packages " +
+                    "/root/.jcode-run/$name*/.venv/lib/python*/site-packages " +
+                    "/home/*/.qcode-run/$name*/.venv/lib/python*/site-packages " +
                     "/home/*/.jcode-run/$name*/.venv/lib/python*/site-packages 2>/dev/null | head -1",
                 workdir = distroProjectDir,
                 timeoutMs = 10_000L,
@@ -377,7 +379,7 @@ class DebugController(
         // breakpoints hit from ext4 and fail from /workspace. The PDB still records the original
         // /workspace source path, so breakpoints keep binding against the files the editor shows.
         // Same reasoning, and the same destination filesystem, as ProjectRunner's run staging.
-        val stageDir = "/root/.jcode-debug/" + csprojDir.name.replace(Regex("[^A-Za-z0-9._-]"), "_")
+        val stageDir = "/root/.qcode-debug/" + csprojDir.name.replace(Regex("[^A-Za-z0-9._-]"), "_")
         val outDir = builtDll.substringBeforeLast('/')
         val dll = stageDir + "/" + builtDll.substringAfterLast('/')
         val staged = distroService.exec(

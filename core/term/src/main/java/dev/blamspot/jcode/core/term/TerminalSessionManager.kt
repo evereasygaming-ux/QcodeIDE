@@ -391,7 +391,7 @@ class TerminalSessionManager(
 
         // ADB bridge: point guest tooling at whichever device is on offer. This duplicates the env
         // map below on purpose — BASH_ENV names only jcode-open.sh, so non-interactive run scripts
-        // (`bash .jcode/run-*.sh`) never source profile.d, while a shell the user starts by hand
+        // (`bash .qcode/run-*.sh`) never source profile.d, while a shell the user starts by hand
         // outside our env map only sees profile.d. Neither mechanism covers both cases alone.
         // Guarded write, marker-scoped delete.
         //
@@ -720,7 +720,7 @@ class TerminalSessionManager(
 
     /**
      * Spawn a temporary child tab for a relocated interactive sub-shell (OSC 7715). Clones [parentId]'s
-     * distro/binds/user/arch/workdir and runs the guest launcher /tmp/.jcode-nsh-<token>.sh, linking
+     * distro/binds/user/arch/workdir and runs the guest launcher /tmp/.qcode-nsh-<token>.sh, linking
      * child→parent so the host refocuses the parent on the child's exit. Returns null if the token is
      * malformed, the parent is unknown, or the session cap is reached (the guest wrapper then falls
      * back to running the sub-shell inline via its watchdog timeout).
@@ -734,12 +734,12 @@ class TerminalSessionManager(
             binds = spec.binds,
             workdir = spec.workdir,
             user = spec.user,
-            shellCommand = "/bin/sh /tmp/.jcode-nsh-$token.sh",
+            shellCommand = "/bin/sh /tmp/.qcode-nsh-$token.sh",
             rootfsArch = spec.rootfsArch,
             label = label.ifBlank { "shell" }.take(24),
         ) ?: return null
         child.relocationParentId = parentId
-        child.relocationFifoHost = File(rootfsManager.getRootfsPath(spec.distroId), "tmp/.jcode-nsh-$token.fifo")
+        child.relocationFifoHost = File(rootfsManager.getRootfsPath(spec.distroId), "tmp/.qcode-nsh-$token.fifo")
         relocationParents[child.id] = parentId
         return child
     }
@@ -1003,9 +1003,9 @@ done
 tok=${'$'}(tr -dc 'a-f0-9' < /proc/sys/kernel/random/uuid 2>/dev/null)
 [ -n "${'$'}tok" ] || tok="${'$'}${'$'}_${'$'}(date +%s 2>/dev/null)"
 d=${'$'}{TMPDIR:-/tmp}
-fifo="${'$'}d/.jcode-nsh-${'$'}tok.fifo"
-launcher="${'$'}d/.jcode-nsh-${'$'}tok.sh"
-abort="${'$'}d/.jcode-nsh-${'$'}tok.abort"
+fifo="${'$'}d/.qcode-nsh-${'$'}tok.fifo"
+launcher="${'$'}d/.qcode-nsh-${'$'}tok.sh"
+abort="${'$'}d/.qcode-nsh-${'$'}tok.abort"
 label=${'$'}self
 cwd=${'$'}(pwd)
 trap 'rm -f "${'$'}fifo" "${'$'}launcher" "${'$'}abort" 2>/dev/null' EXIT

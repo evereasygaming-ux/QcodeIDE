@@ -31,7 +31,7 @@ data class BuildConfig(
     val command: String,
 )
 
-/** Every build/run config for a project, persisted at `/{project}/.jcode/run.yaml`. */
+/** Every build/run config for a project, persisted at `/{project}/.qcode/run.yaml`. */
 data class ProjectConfigs(
     val runs: List<RunConfig>,
     val builds: List<BuildConfig>,
@@ -41,16 +41,18 @@ data class ProjectConfigs(
     }
 }
 
-/** Reads/writes the per-project build/run configs at `.jcode/run.yaml`. */
+/** Reads/writes the per-project build/run configs at `.qcode/run.yaml`. */
 object RunConfigStore {
-    private const val REL_PATH = ".jcode/run.yaml"
+    private const val REL_PATH = ".qcode/run.yaml"
+    private const val LEGACY_REL_PATH = ".jcode/run.yaml"
 
     fun configFile(projectDir: File): File = File(projectDir, REL_PATH)
 
-    fun exists(projectDir: File): Boolean = configFile(projectDir).isFile
+    fun exists(projectDir: File): Boolean =
+        configFile(projectDir).isFile || File(projectDir, LEGACY_REL_PATH).isFile
 
     fun load(projectDir: File): ProjectConfigs? {
-        val file = configFile(projectDir)
+        val file = configFile(projectDir).takeIf { it.isFile } ?: File(projectDir, LEGACY_REL_PATH)
         if (!file.isFile) return null
         return runCatching {
             val map = Load(LoadSettings.builder().build()).loadFromReader(file.reader()) as? Map<*, *> ?: return null
@@ -89,7 +91,7 @@ object RunConfigStore {
     }
 
     fun save(projectDir: File, configs: ProjectConfigs) {
-        val dir = File(projectDir, ".jcode").apply { if (!exists()) mkdirs() }
+        val dir = File(projectDir, ".qcode").apply { if (!exists()) mkdirs() }
         val document = linkedMapOf<String, Any?>(
             "version" to 2,
             "runs" to configs.runs.map { r ->

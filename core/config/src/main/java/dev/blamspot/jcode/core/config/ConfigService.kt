@@ -24,13 +24,16 @@ import org.snakeyaml.engine.v2.api.Load
 import org.snakeyaml.engine.v2.api.LoadSettings
 import org.snakeyaml.engine.v2.common.FlowStyle
 
-const val WORKSPACE_CONFIG_FILE_NAME = ".jcode-workspace.yaml"
+const val WORKSPACE_CONFIG_FILE_NAME = ".qcode-workspace.yaml"
+private const val LEGACY_WORKSPACE_CONFIG_FILE_NAME = ".jcode-workspace.yaml"
 
 /**
  * Returns the relative path to the project config file for a given folder name.
- * Format: `.jcode/{folder_name}.yaml`
+ * Format: `.qcode/{folder_name}.yaml`
  */
-fun projectConfigRelativePath(folderName: String): String = ".jcode/$folderName.yaml"
+fun projectConfigRelativePath(folderName: String): String = ".qcode/$folderName.yaml"
+
+private fun legacyProjectConfigRelativePath(folderName: String): String = ".jcode/$folderName.yaml"
 
 /**
  * YAML-backed config service with live file watching for workspace and project config files.
@@ -78,13 +81,13 @@ class ConfigService {
     val projectError: StateFlow<String?> = _projectError.asStateFlow()
 
     // App-level (Global settings) editor font-size default, pushed in from the DataStore-backed
-    // setting. It is the base of the font-size merge (below workspace/project .jcode), so a Global
+    // setting. It is the base of the font-size merge (below workspace/project .qcode), so a Global
     // change re-publishes the effective config and live-updates open editors with no scope override.
     private var globalEditorFontSize: Float = 14f
 
     // Same idea for word wrap. Bottoming the merge out at a literal `false` instead was what made
     // [EffectiveEditorConfig.wordWrap] unreadable — a caller who used it would have overridden the
-    // Global toggle with `false` for everyone without a .jcode key, so open editors were fed the
+    // Global toggle with `false` for everyone without a .qcode key, so open editors were fed the
     // Global setting *around* the config and a `wordWrap` override at any scope did nothing.
     private var globalEditorWordWrap: Boolean = false
 
@@ -113,14 +116,50 @@ class ConfigService {
         workspaceWatcher?.cancel()
         projectWatcher?.cancel()
 
-        workspaceConfigFile = workspaceRoot?.let { File(it, WORKSPACE_CONFIG_FILE_NAME) }
-        projectConfigFile = projectRoot?.let { File(it, projectConfigRelativePath(it.name)) }
+        withContext(Dispatchers.IO) {
+            listOfNotNull(workspaceRoot, projectRoot)
+                .distinctBy { it.absolutePath }
+                .forEach { migrateLegacyConfigFiles(it) }
+        }
+
+        workspaceConfigFile = workspaceRoot?.let {
+            resolveConfigFile(it, WORKSPACE_CONFIG_FILE_NAME, LEGACY_WORKSPACE_CONFIG_FILE_NAME)
+        }
+        projectConfigFile = projectRoot?.let {
+            resolveConfigFile(it, projectConfigRelativePath(it.name), legacyProjectConfigRelativePath(it.name))
+        }
 
         reloadWorkspaceConfig()
         reloadProjectConfig()
 
         workspaceWatcher = watchFile(workspaceConfigFile) { reloadWorkspaceConfig() }
         projectWatcher = watchFile(projectConfigFile) { reloadProjectConfig() }
+    }
+
+    private fun resolveConfigFile(root: File, preferredPath: String, legacyPath: String): File {
+        val preferred = File(root, preferredPath)
+        val legacy = File(root, legacyPath)
+        return if (!preferred.exists() && legacy.exists()) legacy else preferred
+    }
+
+    private fun migrateLegacyConfigFiles(root: File) {
+        val legacyDir = File(root, ".jcode")
+        val currentDir = File(root, ".qcode")
+        if (legacyDir.isDirectory) {
+            val migrated = if (!currentDir.exists() && legacyDir.renameTo(currentDir)) {
+                true
+            } else {
+                legacyDir.copyRecursively(currentDir, overwrite = false) { _, _ ->
+                    kotlin.io.OnErrorAction.SKIP
+                }
+            }
+            if (migrated && currentDir.exists()) legacyDir.deleteRecursively()
+        }
+        val legacyWorkspace = File(root, LEGACY_WORKSPACE_CONFIG_FILE_NAME)
+        if (legacyWorkspace.isFile) {
+            val currentWorkspace = File(root, WORKSPACE_CONFIG_FILE_NAME)
+            if (!currentWorkspace.exists()) legacyWorkspace.renameTo(currentWorkspace)
+        }
     }
 
     suspend fun ensureConfigFile(scope: ConfigScope): File? {
@@ -138,7 +177,7 @@ class ConfigService {
                         val seed = LinkedHashMap<String, Any?>()
                         seed.putAll(projectDocument)
                         if (!seed.containsKey("name")) {
-                            // Derive folder name from the config file path: .jcode/{folder_name}.yaml
+                            // Derive folder name from the config file path: .qcode/{folder_name}.yaml
                             val folderName = file.nameWithoutExtension
                             seed["name"] = folderName
                         }
@@ -493,7 +532,7 @@ class ConfigService {
                 ?: globalEditorWordWrap,
             formatOnSave = prjEditor?.formatOnSave ?: wsEditor?.formatOnSave ?: defaults.editor.formatOnSave ?: false,
             ligatures = prjEditor?.ligatures ?: wsEditor?.ligatures ?: defaults.editor.ligatures ?: true,
-            // null here = no .jcode override at any scope; the app-level default is applied downstream.
+            // null here = no .qcode override at any scope; the app-level default is applied downstream.
             tabColoring = prjEditor?.tabColoring ?: wsEditor?.tabColoring,
         )
 

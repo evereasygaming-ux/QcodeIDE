@@ -274,7 +274,7 @@ class SearchEngine {
 
         // Default excludes
         val defaultExcludes = listOf(
-            ".git/", ".jcode/trash/", "node_modules/", "build/", ".gradle/",
+            ".git/", ".qcode/trash/", ".jcode/trash/", "node_modules/", "build/", ".gradle/",
             ".idea/", "*.class", "*.jar", "*.so", "*.png", "*.jpg", "*.gif",
         )
         for (pattern in defaultExcludes) {
