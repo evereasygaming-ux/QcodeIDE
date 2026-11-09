@@ -1,6 +1,7 @@
 package dev.blamspot.jcode.feature.agent
 
 import dev.blamspot.jcode.core.agent.AgentBackend
+import dev.blamspot.jcode.core.agent.AgentChatStore
 import dev.blamspot.jcode.core.agent.AgentEvent
 import dev.blamspot.jcode.core.agent.AgentKind
 import dev.blamspot.jcode.core.agent.AgentMessage
@@ -10,7 +11,6 @@ import dev.blamspot.jcode.core.agent.AgentRole
 import dev.blamspot.jcode.core.agent.AgentSavedChat
 import dev.blamspot.jcode.core.agent.AgentToolCall
 import dev.blamspot.jcode.core.agent.AgentToolStatus
-import dev.blamspot.jcode.core.agent.AgentChatStore
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -24,6 +24,7 @@ import java.util.UUID
 /** Everything the Agent pane renders. Immutable so recomposition is driven by one value. */
 data class AgentUiState(
     val kind: AgentKind = AgentKind.CLAUDE,
+    val providers: List<AgentKind> = emptyList(),
     val models: List<AgentModel> = emptyList(),
     val model: String = "default",
     val messages: List<AgentMessage> = emptyList(),
@@ -36,29 +37,48 @@ data class AgentUiState(
 )
 
 /**
- * Drives one chat over an [AgentBackend]. Owns the message list, the in-flight turn, the approval
- * request currently waiting on the user, and the running token counts.
+ * Drives one chat per provider. Owns the message list, the in-flight turn, the approval request
+ * currently waiting on the user, and the running token counts. Switching provider saves the current
+ * feed and loads the other provider's saved chat.
  */
 class AgentController(
-    private val backend: AgentBackend,
+    private val backends: Map<AgentKind, AgentBackend>,
     private val scope: CoroutineScope,
-    private val store: AgentChatStore? = null,
+    private val stores: Map<AgentKind, AgentChatStore> = emptyMap(),
+    initialKind: AgentKind = backends.keys.firstOrNull() ?: AgentKind.CLAUDE,
 ) {
-    private val saved = store?.load()
-    private val _state = MutableStateFlow(
-        AgentUiState(
-            kind = backend.kind,
+    init {
+        require(backends.isNotEmpty()) { "AgentController needs at least one backend" }
+    }
+
+    private val _state = MutableStateFlow(loadState(if (backends.containsKey(initialKind)) initialKind else backends.keys.first()))
+    val state: StateFlow<AgentUiState> = _state.asStateFlow()
+
+    private var turn: Job? = null
+
+    private fun backend(): AgentBackend = backends.getValue(_state.value.kind)
+
+    private fun loadState(kind: AgentKind): AgentUiState {
+        val backend = backends.getValue(kind)
+        val saved = stores[kind]?.load()
+        return AgentUiState(
+            kind = kind,
+            providers = backends.keys.toList(),
             models = backend.availableModels(),
             model = saved?.model ?: "default",
             messages = saved?.messages.orEmpty().map {
                 if (it.isStreaming) it.copy(isStreaming = false) else it
             },
             sessionId = saved?.sessionId,
-        ),
-    )
-    val state: StateFlow<AgentUiState> = _state.asStateFlow()
+        )
+    }
 
-    private var turn: Job? = null
+    fun selectKind(kind: AgentKind) {
+        if (kind == _state.value.kind || !backends.containsKey(kind)) return
+        stop()
+        persist()
+        _state.value = loadState(kind)
+    }
 
     fun selectModel(id: String) {
         _state.update { it.copy(model = id) }
@@ -88,26 +108,34 @@ class AgentController(
             model = _state.value.model,
             resumeSessionId = _state.value.sessionId,
         )
+        val turnKind = _state.value.kind
+        val turnBackend = backend()
         turn = scope.launch {
             try {
-                backend.stream(request).collect { event -> handle(event, assistantId) }
+                turnBackend.stream(request).collect { event ->
+                    if (_state.value.kind == turnKind) handle(event, assistantId)
+                }
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (failure: Throwable) {
-                _state.update {
-                    it.copy(error = failure.message ?: "Agent turn failed", isStreaming = false)
+                if (_state.value.kind == turnKind) {
+                    _state.update {
+                        it.copy(error = failure.message ?: "Agent turn failed", isStreaming = false)
+                    }
                 }
             } finally {
-                finishStreaming(assistantId)
-                _state.update { it.copy(isStreaming = false) }
-                persist()
+                if (_state.value.kind == turnKind) {
+                    finishStreaming(assistantId)
+                    _state.update { it.copy(isStreaming = false) }
+                    persist()
+                }
             }
         }
     }
 
-    /** Stop the running turn. The conversation stays; the next send resumes the CLI session. */
+    /** Stop the running turn. The conversation stays; the next send resumes the session. */
     fun stop() {
-        backend.cancel()
+        backend().cancel()
         turn?.cancel()
         turn = null
         _state.value.messages.filter { it.isStreaming }.forEach { finishStreaming(it.id) }
@@ -118,7 +146,7 @@ class AgentController(
     /** Answer the pending tool-permission prompt. */
     fun approvePending(allow: Boolean) {
         val pending = _state.value.pendingApproval ?: return
-        backend.resolvePermission(pending.requestId, allow)
+        backend().resolvePermission(pending.requestId, allow)
         updateTool(pending.call.id) {
             it.copy(status = if (allow) AgentToolStatus.APPROVED else AgentToolStatus.DENIED)
         }
@@ -126,7 +154,7 @@ class AgentController(
         persist()
     }
 
-    /** Start over: drop the feed and the CLI session so the next prompt begins a fresh chat. */
+    /** Start over: drop the feed and the session so the next prompt begins a fresh chat. */
     fun clearChat() {
         stop()
         _state.update {
@@ -138,13 +166,13 @@ class AgentController(
                 outputTokens = 0,
             )
         }
-        store?.clear()
+        stores[_state.value.kind]?.clear()
     }
 
     fun close() {
         stop()
         persistNow()
-        backend.close()
+        backends.values.forEach { runCatching { it.close() } }
     }
 
     private fun handle(event: AgentEvent, assistantId: String) {
@@ -240,7 +268,7 @@ class AgentController(
     }
 
     private fun persist() {
-        val store = store ?: return
+        val store = stores[_state.value.kind] ?: return
         // Small JSON file, written only at turn boundaries / model changes — synchronous keeps the
         // ordering obvious and avoids a queued write resurrecting a chat that was just cleared.
         store.save(snapshot())

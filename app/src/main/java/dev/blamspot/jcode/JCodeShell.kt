@@ -5027,7 +5027,7 @@ private fun WorkbenchRightSidebar(
     val agentScope = rememberCoroutineScope()
     val agentContext = LocalContext.current.applicationContext
     val agentController = remember(agentContext, distroService) {
-        AgentRuntime.createClaudeController(agentContext, distroService, agentScope)
+        AgentRuntime.createController(agentContext, distroService, agentScope)
     }
     DisposableEffect(agentController) {
         onDispose { agentController.close() }

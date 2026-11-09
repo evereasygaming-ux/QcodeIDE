@@ -24,6 +24,7 @@ android {
 
 dependencies {
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.okhttp)
     implementation(libs.coroutines.android)
     implementation(libs.coroutines.core)
     testImplementation(kotlin("test"))

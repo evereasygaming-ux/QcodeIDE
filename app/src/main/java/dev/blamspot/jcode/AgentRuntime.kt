@@ -2,6 +2,7 @@ package dev.blamspot.jcode
 
 import android.content.Context
 import dev.blamspot.jcode.core.agent.AgentChatStore
+import dev.blamspot.jcode.core.agent.AgentKind
 import dev.blamspot.jcode.core.agent.AgentProcessLauncher
 import dev.blamspot.jcode.core.agent.ClaudeAgentBackend
 import dev.blamspot.jcode.core.distro.DistroService
@@ -18,7 +19,7 @@ import java.io.File
  */
 object AgentRuntime {
 
-    fun createClaudeController(
+    fun createController(
         context: Context,
         distroService: DistroService,
         scope: CoroutineScope,
@@ -48,10 +49,18 @@ object AgentRuntime {
                 )
             }
         }
+        val storeDir = File(context.filesDir, "agent")
+        val agyBackend = AgyAgentBackend(AgyBridgeRuntime(context, distroService, scope))
         return AgentController(
-            backend = ClaudeAgentBackend(launcher),
+            backends = linkedMapOf(
+                AgentKind.CLAUDE to ClaudeAgentBackend(launcher),
+                AgentKind.AGY to agyBackend,
+            ),
             scope = scope,
-            store = AgentChatStore(File(context.filesDir, "agent/chat.json")),
+            stores = mapOf(
+                AgentKind.CLAUDE to AgentChatStore(File(storeDir, "chat.json")),
+                AgentKind.AGY to AgentChatStore(File(storeDir, "chat-agy.json")),
+            ),
         )
     }
 }

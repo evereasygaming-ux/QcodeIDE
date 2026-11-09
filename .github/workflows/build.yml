@@ -35,8 +35,8 @@ jobs:
           sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/share/boost || true
           df -h /
 
-      # Builds the vendored agy_ide_bridge (agent/bridge, module gemini-server). Its go.mod
-      # requires a recent toolchain; `stable` satisfies it and lets setup-go cache modules.
+      # Builds the vendored agy_ide_bridge (agent/bridge, module gemini-server) as a static
+      # Linux/arm64 binary. Its go.mod requires a recent toolchain; `stable` satisfies it.
       - uses: actions/setup-go@v5
         with:
           go-version: 'stable'

@@ -40,6 +40,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import dev.blamspot.jcode.core.agent.AgentEvent
+import dev.blamspot.jcode.core.agent.AgentKind
 import dev.blamspot.jcode.core.agent.AgentMessage
 import dev.blamspot.jcode.core.agent.AgentModel
 import dev.blamspot.jcode.core.agent.AgentRole
@@ -56,6 +57,7 @@ fun AgentPane(controller: AgentController, modifier: Modifier = Modifier) {
         onStop = controller::stop,
         onApprove = controller::approvePending,
         onSelectModel = controller::selectModel,
+        onSelectKind = controller::selectKind,
         onNewChat = controller::clearChat,
         modifier = modifier,
     )
@@ -68,6 +70,7 @@ fun AgentPane(
     onStop: () -> Unit,
     onApprove: (Boolean) -> Unit,
     onSelectModel: (String) -> Unit,
+    onSelectKind: (AgentKind) -> Unit,
     onNewChat: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -77,7 +80,12 @@ fun AgentPane(
     }
 
     Column(modifier.fillMaxSize()) {
-        AgentHeader(state = state, onSelectModel = onSelectModel, onNewChat = onNewChat)
+        AgentHeader(
+            state = state,
+            onSelectKind = onSelectKind,
+            onSelectModel = onSelectModel,
+            onNewChat = onNewChat,
+        )
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
 
         LazyColumn(
@@ -120,6 +128,7 @@ fun AgentPane(
 @Composable
 private fun AgentHeader(
     state: AgentUiState,
+    onSelectKind: (AgentKind) -> Unit,
     onSelectModel: (String) -> Unit,
     onNewChat: () -> Unit,
 ) {
@@ -133,11 +142,7 @@ private fun AgentHeader(
             fontWeight = FontWeight.SemiBold,
         )
         Spacer(Modifier.width(8.dp))
-        Text(
-            text = state.kind.label,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        ProviderPicker(state.providers, state.kind, onSelectKind)
         Spacer(Modifier.weight(1f))
         if (state.inputTokens > 0 || state.outputTokens > 0) {
             Text(
@@ -151,6 +156,40 @@ private fun AgentHeader(
             TextButton(onClick = onNewChat) { Text("New") }
         }
         ModelPicker(state.models, state.model, onSelectModel)
+    }
+}
+
+
+@Composable
+private fun ProviderPicker(
+    providers: List<AgentKind>,
+    selected: AgentKind,
+    onSelect: (AgentKind) -> Unit,
+) {
+    if (providers.size <= 1) {
+        Text(
+            text = selected.label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        return
+    }
+    var expanded by remember { mutableStateOf(false) }
+    Box {
+        TextButton(onClick = { expanded = true }) {
+            Text(selected.label, style = MaterialTheme.typography.labelSmall)
+        }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            providers.forEach { provider ->
+                DropdownMenuItem(
+                    text = { Text(provider.label) },
+                    onClick = {
+                        onSelect(provider)
+                        expanded = false
+                    },
+                )
+            }
+        }
     }
 }
 

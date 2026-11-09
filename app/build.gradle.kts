@@ -89,9 +89,10 @@ val jcodeApplicationId: String =
         ?: "dev.qcode.ide"
 
 // The Agy HTTP/WebSocket bridge is a Go program vendored at agent/bridge (GPL-3.0, see that
-// directory's upstream). It is cross-compiled for Android/arm64 and shipped as an asset, then
-// extracted into the guest rootfs at runtime — /storage is mounted noexec, so it cannot run
-// from there. `go` must be on PATH (CI installs it with actions/setup-go).
+// directory's upstream). It is cross-compiled as a static Linux/arm64 binary and shipped as an
+// asset, then extracted into the guest rootfs at runtime — /storage is mounted noexec, so it
+// cannot run from there, and the guest has no Android linker for a GOOS=android build. `go` must
+// be on PATH (CI installs it with actions/setup-go).
 val agyBridgeOutDir = layout.buildDirectory.dir("generated/agyBridge")
 
 val buildAgyBridge = tasks.register<Exec>("buildAgyBridge") {
@@ -99,10 +100,9 @@ val buildAgyBridge = tasks.register<Exec>("buildAgyBridge") {
     val outputFile = agyBridgeOutDir.get().file("agent/agy_ide_bridge").asFile
 
     workingDir = bridgeSourceDir.asFile
-    environment("GOOS", "android")
+    environment("GOOS", "linux")
     environment("GOARCH", "arm64")
     environment("CGO_ENABLED", "0")
-    environment("GOFLAGS", "-trimpath")
     commandLine(
         "go", "build", "-trimpath", "-ldflags=-s -w",
         "-o", outputFile.absolutePath,
