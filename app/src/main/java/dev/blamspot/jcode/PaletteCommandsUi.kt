@@ -62,7 +62,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.compose.foundation.gestures.detectTapGestures
-import dev.blamspot.jcode.design.JCodeIcon
+import dev.blamspot.jcode.design.QCodeIcon
 import dev.blamspot.jcode.design.jcIcon
 import kotlin.math.roundToInt
 
@@ -289,7 +289,7 @@ internal fun ColorSampleDialog(
                         }
                         IconButton(onClick = { clipboard.setText(AnnotatedString(value)) }) {
                             Icon(
-                                painter = jcIcon(JCodeIcon.Copy),
+                                painter = jcIcon(QCodeIcon.Copy),
                                 contentDescription = "Copy $label",
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             )

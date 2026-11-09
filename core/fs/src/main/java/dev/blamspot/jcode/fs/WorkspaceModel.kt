@@ -9,8 +9,8 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.Relation
 
-const val DEFAULT_SHARED_WORKSPACE_ROOT: String = "/storage/emulated/0/JCode/workspaces/default"
-const val DEFAULT_SHARED_PROJECTS_ROOT: String = "/storage/emulated/0/JCode/projects"
+const val DEFAULT_SHARED_WORKSPACE_ROOT: String = "/storage/emulated/0/QCode/workspaces/default"
+const val DEFAULT_SHARED_PROJECTS_ROOT: String = "/storage/emulated/0/QCode/projects"
 
 enum class ProjectKind {
     Local,

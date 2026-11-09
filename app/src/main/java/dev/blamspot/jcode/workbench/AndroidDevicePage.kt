@@ -149,7 +149,7 @@ internal fun AndroidDevicePage(
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
 
         Text(
-            text = "Pair JCode with this phone's own adb. Once connected, adb, ./gradlew installDebug " +
+            text = "Pair QCode with this phone's own adb. Once connected, adb, ./gradlew installDebug " +
                 "and flutter run inside the runtime install and launch straight onto this device — no " +
                 "computer, no cable.",
             style = MaterialTheme.typography.bodyMedium,
@@ -196,10 +196,10 @@ internal fun AndroidDevicePage(
 
         ManagerSectionCard(
             title = "3. Pair",
-            description = "Put JCode and Settings side by side in split-screen FIRST, then tap \"Pair " +
+            description = "Put QCode and Settings side by side in split-screen FIRST, then tap \"Pair " +
                 "device with pairing code\" in Wireless debugging. Android stops listening for the " +
                 "pairing the instant that dialog leaves the foreground, so simply switching back to " +
-                "JCode to type the code cancels it — the code will always be reported as wrong. The " +
+                "QCode to type the code cancels it — the code will always be reported as wrong. The " +
                 "port fills itself in while the dialog is up; the code is used once and never stored.",
         ) {
             SettingsTextFieldRow(

@@ -21,7 +21,7 @@ import org.snakeyaml.engine.v2.api.LoadSettings
  *
  * Extensions are installed ONLY from a compiled `.jext` package (a zip; see the JEXT spec). The
  * marketplace index lists each extension's `.jext` path + fingerprint; install downloads it, verifies
- * the package fingerprint (`.jext-manifest.json`) and the `minJCodeVersion` from `extension.jehm`,
+ * the package fingerprint (`.jext-manifest.json`) and the `minQCodeVersion` from `extension.jehm`,
  * then unpacks it under `filesDir/extensions/<uniqueName>/`. The app reads each extension's
  * `extension.yaml` from there.
  */
@@ -53,9 +53,9 @@ class ExtensionInstaller internal constructor(context: Context) {
                     version = entry.str("version"),
                     jext = jext,
                     fingerprint = fingerprint,
-                    minJCodeVersion = entry.str("minJCodeVersion"),
-                    targetJCodeVersion = entry.str("targetJCodeVersion"),
-                    maxJCodeVersion = entry.str("maxJCodeVersion"),
+                    minQCodeVersion = entry.str("minQCodeVersion"),
+                    targetQCodeVersion = entry.str("targetQCodeVersion"),
+                    maxQCodeVersion = entry.str("maxQCodeVersion"),
                     iconUrl = iconUrl,
                     description = entry.str("shortDescription") ?: entry.str("description"),
                     longDescription = entry.str("longDescription"),
@@ -64,7 +64,7 @@ class ExtensionInstaller internal constructor(context: Context) {
                     suggests = parseDeps(entry["suggests"]),
                 )
             }
-            MarketplaceIndex(map.str("name") ?: "JCode Marketplace", map.str("version"), entries)
+            MarketplaceIndex(map.str("name") ?: "QCode Marketplace", map.str("version"), entries)
         }
     }
 
@@ -73,7 +73,7 @@ class ExtensionInstaller internal constructor(context: Context) {
         withContext(Dispatchers.IO) {
             runCatching {
                 val jextPath = entry.jext ?: error("${entry.name} has no .jext package")
-                requireCompatible(entry.minJCodeVersion, entry.maxJCodeVersion, appVersion, entry.name)
+                requireCompatible(entry.minQCodeVersion, entry.maxQCodeVersion, appVersion, entry.name)
                 val bytes = openStream(BASE_URL + jextPath).use { it.readBytes() }
                 installFromJextBytes(bytes, expectedFingerprint = entry.fingerprint, appVersion = appVersion)
             }
@@ -156,7 +156,7 @@ class ExtensionInstaller internal constructor(context: Context) {
             }
         }
 
-    /** Outcome of a `.vsix` install: what landed, and what JCode could not honour in it. */
+    /** Outcome of a `.vsix` install: what landed, and what QCode could not honour in it. */
     data class VsixInstallResult(
         val extension: InstalledExtension,
         val manifest: VsixManifest,
@@ -248,7 +248,7 @@ class ExtensionInstaller internal constructor(context: Context) {
             ?: error("not a .jext package (missing $JEXT_MANIFEST)")
         verifyManifest(JSONObject(manifestText), files, expectedFingerprint)
 
-        // The header (install id + minJCodeVersion) now lives in extension.yaml; fall back to a legacy
+        // The header (install id + minQCodeVersion) now lives in extension.yaml; fall back to a legacy
         // extension.jehm for packages built before the header merge.
         val yamlMap = files["extension.yaml"]?.toString(Charsets.UTF_8)
             ?.let { runCatching { parseYamlMapping(it) }.getOrNull() }
@@ -257,8 +257,8 @@ class ExtensionInstaller internal constructor(context: Context) {
         val uniqueName = yamlMap?.str("id") ?: yamlMap?.str("uniqueName") ?: jehmMap?.str("uniqueName")
             ?: error("package has no extension.yaml id (nor a legacy extension.jehm uniqueName)")
         requireCompatible(
-            yamlMap?.str("minJCodeVersion") ?: jehmMap?.str("minJCodeVersion"),
-            yamlMap?.str("maxJCodeVersion") ?: jehmMap?.str("maxJCodeVersion"),
+            yamlMap?.str("minQCodeVersion") ?: jehmMap?.str("minQCodeVersion"),
+            yamlMap?.str("maxQCodeVersion") ?: jehmMap?.str("maxQCodeVersion"),
             appVersion,
             yamlMap?.str("name") ?: jehmMap?.str("name") ?: uniqueName,
         )
@@ -338,7 +338,7 @@ class ExtensionInstaller internal constructor(context: Context) {
 
     // --- parsing -----------------------------------------------------------------------------
 
-    /** How many of a preset's matched files reach a script as JCODE_FILE<n>/JCODE_DIR<n>. Presets
+    /** How many of a preset's matched files reach a script as QCODE_FILE<n>/QCODE_DIR<n>. Presets
      *  address at most a handful; an unmatched slot simply arrives empty. */
     private val PRESET_MATCH_SLOTS = 3
 
@@ -654,9 +654,9 @@ class ExtensionInstaller internal constructor(context: Context) {
         if (!resolved.startsWith("sh ")) return resolved
         // The numbered forms too: a preset matching several files addresses them as {{file1}}/{{dir2}}.
         val numbered = (1..PRESET_MATCH_SLOTS).joinToString(" ") { n ->
-            "JCODE_FILE$n='{{file$n}}' JCODE_DIR$n='{{dir$n}}'"
+            "QCODE_FILE$n='{{file$n}}' QCODE_DIR$n='{{dir$n}}'"
         }
-        return "JCODE_PROJECT_DIR='{{projectDir}}' JCODE_FILE='{{file}}' JCODE_DIR='{{dir}}' " +
+        return "QCODE_PROJECT_DIR='{{projectDir}}' QCODE_FILE='{{file}}' QCODE_DIR='{{dir}}' " +
             numbered + " " + resolved
     }
 
@@ -818,7 +818,7 @@ class ExtensionInstaller internal constructor(context: Context) {
             connectTimeout = 15_000
             readTimeout = 30_000
             instanceFollowRedirects = true
-            setRequestProperty("User-Agent", "JCode")
+            setRequestProperty("User-Agent", "QCODE IDE")
         }
         if (conn.responseCode !in 200..299) {
             val code = conn.responseCode

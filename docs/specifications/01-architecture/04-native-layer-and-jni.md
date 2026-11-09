@@ -21,8 +21,8 @@ modules — and is not discoverable from any single module's `build.gradle.kts`.
 
 ### 2.1 One superbuild, many modules
 
-There is a single `native/CMakeLists.txt`. It is a superbuild keyed on `-DJCODE_NATIVE_MODULE=<id>`
-and it `FATAL_ERROR`s if that variable, `JCODE_JNI_OUTPUT_DIR`, or `JCODE_VARIANT_DIR` is missing.
+There is a single `native/CMakeLists.txt`. It is a superbuild keyed on `-DQCODE_NATIVE_MODULE=<id>`
+and it `FATAL_ERROR`s if that variable, `QCODE_JNI_OUTPUT_DIR`, or `QCODE_VARIANT_DIR` is missing.
 
 The wiring is **injected centrally** by the root `build.gradle.kts` `subprojects { }` block, not by
 each module. A `nativeModuleIds` map associates eight module paths with their superbuild id:
@@ -44,7 +44,7 @@ private val nativeModuleIds = mapOf(
 For each match the root script sets `compileSdk = 36`, `minSdk = 33`, `ndkVersion = 27.2.12479018`,
 ABI filters (`arm64-v8a` alone, on every variant), points
 `externalNativeBuild.cmake.path` at `native/CMakeLists.txt`, and passes
-`-DANDROID_STL=c++_static -DJCODE_NATIVE_MODULE=… -DJCODE_JNI_OUTPUT_DIR=… -DJCODE_VARIANT_DIR=…`.
+`-DANDROID_STL=c++_static -DQCODE_NATIVE_MODULE=… -DQCODE_JNI_OUTPUT_DIR=… -DQCODE_VARIANT_DIR=…`.
 
 **`:native:core` is the exception** — it is absent from that map and carries its own complete
 `externalNativeBuild` block in `native/core/build.gradle.kts`. `:native:grammars` and
@@ -57,7 +57,7 @@ ABI filters (`arm64-v8a` alone, on every variant), points
 function(jcode_configure_target target output_name)
     target_compile_options(${target} PRIVATE -fvisibility=hidden)
     target_link_options(${target} PRIVATE "-Wl,-z,max-page-size=16384")
-    if(JCODE_VARIANT_DIR STREQUAL "release")
+    if(QCODE_VARIANT_DIR STREQUAL "release")
         target_link_options(${target} PRIVATE "-Wl,-s")
     endif()
     …
@@ -69,13 +69,13 @@ endfunction()
 - `-Wl,-s` on release — strip.
 - Language level: C11 and C++17, `CMAKE_POSITION_INDEPENDENT_CODE ON`, `BUILD_SHARED_LIBS OFF`
   (so fetched dependencies build static and get linked in).
-- Output goes to `${JCODE_JNI_OUTPUT_DIR}/${JCODE_VARIANT_DIR}/${ANDROID_ABI}`.
+- Output goes to `${QCODE_JNI_OUTPUT_DIR}/${QCODE_VARIANT_DIR}/${ANDROID_ABI}`.
 
 ### 2.3 Stub targets
 
 `jcode_add_stub_library(target output_name)` builds a `.so` from
 `native/common/jcode_native_stub.c` (13 lines) whose only export is
-`jcode_native_module_name()` returning the `JCODE_STUB_MODULE` compile define.
+`jcode_native_module_name()` returning the `QCODE_STUB_MODULE` compile define.
 
 Two different things use it, and conflating them is the main trap in this file:
 
@@ -219,7 +219,7 @@ the JVM.
 3. Never register both the Cargo output and the CMake stub directory for the same variant.
 4. `libproot*.so` must not be stripped and must stay in `nativeLibraryDir`.
 5. New superbuild modules must be added to `nativeModuleIds` in the root `build.gradle.kts`, or
-   CMake aborts with `Unknown JCODE_NATIVE_MODULE`.
+   CMake aborts with `Unknown QCODE_NATIVE_MODULE`.
 
 ---
 

@@ -4,7 +4,7 @@ import androidx.compose.runtime.compositionLocalOf
 
 /**
  * Editor save-related actions, shared (via [LocalEditorSaveActions]) with the top bar's Save button so
- * its long-press menu can offer them without threading callbacks as params (JCodeShell is at the ART
+ * its long-press menu can offer them without threading callbacks as params (QCodeShell is at the ART
  * verifier's register limit). Each defaults to a no-op.
  */
 class EditorSaveActions(

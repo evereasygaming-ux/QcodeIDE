@@ -22,7 +22,7 @@ in particular.
 
 | Term | Meaning |
 |---|---|
-| **proot** | A ptrace-based userspace sandbox, bundled as a prebuilt binary. JCode's mechanism for running a Linux userland inside the app's own uid. Not a security boundary |
+| **proot** | A ptrace-based userspace sandbox, bundled as a prebuilt binary. QCode's mechanism for running a Linux userland inside the app's own uid. Not a security boundary |
 | **rootfs** | The extracted Linux root filesystem under `filesDir/distros/<id>/rootfs/` |
 | **distro** | An installed rootfs plus its metadata, identified by a `DistroProfile.id` such as `ubuntu-24.04` |
 | **environment** | The user-facing name for a distro plus its installed toolchains. One is active at a time |
@@ -50,21 +50,21 @@ in particular.
 
 | Term | Meaning |
 |---|---|
-| **`.jext`** | A JCode extension package. Signed format-2 packages are Ed25519-signed and AES-GCM-wrapped around a plain ZIP |
+| **`.jext`** | A QCode extension package. Signed format-2 packages are Ed25519-signed and AES-GCM-wrapped around a plain ZIP |
 | **Dev Pack** | The user-facing name for a `type: language` extension: syntax rules, completions, snippets, formatter configuration. The manifest key is still `language` |
 | **contribution point** | A place an extension can add to the host — one of the six keys under `contributes:` |
 | **capability** | A declared API family (`api`, `exec`, `fs`, `config`, `workbench`, `service`) that the user can revoke per extension |
 | **activation** | When an extension's contributions turn on: `AutoStart`, `OnDemand` (default) or `Manual` |
 | **sideload** | Installing an **unsigned** `.jext` through Developer options; marks the extension `dev = true` |
-| **`.vsix`** | A VS Code extension package. JCode implements the webview slice of the VS Code API |
+| **`.vsix`** | A VS Code extension package. QCode implements the webview slice of the VS Code API |
 | **template** | A project scaffold: inputs plus a shell recipe, in `templates/<id>/template.yaml` |
 
 ### 2.4 Virtual device
 
 | Term | Meaning |
 |---|---|
-| **app sandbox** | Running a built APK inside JCode. A **preview, not a security boundary** |
-| **`:guest` process** | The second process of the JCode app that hosts a guest APK. Same uid, same permissions |
+| **app sandbox** | Running a built APK inside QCode. A **preview, not a security boundary** |
+| **`:guest` process** | The second process of the QCode app that hosts a guest APK. Same uid, same permissions |
 | **guest APK** | The application being previewed |
 | **embedded mode** | The guest composited into an editor tab via `SurfaceControlViewHost` |
 | **full-screen mode** | The guest as a real activity in its own task, backed by a stub activity |
@@ -86,8 +86,8 @@ in particular.
 
 | Term | Meaning |
 |---|---|
-| **OSC** | Operating System Command — the escape sequences carrying JCode's shell-integration protocol (codes 7711–7716, plus standard 52) |
-| **shell integration** | The scripts JCode installs in the guest that emit those sequences |
+| **OSC** | Operating System Command — the escape sequences carrying QCode's shell-integration protocol (codes 7711–7716, plus standard 52) |
+| **shell integration** | The scripts QCode installs in the guest that emit those sequences |
 | **LSP** | Language Server Protocol — JSON-RPC 2.0 with `Content-Length` framing |
 | **DAP** | Debug Adapter Protocol — a different envelope over the same framing |
 | **relay** | The fixed-port TCP pump giving the guest one stable ADB endpoint |

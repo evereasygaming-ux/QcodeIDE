@@ -172,7 +172,7 @@ Programmatic updates — `updateEditorConfig`, `updateThemeConfig`, `updateProje
 
 **These merge into the raw `Map<String, Any?>` document, not just the typed model.** Any key the app
 does not understand — a hand-edited field, a key from a newer version, an extension's own block —
-survives the save. Without this, opening Settings once would silently strip everything JCode does
+survives the save. Without this, opening Settings once would silently strip everything QCode does
 not model.
 
 Serialization uses SnakeYAML-engine `Dump` with block flow style and 2-space indentation.

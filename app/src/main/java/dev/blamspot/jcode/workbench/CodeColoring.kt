@@ -30,7 +30,7 @@ val LocalDevToolsCodeSupport = staticCompositionLocalOf { DevToolsCodeSupport() 
  * Colouring for source the DevTools panes show — page scripts, stylesheets, the DOM.
  *
  * The same three-layer arrangement the editor uses, in the same order of authority, because a page
- * source is a source: JCode's built-in Markdown and JSON colouring, then an installed Dev Pack's
+ * source is a source: QCode's built-in Markdown and JSON colouring, then an installed Dev Pack's
  * rules for the language, then a generic tokenizer so nothing is ever left unlit. On top of that,
  * a language server's own classification when one happens to be running and willing — see
  * [dev.blamspot.jcode.lsp.LspController.detachedSemanticTokens] — which is the only layer that knows a

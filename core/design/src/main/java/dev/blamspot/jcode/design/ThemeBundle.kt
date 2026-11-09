@@ -16,18 +16,18 @@ data class ThemeBundle(
     val id: String,
     val name: String,
     val description: String,
-    val author: String = "JCode",
+    val author: String = "QCODE IDE",
     val dark: ColorScheme,
     val light: ColorScheme,
-    val darkSemantic: JCodeSemanticColors,
-    val lightSemantic: JCodeSemanticColors,
+    val darkSemantic: QCodeSemanticColors,
+    val lightSemantic: QCodeSemanticColors,
     val darkSyntax: SyntaxPalette = DefaultDarkSyntax,
     val lightSyntax: SyntaxPalette = DefaultLightSyntax,
     val darkAnsi: AnsiPalette = DefaultDarkAnsi,
     val lightAnsi: AnsiPalette = DefaultLightAnsi,
 ) {
     fun colorScheme(darkTheme: Boolean): ColorScheme = if (darkTheme) dark else light
-    fun semanticColors(darkTheme: Boolean): JCodeSemanticColors = if (darkTheme) darkSemantic else lightSemantic
+    fun semanticColors(darkTheme: Boolean): QCodeSemanticColors = if (darkTheme) darkSemantic else lightSemantic
     fun syntaxPalette(darkTheme: Boolean): SyntaxPalette = if (darkTheme) darkSyntax else lightSyntax
     fun ansiPalette(darkTheme: Boolean): AnsiPalette = if (darkTheme) darkAnsi else lightAnsi
 }
@@ -71,7 +71,7 @@ private val terminalBundle = ThemeBundle(
     id = "terminal",
     name = "Terminal",
     description = "Flat ANSI palette shared by editor, terminal and chrome.",
-    author = "QCode",
+    author = "QCODE IDE",
     dark = darkColorScheme(
         primary = Color(0xFF61AFEF),
         onPrimary = Color(0xFF1A1A1A),
@@ -104,12 +104,12 @@ private val terminalBundle = ThemeBundle(
         surfaceVariant = Color(0xFFE5E5E6),
         onSurfaceVariant = Color(0xFF5C6370),
     ),
-    darkSemantic = JCodeSemanticColors(
+    darkSemantic = QCodeSemanticColors(
         success = Color(0xFF98C379), onSuccess = Color(0xFF1A1A1A),
         warning = Color(0xFFE5C07B), onWarning = Color(0xFF1A1A1A),
         info = Color(0xFF56B6C2), onInfo = Color(0xFF1A1A1A),
     ),
-    lightSemantic = JCodeSemanticColors(
+    lightSemantic = QCodeSemanticColors(
         success = Color(0xFF50A14F), onSuccess = Color(0xFFFFFFFF),
         warning = Color(0xFFC18401), onWarning = Color(0xFFFFFFFF),
         info = Color(0xFF0184BC), onInfo = Color(0xFFFFFFFF),
@@ -197,12 +197,12 @@ private val catppuccinBundle = ThemeBundle(
         surfaceVariant = Color(0xFFCCD0DA),
         onSurfaceVariant = Color(0xFF5C5F77),
     ),
-    darkSemantic = JCodeSemanticColors(
+    darkSemantic = QCodeSemanticColors(
         success = Color(0xFFA6E3A1), onSuccess = Color(0xFF1E1E2E),
         warning = Color(0xFFF9E2AF), onWarning = Color(0xFF1E1E2E),
         info = Color(0xFF89DCEB), onInfo = Color(0xFF1E1E2E),
     ),
-    lightSemantic = JCodeSemanticColors(
+    lightSemantic = QCodeSemanticColors(
         success = Color(0xFF40A02B), onSuccess = Color(0xFFEFF1F5),
         warning = Color(0xFFDF8E1D), onWarning = Color(0xFFEFF1F5),
         info = Color(0xFF209FB5), onInfo = Color(0xFFEFF1F5),
@@ -249,12 +249,12 @@ private val pierreDarkBundle = ThemeBundle(
         surfaceVariant = Color(0xFFE5E5E5),
         onSurfaceVariant = Color(0xFF525252),
     ),
-    darkSemantic = JCodeSemanticColors(
+    darkSemantic = QCodeSemanticColors(
         success = Color(0xFF0DBE4E), onSuccess = Color(0xFF0A0A0A),
         warning = Color(0xFFFFCA00), onWarning = Color(0xFF0A0A0A),
         info = Color(0xFF08C0EF), onInfo = Color(0xFF0A0A0A),
     ),
-    lightSemantic = JCodeSemanticColors(
+    lightSemantic = QCodeSemanticColors(
         success = Color(0xFF18A46C), onSuccess = Color(0xFFFFFFFF),
         warning = Color(0xFFD5A910), onWarning = Color(0xFF0A0A0A),
         info = Color(0xFF1CA1C7), onInfo = Color(0xFFFFFFFF),
@@ -302,12 +302,12 @@ private val nightOwlBundle = ThemeBundle(
         surfaceVariant = Color(0xFFE3E4EC),
         onSurfaceVariant = Color(0xFF5F6673),
     ),
-    darkSemantic = JCodeSemanticColors(
+    darkSemantic = QCodeSemanticColors(
         success = Color(0xFF22DA6E), onSuccess = Color(0xFF011627),
         warning = Color(0xFFECC48D), onWarning = Color(0xFF011627),
         info = Color(0xFF21C7A8), onInfo = Color(0xFF011627),
     ),
-    lightSemantic = JCodeSemanticColors(
+    lightSemantic = QCodeSemanticColors(
         success = Color(0xFF08916A), onSuccess = Color(0xFFFFFFFF),
         warning = Color(0xFFDAAA01), onWarning = Color(0xFF403F53),
         info = Color(0xFF0C969B), onInfo = Color(0xFFFFFFFF),

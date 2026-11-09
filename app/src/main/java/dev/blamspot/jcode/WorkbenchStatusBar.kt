@@ -36,7 +36,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.blamspot.jcode.core.buffer.EditTx
 import dev.blamspot.jcode.core.distro.DistroEnvironmentState
 import dev.blamspot.jcode.design.IconSize
-import dev.blamspot.jcode.design.JCodeIcon
+import dev.blamspot.jcode.design.QCodeIcon
 import dev.blamspot.jcode.design.Space
 import dev.blamspot.jcode.design.jcIcon
 import dev.blamspot.jcode.core.lsp.LspModule
@@ -90,7 +90,7 @@ internal fun WorkbenchStatusBar(
     distroStatus: DistroStatus,
     lspServers: List<dev.blamspot.jcode.lsp.LspServerStatus> = emptyList(),
 ) {
-    // Collected here (not hoisted into JCodeShell): the caret/snapshot flows emit on every
+    // Collected here (not hoisted into QCodeShell): the caret/snapshot flows emit on every
     // keystroke and caret move, so reading them in this bottomBar scope keeps a keystroke from
     // recomposing the whole workbench body — only this 20dp status row invalidates.
     val metrics = rememberEditorMetrics(activeTab)
@@ -112,14 +112,14 @@ internal fun WorkbenchStatusBar(
             StatusCell(
                 "${issueCount.total}",
                 color = if (issueCount.hasErrors) MaterialTheme.colorScheme.error else Color.Unspecified,
-                icon = jcIcon(JCodeIcon.Problems),
+                icon = jcIcon(QCodeIcon.Problems),
             )
             // Every one of these describes an open buffer, so they all hang off the same condition.
             // Testing `isPage` instead only excluded page tabs (Settings) — with no tab at all the
             // bar still claimed "1:1 · lang: Plain Text" over an empty editor area.
             val editorState = activeTab?.editorState
             if (editorState != null) {
-                StatusCell("${metrics.line}:${metrics.column}", icon = jcIcon(JCodeIcon.Cursor))
+                StatusCell("${metrics.line}:${metrics.column}", icon = jcIcon(QCodeIcon.Cursor))
                 StatusCell("lang: ${metrics.language}")
                 EncodingCell(metrics.encoding)
                 LineEndingCell(metrics.lineEnding, editorState)

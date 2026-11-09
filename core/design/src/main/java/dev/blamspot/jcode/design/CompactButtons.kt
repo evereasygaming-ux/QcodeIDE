@@ -57,7 +57,7 @@ fun CompactOutlinedButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     /** Optional leading icon, for a button whose verb reads faster with one. */
-    icon: JCodeIcon? = null,
+    icon: QCodeIcon? = null,
 ) {
     OutlinedButton(
         onClick = onClick,

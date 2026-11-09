@@ -33,7 +33,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.blamspot.jcode.design.JCodeTheme
+import dev.blamspot.jcode.design.QCodeTheme
 import dev.blamspot.jcode.design.Space
 import dev.blamspot.jcode.feature.marketplace.ExtensionManifestValidator
 import dev.blamspot.jcode.feature.marketplace.InstalledExtension
@@ -181,7 +181,7 @@ private fun ValidatorPane(ext: InstalledExtension, hostApiVersion: Int, modifier
         Box(modifier.fillMaxSize()) {
             Box(Modifier.fillMaxSize().padding(Space.xxl), contentAlignment = Alignment.Center) {
                 Text("No problems found ✓", style = MaterialTheme.typography.bodyMedium,
-                    color = JCodeTheme.semanticColors.success)
+                    color = QCodeTheme.semanticColors.success)
             }
         }
         return
@@ -190,7 +190,7 @@ private fun ValidatorPane(ext: InstalledExtension, hostApiVersion: Int, modifier
         items(issues) { issue ->
             val color = when (issue.severity) {
                 ManifestIssue.Severity.Error -> MaterialTheme.colorScheme.error
-                ManifestIssue.Severity.Warning -> JCodeTheme.semanticColors.warning
+                ManifestIssue.Severity.Warning -> QCodeTheme.semanticColors.warning
                 ManifestIssue.Severity.Info -> MaterialTheme.colorScheme.onSurfaceVariant
             }
             val tag = when (issue.severity) {
@@ -235,7 +235,7 @@ private fun LogPane(extId: String, modifier: Modifier = Modifier) {
                 ExtensionDevLogEntry.Kind.Error -> MaterialTheme.colorScheme.error
                 ExtensionDevLogEntry.Kind.Request -> MaterialTheme.colorScheme.primary
                 ExtensionDevLogEntry.Kind.Response -> MaterialTheme.colorScheme.onSurfaceVariant
-                ExtensionDevLogEntry.Kind.Event -> JCodeTheme.semanticColors.warning
+                ExtensionDevLogEntry.Kind.Event -> QCodeTheme.semanticColors.warning
                 ExtensionDevLogEntry.Kind.Console -> MaterialTheme.colorScheme.onSurface
             }
             val prefix = when (e.kind) {

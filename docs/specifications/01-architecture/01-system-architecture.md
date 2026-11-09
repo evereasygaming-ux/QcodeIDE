@@ -11,7 +11,7 @@
 
 ## 1. Purpose and scope
 
-JCode is a single Android application that hosts a full IDE **and** a Linux userland on the same
+QCode is a single Android application that hosts a full IDE **and** a Linux userland on the same
 device, with no root and no companion app. This document describes the top-level shape: what runs
 where, which platform constraints forced which design decisions, and how the pieces connect.
 
@@ -26,7 +26,7 @@ Subsystem detail lives in the other specifications; this document only establish
 ```mermaid
 flowchart TB
     subgraph app[":app — integration layer"]
-        shell["JCodeShell (workbench UI)"]
+        shell["QCodeShell (workbench UI)"]
         vm["MainViewModel (application state)"]
         svc["BackendService (foreground service)"]
     end
@@ -119,7 +119,7 @@ language servers, debug adapters, and build jobs survive backgrounding. It is dr
 
 ### 2.3 The three execution domains
 
-Work in JCode happens in one of three places, and most subsystem complexity is about the seams
+Work in QCode happens in one of three places, and most subsystem complexity is about the seams
 between them:
 
 | Domain | Runs as | Examples | Reaches the others via |
@@ -144,9 +144,9 @@ These are not preferences; each one forced a specific implementation.
 | **Shared `/storage` is FUSE** — no symlinks, not exec-capable | Projects live on app-private ext4 under `filesDir/workspace/projects`; a one-time migration moves legacy shared-storage projects there. |
 | **SELinux blocks `/proc/stat`** under proot | `CpuStatSampler` synthesizes `/proc/stat`, `/proc/loadavg`, `/proc/uptime`, `/proc/version` from per-core `cpuidle` sysfs deltas and proot bind-mounts them over the real ones. |
 | **16 KB page size devices** | Every native target links with `-Wl,-z,max-page-size=16384` (`native/CMakeLists.txt`, `jcode_configure_target`). |
-| **`targetSdk` held at 33** | Deliberate: the API-34 gates (foreground-service types, receiver export flags) are not yet handled, and JCode is distributed outside the Play Store. Lint's `ExpiredTargetSdkVersion` is disabled with that reasoning in `build.gradle.kts:72–78`. |
+| **`targetSdk` held at 33** | Deliberate: the API-34 gates (foreground-service types, receiver export flags) are not yet handled, and QCode is distributed outside the Play Store. Lint's `ExpiredTargetSdkVersion` is disabled with that reasoning in `build.gradle.kts:72–78`. |
 | **`hardwareAccelerated=false` in the manifest** | A window can only *enable* `FLAG_HARDWARE_ACCELERATED`, never disable it, so the manifest default must be off for the user-facing Settings toggle to be able to opt out. `MainActivity` enables it when the preference is on (default on). |
-| **ART verifier register limits** | The workbench passes state through `CompositionLocal` bundles rather than composable parameters; `JCodeShell.kt` is near the per-method limit. |
+| **ART verifier register limits** | The workbench passes state through `CompositionLocal` bundles rather than composable parameters; `QCodeShell.kt` is near the per-method limit. |
 
 ### 3.1 Permissions and why each exists
 
@@ -158,7 +158,7 @@ Declared in `app/src/main/AndroidManifest.xml`:
 | `INTERNET` | Rootfs download, `apt`, marketplace, update check |
 | `POST_NOTIFICATIONS` | The foreground-service notification |
 | `WAKE_LOCK` | Long-running builds and installs |
-| `MANAGE_EXTERNAL_STORAGE` | Raw file-path access to the legacy `/storage/emulated/0/JCode` root; checked with `Environment.isExternalStorageManager()` |
+| `MANAGE_EXTERNAL_STORAGE` | Raw file-path access to the legacy `/storage/emulated/0/QCode` root; checked with `Environment.isExternalStorageManager()` |
 | `REQUEST_INSTALL_PACKAGES` | The in-app updater; gated at runtime by `canRequestPackageInstalls()` |
 
 A `<queries>` block for `ACTION_VIEW` + `BROWSABLE` on `http`/`https` exists solely so the
@@ -204,7 +204,7 @@ Full detail in [Build variants and release](../09-platform/02-build-variants-and
 
 ## 6. Known gaps
 
-- `:app` is very top-heavy: `JCodeShell.kt` (5,607 lines) and `MainViewModel.kt` (6,380 lines)
+- `:app` is very top-heavy: `QCodeShell.kt` (5,607 lines) and `MainViewModel.kt` (6,380 lines)
   hold work that the module layering would place in features. `DistroService.kt` (2,524) likewise
   mixes orchestration, catalog execution, apt self-heal and user management.
 - One split of the shape the layer diagram implies — a `:feature:*` module owning its UI — still
@@ -215,7 +215,7 @@ Full detail in [Build variants and release](../09-platform/02-build-variants-and
   See [Concurrency and resource lifecycle](03-concurrency-and-resource-lifecycle.md).
 - Two distinct `DiagnosticSeverity` types (`core.lsp` and `core.editor.decor`) are converted at the
   boundary.
-- `JCodePosture` in `:core:adaptive` is computed on every window change and nothing branches on
+- `QCodePosture` in `:core:adaptive` is computed on every window change and nothing branches on
   `TableTop` or `Book`.
 
 ---

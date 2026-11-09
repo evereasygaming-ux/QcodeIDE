@@ -1,13 +1,13 @@
-#ifndef JCODE_STUB_MODULE
-#define JCODE_STUB_MODULE "unknown"
+#ifndef QCODE_STUB_MODULE
+#define QCODE_STUB_MODULE "unknown"
 #endif
 
 #if defined(__GNUC__)
-#define JCODE_EXPORT __attribute__((visibility("default")))
+#define QCODE_EXPORT __attribute__((visibility("default")))
 #else
-#define JCODE_EXPORT
+#define QCODE_EXPORT
 #endif
 
-JCODE_EXPORT const char* jcode_native_module_name(void) {
-    return JCODE_STUB_MODULE;
+QCODE_EXPORT const char* jcode_native_module_name(void) {
+    return QCODE_STUB_MODULE;
 }

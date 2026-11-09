@@ -17,7 +17,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
-import dev.blamspot.jcode.design.JCodeTheme
+import dev.blamspot.jcode.design.QCodeTheme
 import dev.blamspot.jcode.feature.marketplace.InstalledExtension
 import dev.blamspot.jcode.feature.marketplace.webUiFile
 import kotlinx.coroutines.CoroutineScope
@@ -98,7 +98,7 @@ internal fun ScmBackgroundHost(
 ) {
     val appContext = LocalContext.current.applicationContext
     val colorScheme = MaterialTheme.colorScheme
-    val semantic = JCodeTheme.semanticColors
+    val semantic = QCodeTheme.semanticColors
     val backgroundArgb = colorScheme.background.toArgb()
     val themeJs = remember(colorScheme, semantic) { extensionThemeJs(colorScheme, semantic) }
     val generation by ScmWebViewHolder.generation.collectAsState()
@@ -170,21 +170,21 @@ private fun createScmWebView(
                 val payload = runCatching { exec(command, timeoutMs) }.getOrElse { e ->
                     JSONObject().put("error", e.message ?: "exec failed").toString()
                 }
-                evalJs("window.JCode && window.JCode._onExec(${JSONObject.quote(reqId)}, ${JSONObject.quote(payload)})")
+                evalJs("window.QCode && window.QCode._onExec(${JSONObject.quote(reqId)}, ${JSONObject.quote(payload)})")
             }
         },
         onRequest = { reqId, envelope ->
             // The first request is proof the page's JS is alive — only now may explorerAction taps
             // be pushed instead of stashed (registering at WebView creation loses taps into a page
-            // that hasn't defined window.JCode yet).
+            // that hasn't defined window.QCode yet).
             liveHosts.add(extension.id)
             scope.launch {
                 val payload = runCatching { apiRequest(extension, envelope) }.getOrElse { e ->
                     JSONObject().put("ok", false).put("error", e.message ?: "request failed").toString()
                 }
                 evalJs(
-                    "window.JCode && window.JCode._onResult && " +
-                        "window.JCode._onResult(${JSONObject.quote(reqId)}, ${JSONObject.quote(payload)})",
+                    "window.QCode && window.QCode._onResult && " +
+                        "window.QCode._onResult(${JSONObject.quote(reqId)}, ${JSONObject.quote(payload)})",
                 )
             }
         },
@@ -223,7 +223,7 @@ private fun createScmWebView(
             }
             false
         }
-        addJavascriptInterface(bridge, "JCodeNative")
+        addJavascriptInterface(bridge, "QCodeNative")
         extension.webUiFile?.let { loadUrl("file://${it.absolutePath}") }
     }
     events?.let { flow ->
@@ -237,8 +237,8 @@ private fun createScmWebView(
                     if (!target.isNullOrEmpty() && target != extension.id) return@collect
                 }
                 evalJs(
-                    "window.JCode && window.JCode._onEvent && " +
-                        "window.JCode._onEvent(${JSONObject.quote(name)}, ${JSONObject.quote(json)})",
+                    "window.QCode && window.QCode._onEvent && " +
+                        "window.QCode._onEvent(${JSONObject.quote(name)}, ${JSONObject.quote(json)})",
                 )
             }
         }

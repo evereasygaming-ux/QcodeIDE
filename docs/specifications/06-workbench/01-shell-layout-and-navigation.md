@@ -4,7 +4,7 @@
 |---|---|
 | **Status** | Implemented |
 | **Modules** | `:app`, `:core:adaptive`, `:core:design` |
-| **Primary sources** | app/src/main/java/dev/blamspot/jcode/JCodeShell.kt (4,999 lines), app/src/main/java/dev/blamspot/jcode/workbench/WorkbenchChrome.kt, app/src/main/java/dev/blamspot/jcode/workbench/WorkbenchChromeBars.kt, app/src/main/java/dev/blamspot/jcode/workbench/WorkbenchModel.kt, app/src/main/java/dev/blamspot/jcode/WorkbenchStatusBar.kt, app/src/main/java/dev/blamspot/jcode/SessionStore.kt, core/adaptive/src/main/java/dev/blamspot/jcode/adaptive/WindowInfo.kt, app/src/main/java/dev/blamspot/jcode/MainActivity.kt |
+| **Primary sources** | app/src/main/java/dev/blamspot/jcode/QCodeShell.kt (4,999 lines), app/src/main/java/dev/blamspot/jcode/workbench/WorkbenchChrome.kt, app/src/main/java/dev/blamspot/jcode/workbench/WorkbenchChromeBars.kt, app/src/main/java/dev/blamspot/jcode/workbench/WorkbenchModel.kt, app/src/main/java/dev/blamspot/jcode/WorkbenchStatusBar.kt, app/src/main/java/dev/blamspot/jcode/SessionStore.kt, core/adaptive/src/main/java/dev/blamspot/jcode/adaptive/WindowInfo.kt, app/src/main/java/dev/blamspot/jcode/MainActivity.kt |
 | **Verified against** | commit `cea581c`, 2026-08-09 |
 
 ---
@@ -21,19 +21,19 @@ the layout responds to the keyboard, and how a session is restored.
 `:core:adaptive` classifies the window:
 
 ```kotlin
-enum class JCodeWindowWidthClass  { Compact, Medium, Expanded }
-enum class JCodeWindowHeightClass { Compact, Medium, Expanded }
-enum class JCodePosture           { Flat, TableTop, Book }
+enum class QCodeWindowWidthClass  { Compact, Medium, Expanded }
+enum class QCodeWindowHeightClass { Compact, Medium, Expanded }
+enum class QCodePosture           { Flat, TableTop, Book }
 
-data class JCodeWindowInfo(
-    val widthClass: JCodeWindowWidthClass,
-    val heightClass: JCodeWindowHeightClass,
-    val posture: JCodePosture,
+data class QCodeWindowInfo(
+    val widthClass: QCodeWindowWidthClass,
+    val heightClass: QCodeWindowHeightClass,
+    val posture: QCodePosture,
     val hasPhysicalKeyboard: Boolean,
 )
 ```
 
-`rememberJCodeWindowInfo()` combines Material 3 adaptive size classes, `WindowInfoTracker`'s
+`rememberQCodeWindowInfo()` combines Material 3 adaptive size classes, `WindowInfoTracker`'s
 `FoldingFeature` (for posture), and a live `InputManager.InputDeviceListener` so an attached or
 detached physical keyboard is reflected immediately rather than only on configuration change.
 
@@ -43,7 +43,7 @@ detached physical keyboard is reflected immediately rather than only on configur
 
 ```kotlin
 val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-val isMobileLandscapeMode = isLandscape && windowInfo.heightClass == JCodeWindowHeightClass.Compact
+val isMobileLandscapeMode = isLandscape && windowInfo.heightClass == QCodeWindowHeightClass.Compact
 val usesModalWorkspace = !isLandscape || isMobileLandscapeMode
 ```
 
@@ -196,11 +196,11 @@ Fullscreen, orientation lock, keep-awake and chrome-hiding are command-palette c
 
 The shell passes state through `CompositionLocal` bundles (`WorkbenchRunActions`,
 `WorkbenchManagerActions`, `DebugSessionUi`, `IssueActions`, `LocalExplorerScmUi`, …) rather than
-composable parameters. This is not stylistic: `JCodeShell`'s root composable is near the **ART
+composable parameters. This is not stylistic: `QCodeShell`'s root composable is near the **ART
 verifier's per-method register limit**, and adding parameters risks a verification failure at
 runtime.
 
-The same constraint explains why font typefaces are hoisted into the outer `JCodeApp` composable
+The same constraint explains why font typefaces are hoisted into the outer `QCodeApp` composable
 rather than being created inside the shell.
 
 ---
@@ -231,10 +231,10 @@ rather than being created inside the shell.
 
 ## 12. Known gaps
 
-- `JCodeShell.kt` (4,999 lines) and `MainViewModel.kt` (4,844 lines) hold work the module layering
+- `QCodeShell.kt` (4,999 lines) and `MainViewModel.kt` (4,844 lines) hold work the module layering
   would place in `:feature:*`.
-- `JCodePosture` is computed but no layout currently branches on `TableTop` or `Book`.
-- A few source lines in `JCodeShell.kt`, `ExplorerView.kt` and `SettingsFeature.kt` contain literal
+- `QCodePosture` is computed but no layout currently branches on `TableTop` or `Book`.
+- A few source lines in `QCodeShell.kt`, `ExplorerView.kt` and `SettingsFeature.kt` contain literal
   control bytes where `//` was intended, which makes tooling treat those files as binary. Use
   `grep -a` or the Read tool.
 

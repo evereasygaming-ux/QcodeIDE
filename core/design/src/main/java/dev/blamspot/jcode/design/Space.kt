@@ -6,7 +6,7 @@ import androidx.compose.ui.unit.dp
  * The app's spacing scale: every padding and gap comes from here rather than a literal, so density
  * is one decision instead of several hundred.
  *
- * The steps are the ones JCode actually designs in. [s] (6) and [ms] (10) look like odd steps for a
+ * The steps are the ones QCode actually designs in. [s] (6) and [ms] (10) look like odd steps for a
  * 4-based scale and are kept deliberately: together they carry a third of the app's spacing, and
  * folding them into their neighbours would have restyled the workbench rather than tokenised it.
  * New code should still reach for [xs]/[sm]/[md]/[lg] first.

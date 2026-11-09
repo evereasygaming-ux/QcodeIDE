@@ -7,12 +7,12 @@ import org.json.JSONObject
  * Reading a `.vsix` — the format VS Code extensions ship in.
  *
  * A `.vsix` is a plain ZIP holding an `extension.vsixmanifest` and the extension itself under
- * `extension/`, whose `package.json` is the manifest that matters. JCode installs one by
+ * `extension/`, whose `package.json` is the manifest that matters. QCode installs one by
  * translating that manifest into its own `extension.yaml` ([toExtensionYaml]) and unpacking the
  * `extension/` subtree as the install directory, so the extension list, detail page, uninstall and
  * developer tools all work on a VSIX without knowing a second manifest format.
  *
- * JCode implements the slice of the VS Code API that webview-based extensions use. What an
+ * QCode implements the slice of the VS Code API that webview-based extensions use. What an
  * extension *declares* is checked here at import time ([VsixCompatibility]) because declarations are
  * reliable; what it *calls* is checked at runtime by the API shim, which throws naming the missing
  * member — a bundled extension's calls go through a renamed import (`vscode_1.window…`), so
@@ -31,7 +31,7 @@ object VsixPackage {
     const val VSIX_MARKER = ".jcode-vsix"
 
     /**
-     * Contribution points JCode can surface today. Anything else is reported as unsupported rather
+     * Contribution points QCode can surface today. Anything else is reported as unsupported rather
      * than being dropped quietly, so an import says up front what will not work.
      */
     val SUPPORTED_CONTRIBUTES = setOf(
@@ -118,7 +118,7 @@ object VsixPackage {
     }
 
     /**
-     * Translate `contributes.configuration` into JCode [ExtensionSetting]s. VS Code allows the value
+     * Translate `contributes.configuration` into QCode [ExtensionSetting]s. VS Code allows the value
      * to be a single object or an array of them, each with a `properties` map keyed by the full
      * dotted setting id (e.g. `openchamber.apiUrl`) — that id is kept verbatim so it round-trips
      * through `getConfiguration(section).get(key)` on the host side.
@@ -229,7 +229,7 @@ object VsixPackage {
                 id = id,
                 title = readableTitle(localize(entry.optString("title"), strings)).ifBlank { id },
                 // `icon` is either a codicon reference or a { light, dark } pair of image paths;
-                // only the codicon can map onto a JCode icon, so a path is treated as no icon.
+                // only the codicon can map onto a QCode icon, so a path is treated as no icon.
                 icon = entry.optString("icon").takeIf { it.isNotBlank() },
             )
         }
@@ -261,7 +261,7 @@ object VsixPackage {
      * VS Code's rule, as far as it can be applied without when-clause evaluation: everything under
      * `contributes.commands`, minus what `menus.commandPalette` explicitly withholds with
      * `"when": "false"` — an extension's own way of saying a command is for a keybinding or another
-     * menu and not for a person to pick. Anything else is offered; a `when` JCode cannot evaluate is
+     * menu and not for a person to pick. Anything else is offered; a `when` QCode cannot evaluate is
      * better answered by showing the command than by hiding it.
      *
      * Deduplicated by title, because an extension that registers the same action under two ids
@@ -297,7 +297,7 @@ object VsixPackage {
         }.distinctBy { it.title }
     }
 
-    /** What JCode can and cannot honour in [manifest]. */
+    /** What QCode can and cannot honour in [manifest]. */
     fun compatibilityOf(manifest: VsixManifest): VsixCompatibility {
         val supported = manifest.contributeKeys.filter { it in SUPPORTED_CONTRIBUTES }
         val unsupported = manifest.contributeKeys.filterNot { it in SUPPORTED_CONTRIBUTES }
@@ -306,10 +306,10 @@ object VsixPackage {
                 add("Declares no \"main\", so there is no extension code to run.")
             }
             if (unsupported.isNotEmpty()) {
-                add("JCode does not implement these contribution points: ${unsupported.joinToString(", ")}.")
+                add("QCode does not implement these contribution points: ${unsupported.joinToString(", ")}.")
             }
             if (manifest.contributeKeys.none { it == "views" || it == "viewsContainers" }) {
-                add("Contributes no view, so it may have no visible surface in JCode.")
+                add("Contributes no view, so it may have no visible surface in QCode.")
             }
         }
         return VsixCompatibility(
@@ -320,19 +320,19 @@ object VsixPackage {
     }
 
     /**
-     * The JCode manifest for [manifest]. `entry.ui` is deliberately absent: a VS Code extension has
+     * The QCode manifest for [manifest]. `entry.ui` is deliberately absent: a VS Code extension has
      * no static HTML entry — its webview HTML is produced by the extension host at runtime — so the
      * view is created through the host bridge rather than by pointing at a file.
      */
     fun toExtensionYaml(manifest: VsixManifest): String = buildString {
-        appendLine("# Generated by JCode from a .vsix. Edits here are lost on reinstall.")
+        appendLine("# Generated by QCode from a .vsix. Edits here are lost on reinstall.")
         appendLine("id: ${manifest.id.yaml()}")
         appendLine("name: ${manifest.displayName.yaml()}")
         appendLine("publisher: ${manifest.publisher.yaml()}")
         appendLine("version: ${manifest.version.yaml()}")
         appendLine("type: app")
         appendLine("description: ${manifest.description.yaml()}")
-        // Declared so JCode can answer the extension host's questions about the editor — which file
+        // Declared so QCode can answer the extension host's questions about the editor — which file
         // is open, which project, which theme. Without it those calls are refused and the extension
         // falls back to whatever it last persisted, so it shows the wrong project. It stays a
         // declaration: the user can still revoke it from the extension's permissions.
@@ -408,7 +408,7 @@ data class VsixCommand(
         ?.takeIf { it.isNotBlank() }
 }
 
-/** The parts of a VS Code `package.json` that JCode acts on. */
+/** The parts of a VS Code `package.json` that QCode acts on. */
 data class VsixManifest(
     val publisher: String,
     val name: String,
@@ -423,20 +423,20 @@ data class VsixManifest(
     val engineRange: String?,
     val activationEvents: List<String>,
     val contributeKeys: List<String>,
-    /** Settings translated from `contributes.configuration`, surfaced on JCode's Extension Settings
+    /** Settings translated from `contributes.configuration`, surfaced on QCode's Extension Settings
      *  page and delivered to the extension through `getConfiguration`. */
     val settings: List<ExtensionSetting> = emptyList(),
 ) {
-    /** VS Code's identity for an extension, and the id JCode installs it under. */
+    /** VS Code's identity for an extension, and the id QCode installs it under. */
     val id: String get() = "$publisher.$name"
 }
 
-/** What JCode can honour in a `.vsix`, reported before it is installed. */
+/** What QCode can honour in a `.vsix`, reported before it is installed. */
 data class VsixCompatibility(
     val supportedContributes: List<String>,
     val unsupportedContributes: List<String>,
     val warnings: List<String>,
 ) {
-    /** True when nothing the extension declares is beyond what JCode implements. */
+    /** True when nothing the extension declares is beyond what QCode implements. */
     val fullySupported: Boolean get() = unsupportedContributes.isEmpty() && warnings.isEmpty()
 }

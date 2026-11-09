@@ -24,7 +24,7 @@ object ExtensionManifestValidator {
         "id", "name", "publisher", "author", "authors", "type", "version", "description",
         "longDescription", "shortDescription", "samples", "templates", "language", "languages",
         "settings", "api", "requires", "suggests", "contributes", "entry", "images",
-        "minJCodeVersion", "targetJCodeVersion", "maxJCodeVersion", "category", "subcategory",
+        "minQCodeVersion", "targetQCodeVersion", "maxQCodeVersion", "category", "subcategory",
     )
     private val KNOWN_CAPABILITIES = setOf("api", "exec", "fs", "config", "workbench", "service")
 
@@ -55,7 +55,7 @@ object ExtensionManifestValidator {
 
         // --- API ---
         if (ext.apiMinVersion > hostApiVersion) {
-            err("`api.minApiVersion` ${ext.apiMinVersion} > this JCode's v$hostApiVersion — won't run here.", "api.minApiVersion")
+            err("`api.minApiVersion` ${ext.apiMinVersion} > this QCode's v$hostApiVersion — won't run here.", "api.minApiVersion")
         }
         ext.apiCapabilities.forEach { cap ->
             if (cap !in KNOWN_CAPABILITIES) {

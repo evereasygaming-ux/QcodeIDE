@@ -4,16 +4,16 @@ project(jcode_native_superbuild LANGUAGES C CXX)
 
 include(FetchContent)
 
-if(NOT DEFINED JCODE_NATIVE_MODULE)
-    message(FATAL_ERROR "JCODE_NATIVE_MODULE must be provided by Gradle.")
+if(NOT DEFINED QCODE_NATIVE_MODULE)
+    message(FATAL_ERROR "QCODE_NATIVE_MODULE must be provided by Gradle.")
 endif()
 
-if(NOT DEFINED JCODE_JNI_OUTPUT_DIR)
-    message(FATAL_ERROR "JCODE_JNI_OUTPUT_DIR must be provided by Gradle.")
+if(NOT DEFINED QCODE_JNI_OUTPUT_DIR)
+    message(FATAL_ERROR "QCODE_JNI_OUTPUT_DIR must be provided by Gradle.")
 endif()
 
-if(NOT DEFINED JCODE_VARIANT_DIR)
-    message(FATAL_ERROR "JCODE_VARIANT_DIR must be provided by Gradle.")
+if(NOT DEFINED QCODE_VARIANT_DIR)
+    message(FATAL_ERROR "QCODE_VARIANT_DIR must be provided by Gradle.")
 endif()
 
 set(CMAKE_C_STANDARD 11)
@@ -26,28 +26,28 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 set(FETCHCONTENT_UPDATES_DISCONNECTED ON CACHE BOOL "" FORCE)
 
-set(JCODE_STUB_SOURCE "${CMAKE_CURRENT_LIST_DIR}/common/jcode_native_stub.c")
-set(JCODE_OUTPUT_DIR "${JCODE_JNI_OUTPUT_DIR}/${JCODE_VARIANT_DIR}/${ANDROID_ABI}")
+set(QCODE_STUB_SOURCE "${CMAKE_CURRENT_LIST_DIR}/common/jcode_native_stub.c")
+set(QCODE_OUTPUT_DIR "${QCODE_JNI_OUTPUT_DIR}/${QCODE_VARIANT_DIR}/${ANDROID_ABI}")
 
 function(jcode_configure_target target output_name)
     target_compile_options(${target} PRIVATE -fvisibility=hidden)
     target_link_options(${target} PRIVATE "-Wl,-z,max-page-size=16384")
 
-    if(JCODE_VARIANT_DIR STREQUAL "release")
+    if(QCODE_VARIANT_DIR STREQUAL "release")
         target_link_options(${target} PRIVATE "-Wl,-s")
     endif()
 
     set_target_properties(${target} PROPERTIES
         OUTPUT_NAME "${output_name}"
-        LIBRARY_OUTPUT_DIRECTORY "${JCODE_OUTPUT_DIR}"
-        RUNTIME_OUTPUT_DIRECTORY "${JCODE_OUTPUT_DIR}"
+        LIBRARY_OUTPUT_DIRECTORY "${QCODE_OUTPUT_DIR}"
+        RUNTIME_OUTPUT_DIRECTORY "${QCODE_OUTPUT_DIR}"
     )
 endfunction()
 
 # A placeholder `lib<output_name>.so` so a machine without cargo still links and runs, with the
 # feature degraded rather than the build broken.
 #
-# `JCODE_REAL_LIB_PRESENT` says cargo has already produced the genuine library for this variant, and
+# `QCODE_REAL_LIB_PRESENT` says cargo has already produced the genuine library for this variant, and
 # then the stub must not exist *as a shared library at all*. A SHARED stub is written into the
 # CMake object directory under the very name AGP takes the cargo library from, and the native-library
 # merger cannot choose between them — it fails the build:
@@ -59,13 +59,13 @@ endfunction()
 # Dropping the target entirely would leave the module's CMake project with nothing to build, so it
 # is built STATIC instead: AGP still has a target, and a `.a` is never packaged.
 function(jcode_add_stub_library target output_name)
-    if(JCODE_REAL_LIB_PRESENT)
-        add_library(${target} STATIC "${JCODE_STUB_SOURCE}")
-        target_compile_definitions(${target} PRIVATE JCODE_STUB_MODULE="${output_name}")
+    if(QCODE_REAL_LIB_PRESENT)
+        add_library(${target} STATIC "${QCODE_STUB_SOURCE}")
+        target_compile_definitions(${target} PRIVATE QCODE_STUB_MODULE="${output_name}")
         return()
     endif()
-    add_library(${target} SHARED "${JCODE_STUB_SOURCE}")
-    target_compile_definitions(${target} PRIVATE JCODE_STUB_MODULE="${output_name}")
+    add_library(${target} SHARED "${QCODE_STUB_SOURCE}")
+    target_compile_definitions(${target} PRIVATE QCODE_STUB_MODULE="${output_name}")
     jcode_configure_target(${target} ${output_name})
 endfunction()
 
@@ -74,7 +74,7 @@ endfunction()
 
 
 
-if(JCODE_NATIVE_MODULE STREQUAL "buffer")
+if(QCODE_NATIVE_MODULE STREQUAL "buffer")
     add_library(jcode_native_buffer SHARED
         "${CMAKE_CURRENT_LIST_DIR}/buffer/src/piece_tree.cpp"
         "${CMAKE_CURRENT_LIST_DIR}/buffer/src/jni_buffer.cpp"
@@ -82,7 +82,7 @@ if(JCODE_NATIVE_MODULE STREQUAL "buffer")
         "${CMAKE_CURRENT_LIST_DIR}/buffer/src/jni_highlight.cpp"
         "${CMAKE_CURRENT_LIST_DIR}/buffer/src/wrap_map.cpp"
         "${CMAKE_CURRENT_LIST_DIR}/buffer/src/jni_wrap.cpp"
-        "${JCODE_STUB_SOURCE}"
+        "${QCODE_STUB_SOURCE}"
     )
     target_include_directories(jcode_native_buffer PRIVATE
         "${CMAKE_CURRENT_LIST_DIR}/buffer/src"
@@ -92,15 +92,15 @@ if(JCODE_NATIVE_MODULE STREQUAL "buffer")
     # where the AGP default -O0 makes it slower than the Kotlin fallback it replaces.
     target_compile_options(jcode_native_buffer PRIVATE -O2)
     jcode_configure_target(jcode_native_buffer jcodebuffer)
-elseif(JCODE_NATIVE_MODULE STREQUAL "editor-render")
+elseif(QCODE_NATIVE_MODULE STREQUAL "editor-render")
     jcode_add_stub_library(jcode_native_editor_render jcodernd)
-elseif(JCODE_NATIVE_MODULE STREQUAL "ripgrep-ffi")
+elseif(QCODE_NATIVE_MODULE STREQUAL "ripgrep-ffi")
     jcode_add_stub_library(jcode_native_ripgrep ripgrep_ffi)
-elseif(JCODE_NATIVE_MODULE STREQUAL "pty")
+elseif(QCODE_NATIVE_MODULE STREQUAL "pty")
     add_library(jcode_native_pty SHARED
         "${CMAKE_CURRENT_LIST_DIR}/pty/src/pty.cpp"
         "${CMAKE_CURRENT_LIST_DIR}/pty/src/jni_pty.cpp"
-        "${JCODE_STUB_SOURCE}"
+        "${QCODE_STUB_SOURCE}"
     )
     target_include_directories(jcode_native_pty PRIVATE
         "${CMAKE_CURRENT_LIST_DIR}/pty/src"
@@ -110,11 +110,11 @@ elseif(JCODE_NATIVE_MODULE STREQUAL "pty")
     # optimized even in debug builds, where the AGP default -O0 cripples per-byte native code.
     target_compile_options(jcode_native_pty PRIVATE -O2)
     jcode_configure_target(jcode_native_pty pty)
-elseif(JCODE_NATIVE_MODULE STREQUAL "vt")
+elseif(QCODE_NATIVE_MODULE STREQUAL "vt")
     add_library(jcode_native_vt SHARED
         "${CMAKE_CURRENT_LIST_DIR}/vt/src/vt_parser.c"
         "${CMAKE_CURRENT_LIST_DIR}/vt/src/jni_vt.c"
-        "${JCODE_STUB_SOURCE}"
+        "${QCODE_STUB_SOURCE}"
     )
     target_include_directories(jcode_native_vt PRIVATE
         "${CMAKE_CURRENT_LIST_DIR}/vt/src"
@@ -124,8 +124,8 @@ elseif(JCODE_NATIVE_MODULE STREQUAL "vt")
     # AGP default -O0 cripples per-byte native parsers.
     target_compile_options(jcode_native_vt PRIVATE -O2)
     jcode_configure_target(jcode_native_vt jcode_vt)
-elseif(JCODE_NATIVE_MODULE STREQUAL "wasmtime-ffi")
+elseif(QCODE_NATIVE_MODULE STREQUAL "wasmtime-ffi")
     jcode_add_stub_library(jcode_native_wasmtime jcode_wasm)
 else()
-    message(FATAL_ERROR "Unknown JCODE_NATIVE_MODULE='${JCODE_NATIVE_MODULE}'")
+    message(FATAL_ERROR "Unknown QCODE_NATIVE_MODULE='${QCODE_NATIVE_MODULE}'")
 endif()

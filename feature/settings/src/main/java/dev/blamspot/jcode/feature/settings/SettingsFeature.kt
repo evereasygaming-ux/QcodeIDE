@@ -83,7 +83,7 @@ import dev.blamspot.jcode.design.LocalIconSetSettings
 import dev.blamspot.jcode.design.UiIconSet
 import dev.blamspot.jcode.design.UiIconSetRegistry
 import dev.blamspot.jcode.design.IconSize
-import dev.blamspot.jcode.design.JCodeIcon
+import dev.blamspot.jcode.design.QCodeIcon
 import dev.blamspot.jcode.design.Radius
 import dev.blamspot.jcode.design.SettingsActionRow
 import dev.blamspot.jcode.design.Space
@@ -385,7 +385,7 @@ object SettingsFeature {
                 }
             }
 
-            // Hidden until something can fill it: JCode ships no file icon set, so with no icon-pack
+            // Hidden until something can fill it: QCODE IDE ships no file icon set, so with no icon-pack
             // extension installed this card would offer exactly one choice — the one already in use.
             if (iconSettings.fileSets.isNotEmpty()) {
                 SettingsCard(
@@ -397,7 +397,7 @@ object SettingsFeature {
                     val activeFiles = iconSettings.activeFileSetId
                     FileIconSetRow(
                         name = "None",
-                        description = "JCode's own folder and file glyphs, from the UI icon set.",
+                        description = "QCODE IDE's own folder and file glyphs, from the UI icon set.",
                         detail = null,
                         selected = activeFiles == FileIconSetRegistry.NONE_ID,
                         onClick = { iconSettings.onSelectFileSet(FileIconSetRegistry.NONE_ID) },
@@ -652,7 +652,7 @@ object SettingsFeature {
             ) {
                 ToggleRow(
                     label = "Restore last session on launch",
-                    supporting = "Reopen the last workspace, project, and editor tabs — including unsaved changes — when JCode starts. Missing files are skipped.",
+                    supporting = "Reopen the last workspace, project, and editor tabs — including unsaved changes — when QCODE IDE starts. Missing files are skipped.",
                     checked = restoreSessionSetting.enabled,
                     onCheckedChange = restoreSessionSetting.onChange,
                     modified = restoreSessionSetting.enabled != SettingsDefaults.RESTORE_LAST_SESSION,
@@ -668,7 +668,7 @@ object SettingsFeature {
             SettingsGroup("Performance") {
             SettingsCard(
                 title = "Rendering",
-                description = "How JCode draws the UI, editor, and terminal.",
+                description = "How QCODE IDE draws the UI, editor, and terminal.",
                 keywords = "performance rendering hardware acceleration gpu software draw graphics lag smooth",
             ) {
                 ToggleRow(
@@ -699,7 +699,7 @@ object SettingsFeature {
                 )
                 ToggleRow(
                     label = "Close app fully on swipe-away",
-                    supporting = "When you swipe JCode off the Android recents screen, stop the Linux runtime " +
+                    supporting = "When you swipe QCODE IDE off the Android recents screen, stop the Linux runtime " +
                         "(terminals, runs, VMs) and exit completely instead of leaving it running in the background.",
                     checked = perf.exitOnSwipeAway,
                     onCheckedChange = perf.onSetExitOnSwipeAway,
@@ -799,7 +799,7 @@ object SettingsFeature {
                             WebPreviewBrowsers.INHERIT -> "Fall back to the app-wide default"
                             WebPreviewBrowsers.SYSTEM -> "The device's default browser app"
                             WebPreviewBrowsers.ASK -> "Show the Android app chooser each time"
-                            WebPreviewBrowsers.BUILTIN -> "JCode's own in-editor browser, with DevTools"
+                            WebPreviewBrowsers.BUILTIN -> "QCODE IDE's own in-editor browser, with DevTools"
                             else -> choice
                         },
                         selected = selectedChoice == choice,
@@ -817,9 +817,9 @@ object SettingsFeature {
 
             SettingsCard(
                 title = "Web engine",
-                description = "The Chromium engine behind JCode's built-in browser and web previews. " +
-                    "It is the device's WebView provider — a system component JCode can read but not " +
-                    "choose; when it can't be updated, JCode falls back to the ROM's engine.",
+                description = "The Chromium engine behind QCODE IDE's built-in browser and web previews. " +
+                    "It is the device's WebView provider — a system component QCODE IDE can read but not " +
+                    "choose; when it can't be updated, QCODE IDE falls back to the ROM's engine.",
                 keywords = "web engine webview chromium version provider outdated update play store " +
                     "browser render blank dvh modern developer options implementation",
             ) {
@@ -867,7 +867,7 @@ object SettingsFeature {
                     Text(
                         text = "Modern sites can render blank or broken on this engine. Install the " +
                             "latest Android System WebView, then select it under Developer options → " +
-                            "WebView implementation. Some devices lock the provider; JCode then keeps " +
+                            "WebView implementation. Some devices lock the provider; QCODE IDE then keeps " +
                             "using the ROM's engine.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -998,7 +998,7 @@ object SettingsFeature {
                     // out through shared storage first — see MigrationBundle.
                     Text(
                         text = "Moving to a differently-named build? Write the environment, projects, " +
-                            "extensions and settings to the shared JCode folder, then import them " +
+                            "extensions and settings to the shared QCODE IDE folder, then import them " +
                             "from the new install.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -1025,7 +1025,7 @@ object SettingsFeature {
                 title = "Background process limit",
                 description = "Android caps how many processes an app may fork and kills the rest — " +
                     "which takes the whole Linux environment down mid-command. Raising the cap needs " +
-                    "one adb command; JCode cannot set it itself.",
+                    "one adb command; QCODE IDE cannot set it itself.",
                 keywords = "phantom process limit killed died crashed dies terminal closes distro proot stopped " +
                     "background max_phantom_processes device_config adb activity manager trimming long session " +
                     "claude agent build gradle npm disappears exits by itself",
@@ -1047,7 +1047,7 @@ object SettingsFeature {
                 Text(
                     text = "Android 12+ kills an app's forked processes once they pass the cap — 32 by " +
                         "default. proot, the shell and everything under it count, so a long build or " +
-                        "coding-agent session goes over it and the terminal dies while JCode keeps " +
+                        "coding-agent session goes over it and the terminal dies while QCODE IDE keeps " +
                         "running. Run these from a computer with the device connected (or from this " +
                         "device's own adb) to lift it; it survives reboots but has to be redone after a " +
                         "factory reset.",
@@ -1068,7 +1068,7 @@ object SettingsFeature {
 
             SettingsCard(
                 title = "Android device",
-                description = "Pair JCode with this phone's own adb so builds install and launch on it.",
+                description = "Pair QCODE IDE with this phone's own adb so builds install and launch on it.",
                 keywords = "android device adb bridge wireless debugging pair pairing code relay serial apk " +
                     "install launch logcat gradle installdebug flutter run",
             ) {
@@ -1086,7 +1086,7 @@ object SettingsFeature {
 
             SettingsGroup("About") {
             SettingsCard(
-                title = "JCode",
+                title = "QCODE IDE",
                 description = "App version and updates from GitHub releases.",
                 keywords = "about version update check release github changelog build app",
             ) {
@@ -1195,9 +1195,9 @@ object SettingsFeature {
                     )
                     ToggleRow(
                         label = "Include the system log",
-                        supporting = "Adds JCode's logcat output — including proot and the Linux " +
+                        supporting = "Adds QCODE IDE's logcat output — including proot and the Linux " +
                             "environment running under it, which is where most of the detail about " +
-                            "toolchains, extensions and language servers ends up. Only JCode's own " +
+                            "toolchains, extensions and language servers ends up. Only QCODE IDE's own " +
                             "entries are readable; another app's never are.",
                         checked = diagnostics.captureSystemLog,
                         onCheckedChange = diagnostics.onSetCaptureSystemLog,
@@ -1428,7 +1428,7 @@ object SettingsFeature {
                 if (trashSettings.enabled) {
                     SettingsDropdownRow(
                         label = "Keep deleted files for",
-                        supporting = "Older items are removed when JCode starts and when the Trash is opened. " +
+                        supporting = "Older items are removed when QCODE IDE starts and when the Trash is opened. " +
                             "The Trash is app-private storage, so what is in it counts against the app's size.",
                         options = TRASH_RETENTION_CHOICES.map { it.toString() },
                         selected = trashSettings.retentionDays.toString(),
@@ -1445,7 +1445,7 @@ object SettingsFeature {
             SettingsGroup("Developer") {
             SettingsCard(
                 title = "Developer options",
-                description = "Tools for building and testing JCode extensions.",
+                description = "Tools for building and testing QCODE IDE extensions.",
                 keywords = "developer options extension sideload unsigned jext debug dev tools inspector validator log console reload make tool third party",
             ) {
                 val developerSetting = LocalDeveloperSetting.current
@@ -1461,9 +1461,9 @@ object SettingsFeature {
                 )
                 if (developerSetting.enabled) {
                     Text(
-                        "Compile and pack your extension with the JCode extension make tool, then import the " +
+                        "Compile and pack your extension with the QCODE IDE extension make tool, then import the " +
                             "unsigned .jext from the Extensions panel — the Ext Dev tab auto-reloads it on each " +
-                            "rebuild. Only signed packages (signed privately by the JCode maintainers) reach the " +
+                            "rebuild. Only signed packages (signed privately by the QCODE IDE maintainers) reach the " +
                             "marketplace.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -1831,7 +1831,7 @@ private fun ColumnScope.SettingsGroup(
             modifier = Modifier.weight(1f),
         )
         Icon(
-            painter = jcIcon(if (expanded) JCodeIcon.ChevronUp else JCodeIcon.ChevronDown),
+            painter = jcIcon(if (expanded) QCodeIcon.ChevronUp else QCodeIcon.ChevronDown),
             contentDescription = if (expanded) "Collapse $title" else "Expand $title",
             tint = MaterialTheme.colorScheme.primary,
             modifier = Modifier.size(IconSize.md),
@@ -1973,7 +1973,7 @@ private fun UiIconSetRow(
 ) {
     // Five slots a set is most likely to have restyled, so two packs are told apart at a glance
     // rather than by their names.
-    val sample = listOf(JCodeIcon.Files, JCodeIcon.Run, JCodeIcon.Terminal, JCodeIcon.Search, JCodeIcon.Settings)
+    val sample = listOf(QCodeIcon.Files, QCodeIcon.Run, QCodeIcon.Terminal, QCodeIcon.Search, QCodeIcon.Settings)
     IconSetRow(
         name = set.name,
         description = set.description.ifBlank { "${set.filledSlots} icons" },
@@ -2304,8 +2304,8 @@ private fun StepperRow(
                 horizontalArrangement = Arrangement.spacedBy(Space.xs),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                StepperButton(JCodeIcon.Minus, "Decrease $label", filled = false, onClick = onDecrease)
-                StepperButton(JCodeIcon.Add, "Increase $label", filled = true, onClick = onIncrease)
+                StepperButton(QCodeIcon.Minus, "Decrease $label", filled = false, onClick = onDecrease)
+                StepperButton(QCodeIcon.Add, "Increase $label", filled = true, onClick = onIncrease)
             }
         }
     }
@@ -2327,7 +2327,7 @@ private fun StepperRow(
  */
 @Composable
 private fun StepperButton(
-    icon: JCodeIcon,
+    icon: QCodeIcon,
     contentDescription: String,
     filled: Boolean,
     onClick: () -> Unit,

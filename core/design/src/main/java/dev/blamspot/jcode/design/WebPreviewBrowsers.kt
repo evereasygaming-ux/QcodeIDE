@@ -37,7 +37,7 @@ class WebPreviewBrowsers(
     companion object {
         const val SYSTEM = "SYSTEM"
         const val ASK = "ASK"
-        /** Open the preview inside JCode's own in-editor browser (with DevTools) instead of an external app. */
+        /** Open the preview inside QCode's own in-editor browser (with DevTools) instead of an external app. */
         const val BUILTIN = "BUILTIN"
         const val INHERIT = ""
     }

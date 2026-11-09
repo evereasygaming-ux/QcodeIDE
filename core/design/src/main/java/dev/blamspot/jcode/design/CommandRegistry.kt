@@ -12,7 +12,7 @@ data class CommandSpec(
     val group: String,
     val action: () -> Unit,
     val isEnabled: () -> Boolean = { true },
-    val icon: JCodeIcon? = null,
+    val icon: QCodeIcon? = null,
 )
 
 object CommandRegistry {
@@ -30,7 +30,7 @@ object CommandRegistry {
         group: String,
         action: () -> Unit,
         whenPredicate: () -> Boolean = { true },
-        icon: JCodeIcon? = null,
+        icon: QCodeIcon? = null,
     ) {
         commands[id] = CommandSpec(
             id = id,
@@ -51,7 +51,7 @@ object CommandRegistry {
      * For a caller that has a *name* rather than a lambda -- an extension whose manifest declares
      * a `type: action` setting, which says which command its button runs and nothing about what
      * that command does. Silently does nothing when the id is unknown: a manifest naming a
-     * command this JCode does not have is a button that should do nothing, not a crash.
+     * command this QCode does not have is a button that should do nothing, not a crash.
      */
     fun run(id: String): Boolean = commands[id]?.also { it.action() } != null
 

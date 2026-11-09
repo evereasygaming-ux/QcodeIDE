@@ -257,7 +257,7 @@ class AgyAcpBackend(
                 params = buildJsonObject {
                     put("protocolVersion", PROTOCOL_VERSION)
                     put("clientInfo", buildJsonObject {
-                        put("name", "QCode")
+                        put("name", "QCODE IDE")
                         put("version", "1.0")
                     })
                     put("clientCapabilities", buildJsonObject {})

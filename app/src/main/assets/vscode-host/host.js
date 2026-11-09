@@ -1,14 +1,14 @@
 'use strict';
 /*
- * JCode's VS Code extension host.
+ * QCode's VS Code extension host.
  *
  * Runs inside the Linux runtime under Node and loads a `.vsix` extension's `main` module with a
  * `vscode` module of our own in front of it. Everything the extension asks of the editor is
- * forwarded to JCode over stdin/stdout as newline-delimited JSON; everything JCode asks of the
+ * forwarded to QCode over stdin/stdout as newline-delimited JSON; everything QCode asks of the
  * extension (activate, resolve a webview, run a command) arrives the same way.
  *
- * JCode implements the slice of the API that extensions built around a webview use. Anything
- * outside it throws by name — `vscode.debug.startDebugging is not implemented by JCode` — because
+ * QCode implements the slice of the API that extensions built around a webview use. Anything
+ * outside it throws by name — `vscode.debug.startDebugging is not implemented by QCode` — because
  * an extension failing loudly at the call it actually made is far easier to act on than one that
  * silently does nothing.
  *
@@ -42,7 +42,7 @@ const pending = new Map();
 // The one writer of the frame stream. Everything else that reaches stdout is the extension's own
 // console output, which is diverted below rather than allowed to share the channel: an extension
 // that logs (Claude Code prints "Created lock file at ..." as it starts) puts raw text between
-// JCode's frames, and anything landing mid-frame is a message silently dropped at the far end.
+// QCode's frames, and anything landing mid-frame is a message silently dropped at the far end.
 const rawStdoutWrite = process.stdout.write.bind(process.stdout);
 let writingFrame = false;
 const send = (message) => {
@@ -54,7 +54,7 @@ const send = (message) => {
   }
 };
 
-/** Ask JCode something and wait for its answer. */
+/** Ask QCode something and wait for its answer. */
 const call = (method, params) =>
   new Promise((resolve, reject) => {
     const id = nextRequestId++;
@@ -62,12 +62,12 @@ const call = (method, params) =>
     send({ id, method, params: params || {} });
   });
 
-/** Tell JCode something with no answer expected. */
+/** Tell QCode something with no answer expected. */
 const notify = (method, params) => send({ method, params: params || {} });
 
 const log = (level, text) => notify('host/log', { level, text: String(text) });
 
-// The extension's own console output. Rerouted into the log channel so it reaches JCode's
+// The extension's own console output. Rerouted into the log channel so it reaches QCode's
 // extension log instead of the frame stream it would otherwise be interleaved into.
 process.stdout.write = (chunk, encoding, callback) => {
   if (writingFrame) return rawStdoutWrite(chunk, encoding, callback);
@@ -83,7 +83,7 @@ process.stdout.write = (chunk, encoding, callback) => {
 /** Everything not implemented routes here, so the failure names the member that was missing. */
 const missing = (member) => () => {
   throw new Error(
-    `vscode.${member} is not implemented by JCode. JCode runs the part of the VS Code API that ` +
+    `vscode.${member} is not implemented by QCODE IDE. QCODE IDE runs the part of the VS Code API that ` +
       `extensions built around a webview use.`,
   );
 };
@@ -436,7 +436,7 @@ const makeEnvironmentCollection = () => {
     delete: (variable) => store.delete(variable),
     clear: () => store.clear(),
     [Symbol.iterator]: () => store.entries(),
-    // Scoping selects which terminals a mutation applies to; JCode has one terminal environment, so
+    // Scoping selects which terminals a mutation applies to; QCode has one terminal environment, so
     // every scope is the same collection rather than a silently separate one.
     getScoped: () => collection,
     /** The collection resolved against [base], as a terminal should start. */
@@ -519,7 +519,7 @@ class FileSystemError extends Error {
 
 /** Origin the app serves the extension's own files from. Also what `cspSource` reports, so an
  *  extension that builds a Content-Security-Policy around it keeps working unchanged. */
-const RESOURCE_ORIGIN = 'https://jcode.webview';
+const RESOURCE_ORIGIN = 'https://qcode.webview';
 
 const webviewViewProviders = new Map();
 const webviews = new Map();
@@ -562,7 +562,7 @@ const makeWebview = (viewId) => {
 
 // --- the API surface ---
 
-const activeColorTheme = { kind: 2 }; // Dark. JCode overwrites this from its own theme below.
+const activeColorTheme = { kind: 2 }; // Dark. QCode overwrites this from its own theme below.
 const onDidChangeActiveColorTheme = emitter();
 const onDidChangeActiveTextEditor = emitter();
 const onDidChangeTextEditorSelection = emitter();
@@ -595,7 +595,7 @@ let activeTextEditor;
 let windowState = { focused: true, active: true };
 
 /**
- * The editor tab model, derived from the one thing JCode reports: which file is active.
+ * The editor tab model, derived from the one thing QCode reports: which file is active.
  *
  * Kept as a live view rather than a snapshot so an extension that holds on to `tabGroups` — Claude
  * Code reads it in a dozen places — keeps seeing the current file rather than the one that happened
@@ -635,7 +635,7 @@ const editorFor = (document, selection) => {
     visibleRanges: [at],
     viewColumn: 1,
     options: { tabSize: 4, insertSpaces: true },
-    // Editing through the editor object is not wired to JCode's buffer; an extension that wants to
+    // Editing through the editor object is not wired to QCode's buffer; an extension that wants to
     // change a file has workspace.applyEdit, which is.
     edit: () => Promise.resolve(false),
     insertSnippet: () => Promise.resolve(false),
@@ -827,7 +827,7 @@ const vscode = {
   TextEditorSelectionChangeKind: { Keyboard: 1, Mouse: 2, Command: 3 },
   DecorationRangeBehavior: { OpenOpen: 0, ClosedClosed: 1, OpenClosed: 2, ClosedOpen: 3 },
   OverviewRulerLane: { Left: 1, Center: 2, Right: 4, Full: 7 },
-  // JCode is a local editor with one window: `Desktop`, never `Web`.
+  // QCode is a local editor with one window: `Desktop`, never `Web`.
   UIKind: { Desktop: 1, Web: 2 },
   LogLevel: { Off: 0, Trace: 1, Debug: 2, Info: 3, Warning: 4, Error: 5 },
   TerminalLocation: { Panel: 1, Editor: 2 },
@@ -874,7 +874,7 @@ const vscode = {
       if (local) return Promise.resolve().then(() => local(...args));
       return call('commands/execute', { id, args });
     },
-    // Answered here rather than asked of JCode: JCode implements no VS Code built-in commands, so
+    // Answered here rather than asked of QCode: QCode implements no VS Code built-in commands, so
     // the extension's own registrations are the whole list. Asking anyway rejected, and an extension
     // that calls this without a catch (they do) turned that into an unhandled rejection.
     getCommands: () => Promise.resolve(Array.from(commands.keys())),
@@ -980,7 +980,7 @@ const vscode = {
       dispose: () => {},
     }),
 
-    /** Open a file in JCode's editor and report an editor for it. */
+    /** Open a file in QCode's editor and report an editor for it. */
     showTextDocument: async (target, options) => {
       const uri = target && target.uri ? target.uri : target;
       const document = target && target.getText ? target : await vscode.workspace.openTextDocument(uri);
@@ -995,7 +995,7 @@ const vscode = {
     },
 
     /**
-     * A terminal in JCode's own terminal panel. Real rather than a stand-in because JCode has
+     * A terminal in QCode's own terminal panel. Real rather than a stand-in because QCode has
      * terminals and an extension's whole point can be to run something in one — Claude Code offers
      * to run its CLI that way.
      */
@@ -1009,7 +1009,7 @@ const vscode = {
         creationOptions: options,
         exitStatus: undefined,
         state: { isInteractedWith: false },
-        // Present but never populated: JCode's terminal does not report command boundaries back, so
+        // Present but never populated: QCode's terminal does not report command boundaries back, so
         // an extension that waits on shell integration would wait forever. Absent is the answer VS
         // Code itself gives for a terminal without it, and extensions handle that.
         shellIntegration: undefined,
@@ -1043,7 +1043,7 @@ const vscode = {
     onDidCloseTerminal,
     onDidChangeActiveTerminal: emitter(),
     onDidChangeTerminalState: emitter(),
-    // Shell integration is not reported by JCode's terminal, so these never fire. They exist because
+    // Shell integration is not reported by QCode's terminal, so these never fire. They exist because
     // an extension subscribes during activate() and must not die there.
     onDidChangeTerminalShellIntegration: emitter(),
     onDidStartTerminalShellExecution: emitter(),
@@ -1052,7 +1052,7 @@ const vscode = {
     /**
      * The editor tabs, as far as the host can know them.
      *
-     * JCode tells the host which file is active and nothing more, so this reports that one tab
+     * QCode tells the host which file is active and nothing more, so this reports that one tab
      * rather than pretending to a full model of the editor area. An extension reading it to find
      * "the file the user is looking at" — which is what these calls are for — gets the right answer;
      * one enumerating every open editor gets a short list rather than a wrong one.
@@ -1066,7 +1066,7 @@ const vscode = {
     onDidChangeActiveNotebookEditor: emitter(),
 
     // Registration points. Accepted and held rather than refused: they are called during activate(),
-    // where throwing would take the whole extension down over a feature it may never use. What JCode
+    // where throwing would take the whole extension down over a feature it may never use. What QCode
     // cannot show simply never gets asked for.
     registerUriHandler: (handler) => {
       uriHandlers.push(handler);
@@ -1077,7 +1077,7 @@ const vscode = {
     registerTerminalLinkProvider: () => disposable(),
     registerFileDecorationProvider: () => disposable(),
     registerTreeDataProvider: () => disposable(),
-    // Decorations are a rendering feature of an editor JCode draws itself, so the type is inert.
+    // Decorations are a rendering feature of an editor QCode draws itself, so the type is inert.
     createTextEditorDecorationType: (options) => ({ key: `decoration-${nextDecorationId++}`, options, dispose: () => {} }),
 
     createTreeView: missing('window.createTreeView'),
@@ -1096,7 +1096,7 @@ const vscode = {
       return workspaceState.folders[0] && workspaceState.folders[0].uri.fsPath;
     },
     workspaceFile: undefined,
-    // A workspace opened in JCode is the user's own; there is no restricted mode to be outside of.
+    // A workspace opened in QCode is the user's own; there is no restricted mode to be outside of.
     isTrusted: true,
     onDidGrantWorkspaceTrust: emitter(),
     get textDocuments() {
@@ -1133,7 +1133,7 @@ const vscode = {
       return workspaceState.folders.find((f) => target === f.uri.fsPath || target.startsWith(`${f.uri.fsPath}/`));
     },
     // The extension host shares the runtime's filesystem, so these are real operations rather than
-    // a round trip through JCode.
+    // a round trip through QCode.
     fs: {
       readFile: (uri) => fs.promises.readFile(uri.fsPath || uri.path).then((b) => new Uint8Array(b)),
       writeFile: (uri, content) => fs.promises.writeFile(uri.fsPath || uri.path, Buffer.from(content)),
@@ -1257,7 +1257,7 @@ const vscode = {
     saveAll: () => Promise.resolve(true),
 
     // Held so `openTextDocument` can serve a custom scheme through them. Registering is accepted
-    // during activate() whether or not JCode ever shows such a document.
+    // during activate() whether or not QCode ever shows such a document.
     registerFileSystemProvider: (scheme, provider) => {
       fileSystemProviders.set(scheme, provider);
       return disposable(() => fileSystemProviders.delete(scheme));
@@ -1269,14 +1269,14 @@ const vscode = {
   },
 
   env: {
-    appName: 'JCode',
-    appHost: 'jcode',
-    uriScheme: 'jcode',
+    appName: 'QCODE IDE',
+    appHost: 'qcode',
+    uriScheme: 'qcode',
     language: 'en',
-    machineId: 'jcode',
-    sessionId: `jcode-${Date.now()}`,
+    machineId: 'qcode',
+    sessionId: `qcode-${Date.now()}`,
     appRoot: EXT_DIR,
-    // The host runs in JCode's own Linux runtime, not over a remote connection: `remoteName` is
+    // The host runs in QCode's own Linux runtime, not over a remote connection: `remoteName` is
     // undefined for the same reason it is in a local VS Code window. Extensions branch on this to
     // decide whether their binaries can reach the workspace — here they can.
     remoteName: undefined,
@@ -1316,7 +1316,7 @@ const vscode = {
   },
 
   /**
-   * The namespaces JCode has its own systems for.
+   * The namespaces QCode has its own systems for.
    *
    * Registering into one is accepted and dropped; asking one to *do* something still throws by
    * name. The split matters: registration happens during activate(), where a throw takes the whole
@@ -1324,7 +1324,7 @@ const vscode = {
    * asked for and deserves a straight answer about.
    */
   languages: registryNamespace('languages', {
-    // JCode owns diagnostics ([[Issues]] pane) and does not publish them to extensions, so the
+    // QCode owns diagnostics ([[Issues]] pane) and does not publish them to extensions, so the
     // honest answer is that this extension can see none — not that the call does not exist.
     getDiagnostics: (uri) => (uri ? [] : []),
     onDidChangeDiagnostics: emitter(),
@@ -1373,7 +1373,7 @@ const vscode = {
   }),
 
   /**
-   * Language models. JCode brokers none, and saying so is what makes these extensions usable: told
+   * Language models. QCode brokers none, and saying so is what makes these extensions usable: told
    * there is no proxy, Codex falls back to the CLI it ships — which is the path that works here.
    */
   lm: registryNamespace('lm', {
@@ -1390,9 +1390,9 @@ const vscode = {
      * An extension looking itself up wants its own version or path, and it must find itself: Claude
      * Code reads `getExtension(id).packageJSON` during activate() with no null check. The id is
      * matched case-insensitively and against the manifest's own `publisher.name`, because the id
-     * JCode installed under is not always spelled the way the extension spells it.
+     * QCode installed under is not always spelled the way the extension spells it.
      *
-     * Any other id is a dependency JCode does not host, and `undefined` is what VS Code answers for
+     * Any other id is a dependency QCode does not host, and `undefined` is what VS Code answers for
      * one that is not installed.
      */
     getExtension: (id) => (isSelf(id) ? selfExtension() : undefined),
@@ -1542,7 +1542,7 @@ const memento = () => {
   };
 };
 
-/** Ask the extension to fill in a webview view JCode is showing. */
+/** Ask the extension to fill in a webview view QCode is showing. */
 const resolveWebviewView = async ({ viewId }) => {
   const provider = webviewViewProviders.get(viewId);
   if (!provider) throw new Error(`no webview view provider registered for "${viewId}"`);
@@ -1556,7 +1556,7 @@ const resolveWebviewView = async ({ viewId }) => {
     onDidDispose,
     onDidChangeVisibility,
     // Labelled, because a view asking to be shown is not the request a panel makes when it asks
-    // to be brought to the front, and JCode opens an editor tab for the second. Unlabelled, a
+    // to be brought to the front, and QCode opens an editor tab for the second. Unlabelled, a
     // sidebar view's own show() opened a duplicate tab holding the very webview the drawer had.
     show: () => notify('webview/reveal', { handle, kind: 'view' }),
     title: undefined,
@@ -1654,7 +1654,7 @@ process.stdin.on('data', (chunk) => {
       else waiting.resolve(message.result);
       continue;
     }
-    // A request from JCode.
+    // A request from QCode.
     Promise.resolve()
       .then(() => dispatch(message))
       .then(

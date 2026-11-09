@@ -9,9 +9,9 @@
 
 ---
 
-## 1. What JCode is
+## 1. What QCode is
 
-JCode is a **native Android IDE with an embedded Linux runtime**. It builds, runs, edits and debugs
+QCode is a **native Android IDE with an embedded Linux runtime**. It builds, runs, edits and debugs
 real projects entirely on-device, with no companion app and no root.
 
 | | |
@@ -45,7 +45,7 @@ by `apt` into an app-managed rootfs — not bundled into the APK, and not borrow
 | **Extensions** | A marketplace of Ed25519-verified `.jext` packages — Dev Packs, project templates, manager UIs — plus `.vsix` import for the webview slice of the VS Code API | [07-extensions](../07-extensions/01-extension-model-and-lifecycle.md) |
 | **Toolchains** | A unified manager for SDKs, language servers and debug engines, installed per distro from a YAML catalog with real progress reporting | [03-runtime](../03-runtime/04-toolchain-catalog-and-onboarding.md) |
 | **Embedded Linux** | Bundled proot, a downloaded minimal Ubuntu rootfs, `apt`-managed toolchains, project directories bind-mounted into the guest | [03-runtime](../03-runtime/03-embedded-linux-runtime.md) |
-| **Android app sandbox** | Build an APK and run it **inside** JCode in an editor tab, with a device-side ADB daemon and JDWP debugging against the same device | [08-virtual-device](../08-virtual-device/01-app-sandbox-architecture.md) |
+| **Android app sandbox** | Build an APK and run it **inside** QCode in an editor tab, with a device-side ADB daemon and JDWP debugging against the same device | [08-virtual-device](../08-virtual-device/01-app-sandbox-architecture.md) |
 
 ---
 
@@ -69,8 +69,8 @@ These are settled and should not be revisited casually:
 ## 4. Non-goals
 
 - **Not a security sandbox for untrusted code.** proot is a convenience sandbox and the app-sandbox
-  `:guest` process shares JCode's uid. See [Security and privacy](../09-platform/04-security-and-privacy.md).
-- **Not a Termux replacement or client.** JCode has no Termux dependency and does not aim to be a
+  `:guest` process shares QCode's uid. See [Security and privacy](../09-platform/04-security-and-privacy.md).
+- **Not a Termux replacement or client.** QCode has no Termux dependency and does not aim to be a
   general terminal environment.
 - **Not a VS Code clone.** `.vsix` support covers the webview slice of the API; `languages`, `debug`,
   `tasks` and `scm` throw by name.
@@ -105,7 +105,7 @@ Each subsystem specification states its own gaps in a closing section, against t
 ## 6. Shape of the codebase
 
 ```
-:app            integration layer + the JCode shell
+:app            integration layer + the QCode shell
 :core:*         19 modules — editor, buffer, term, distro, lsp, debug, vcs, search,
                 config, design, fs, treesitter, ctags, resource, state, …
 :feature:*      12 modules — explorer, editor-pane, terminal-pane, scm, debug, problems,

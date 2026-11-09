@@ -158,7 +158,7 @@ entry is greyed out (default) or removed from the tree.
 the bin or destroy. The bin itself opens from the Explorer toolbar as an editor page
 (`EditorPageKind.Trash`, `TrashPage`). The Explorer reads it through `LocalTrashSettings` and words its confirmation
 accordingly; the workbench applies it on behalf of extensions, so whether a discard is kept stays a
-decision about JCode rather than one each extension makes for itself.
+decision about QCode rather than one each extension makes for itself.
 
 `TRASH_RETENTION_DAYS` is swept at startup (`MainViewModel.init`), when the Trash page opens, and
 immediately when the value is lowered. `TRASH_RETENTION_CHOICES` holds the offered periods; 0 is

@@ -4,7 +4,7 @@ import androidx.compose.runtime.compositionLocalOf
 
 /**
  * Performance / resource-management preferences, shared (via [LocalPerformanceSettings]) with both the
- * settings screen and JCodeShell without threading params through the latter (ART register limit).
+ * settings screen and QCodeShell without threading params through the latter (ART register limit).
  * [confirmCloseRunning] warns before closing a project/workspace that still has a running terminal
  * program, an active Build & Run, or a live debug session; [autoCloseIdleTerminals] auto-closes
  * terminals idle at the prompt past [idleTimeoutMinutes] to free their proot trees + memory.

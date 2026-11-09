@@ -16,7 +16,7 @@ import (
 	"sync"
 )
 
-const repoIndex = "antigem-plugins.json"
+const repoIndex = "qcode-plugins.json"
 
 // Repo is a public GitHub repository of plugin folders; Ref is a branch or tag, empty for the default branch.
 type Repo struct {
@@ -100,7 +100,7 @@ func (m *Manager) get(u string) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("User-Agent", "AntiGem")
+	req.Header.Set("User-Agent", "QCODE")
 	return m.client.Do(req)
 }
 
@@ -136,7 +136,7 @@ type treeEntry struct {
 // tree lists every file in the repository with one GitHub API call.
 func (m *Manager) tree(r Repo) ([]treeEntry, error) {
 	req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("https://api.github.com/repos/%s/%s/git/trees/%s?recursive=1", r.Owner, r.Name, encodePath(r.ref())), nil)
-	req.Header.Set("User-Agent", "AntiGem")
+	req.Header.Set("User-Agent", "QCODE")
 	req.Header.Set("Accept", "application/vnd.github+json")
 	resp, err := m.client.Do(req)
 	if err != nil {

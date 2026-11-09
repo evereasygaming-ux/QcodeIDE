@@ -26,7 +26,7 @@ import dev.blamspot.jcode.design.Space
 import dev.blamspot.jcode.design.StrokeWidth
 
 /**
- * The app's snackbar host, themed to match JCode panels — a rounded `surfaceContainerHighest` card
+ * The app's snackbar host, themed to match QCode panels — a rounded `surfaceContainerHighest` card
  * with an outline and shadow, rather than Material's default inverse-surface pill. Intended to be
  * rendered as a top-level overlay above the workbench drawers/sidebars so a message is never hidden
  * behind them (the default Scaffold slot sits under the modal drawer sheet).

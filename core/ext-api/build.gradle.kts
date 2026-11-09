@@ -27,14 +27,14 @@ android {
 }
 
 // Everything here is a compatibility commitment: an extension compiled against it runs inside
-// JCode's own process, so anything added is something a future release cannot casually change.
-// Keep the surface small, and take the `compileOnly` note in JCodeNativeExtension seriously.
+// QCode's own process, so anything added is something a future release cannot casually change.
+// Keep the surface small, and take the `compileOnly` note in QCodeNativeExtension seriously.
 dependencies {
     implementation(platform(libs.compose.bom))
     api(libs.compose.runtime)
 
     // The adb service seam the virtual-device contract hands back (AdbServiceHandler / AdbStream).
-    // compileOnly because JCode supplies it at runtime exactly as it supplies Compose: an extension
+    // compileOnly because QCode supplies it at runtime exactly as it supplies Compose: an extension
     // that bundled a second copy would implement an interface the daemon does not accept.
     compileOnly(project(":core:distro"))
 }

@@ -13,9 +13,9 @@ class GuestShellScriptTest {
 
     @Test
     fun aUserGetsEveryExportedVariableCarriedThroughSu() {
-        val script = ProotManager.guestShellScript("echo hi", mapOf("JCODE_PROC_ID" to "ext:1"), "jcode")
+        val script = ProotManager.guestShellScript("echo hi", mapOf("QCODE_PROC_ID" to "ext:1"), "jcode")
         assertTrue(
-            script.endsWith("exec su -w 'COLORTERM,JCODE,JCODE_PROC_ID,LANG,TMPDIR' - 'jcode' -c 'echo hi'"),
+            script.endsWith("exec su -w 'COLORTERM,QCODE,QCODE_PROC_ID,LANG,TMPDIR' - 'jcode' -c 'echo hi'"),
             script,
         )
     }

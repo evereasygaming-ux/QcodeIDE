@@ -35,14 +35,14 @@ import dev.blamspot.jcode.design.CommandRegistry
 import dev.blamspot.jcode.design.CommandSpec
 import dev.blamspot.jcode.design.CompactSearchField
 import dev.blamspot.jcode.design.IconSize
-import dev.blamspot.jcode.design.JCodeIcon
+import dev.blamspot.jcode.design.QCodeIcon
 import dev.blamspot.jcode.design.Radius
 import dev.blamspot.jcode.design.Space
 import dev.blamspot.jcode.design.jcIcon
 
 /**
  * Ctrl/Cmd+Shift+P command palette. Sources entries from the shared [CommandRegistry] (populated by
- * the workbench shell) and fuzzy-filters them. Uses JCode's compact vocabulary — the shared
+ * the workbench shell) and fuzzy-filters them. Uses QCode's compact vocabulary — the shared
  * [CompactSearchField] plus dense icon+title rows — so it reads like the manager panels and context
  * menus. Renders as a bottom sheet on compact windows and a centered dialog on large ones.
  */
@@ -138,7 +138,7 @@ private fun CommandRow(command: CommandSpec, onClick: () -> Unit) {
         horizontalArrangement = Arrangement.spacedBy(Space.ms),
     ) {
         Icon(
-            painter = jcIcon(command.icon ?: JCodeIcon.CommandPalette),
+            painter = jcIcon(command.icon ?: QCodeIcon.CommandPalette),
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(IconSize.md),

@@ -45,7 +45,7 @@ worth knowing: the distro layer reads project configuration to resolve bind moun
 The integration layer. It also *contains* a large amount of feature implementation that the module
 layering would place elsewhere — see §6.
 
-Largest files: `JCodeShell.kt` (4,999 lines), `MainViewModel.kt` (4,844).
+Largest files: `QCodeShell.kt` (4,999 lines), `MainViewModel.kt` (4,844).
 
 ---
 
@@ -108,7 +108,7 @@ screens (`app/src/main/java/dev/blamspot/jcode/workbench/marketplace/ExtensionsP
 ## 7. `:native:*` — 11 modules
 
 All native modules are Android library modules whose only job is to produce a `.so`. Eight of them
-share one CMake superbuild selected by `-DJCODE_NATIVE_MODULE`; the wiring is injected centrally by
+share one CMake superbuild selected by `-DQCODE_NATIVE_MODULE`; the wiring is injected centrally by
 the root `build.gradle.kts`. See [Native layer and JNI](04-native-layer-and-jni.md) for the full
 mechanism.
 

@@ -38,7 +38,7 @@ import dev.blamspot.jcode.design.jcIcon
 
 /**
  * Leaf chrome buttons for the workbench (activity rail, top-bar quick actions, sidebar tool row).
- * Stateless and param-driven — peeled out of JCodeShell so the shell composable stays small.
+ * Stateless and param-driven — peeled out of QCodeShell so the shell composable stays small.
  */
 
 @Composable

@@ -233,7 +233,7 @@ func (m *HubManager) FetchCsrfToken() string {
 		log.Printf("[FetchCsrfToken] NewRequest error: %v", err)
 		return ""
 	}
-	req.Header.Set("User-Agent", "antiGem-Go-Supervisor")
+	req.Header.Set("User-Agent", "QCODE-Go-Supervisor")
 
 	resp, err := client.Do(req)
 	if err != nil {

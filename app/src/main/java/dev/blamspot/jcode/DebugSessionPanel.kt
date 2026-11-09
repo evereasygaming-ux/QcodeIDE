@@ -29,7 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.blamspot.jcode.core.debug.DebugState
 import dev.blamspot.jcode.design.IconSize
-import dev.blamspot.jcode.design.JCodeIcon
+import dev.blamspot.jcode.design.QCodeIcon
 import dev.blamspot.jcode.design.JcTooltip
 import dev.blamspot.jcode.design.Radius
 import dev.blamspot.jcode.design.Space
@@ -59,7 +59,7 @@ internal fun DebugSessionPanel(ui: DebugSessionUi, modifier: Modifier = Modifier
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Space.sm),
         ) {
-            Icon(jcIcon(JCodeIcon.Debug), contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+            Icon(jcIcon(QCodeIcon.Debug), contentDescription = null, tint = MaterialTheme.colorScheme.primary)
             // "Debug session", not "Debug": beside a row of run configs each carrying their own Debug
             // button, a section called Debug reads as a second, different Debug command.
             Text("Debug session", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
@@ -106,7 +106,7 @@ internal fun DebugLaunchRow(ui: DebugSessionUi) {
                     JcTooltip("Start debugging") {
                         IconButton(onClick = ui.onDebug) {
                             Icon(
-                                painter = jcIcon(JCodeIcon.Debug),
+                                painter = jcIcon(QCodeIcon.Debug),
                                 contentDescription = "Start debugging",
                                 tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(22.dp),
@@ -134,17 +134,17 @@ private fun DebugToolbar(ui: DebugSessionUi) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Space.xxs),
     ) {
-        DebugAction(JCodeIcon.Continue, "Continue", enabled = stopped, tint = MaterialTheme.colorScheme.primary, onClick = ui.onContinue)
-        DebugAction(JCodeIcon.StepOver, "Step over", enabled = stopped, onClick = ui.onStepOver)
-        DebugAction(JCodeIcon.StepInto, "Step into", enabled = stopped, onClick = ui.onStepInto)
-        DebugAction(JCodeIcon.StepOut, "Step out", enabled = stopped, onClick = ui.onStepOut)
+        DebugAction(QCodeIcon.Continue, "Continue", enabled = stopped, tint = MaterialTheme.colorScheme.primary, onClick = ui.onContinue)
+        DebugAction(QCodeIcon.StepOver, "Step over", enabled = stopped, onClick = ui.onStepOver)
+        DebugAction(QCodeIcon.StepInto, "Step into", enabled = stopped, onClick = ui.onStepInto)
+        DebugAction(QCodeIcon.StepOut, "Step out", enabled = stopped, onClick = ui.onStepOut)
         Spacer(Modifier.weight(1f))
-        DebugAction(JCodeIcon.Stop, "Stop", enabled = true, tint = MaterialTheme.colorScheme.error, onClick = ui.onStop)
+        DebugAction(QCodeIcon.Stop, "Stop", enabled = true, tint = MaterialTheme.colorScheme.error, onClick = ui.onStop)
     }
 }
 
 @Composable
-private fun DebugAction(icon: JCodeIcon, label: String, enabled: Boolean, tint: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.onSurfaceVariant, onClick: () -> Unit) {
+private fun DebugAction(icon: QCodeIcon, label: String, enabled: Boolean, tint: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.onSurfaceVariant, onClick: () -> Unit) {
     JcTooltip(label) {
         IconButton(onClick = onClick, enabled = enabled) {
             Icon(

@@ -39,7 +39,7 @@ class MainActivity : ComponentActivity() {
     private val mouseContextClick = MouseContextClick(::dispatchReplayedTouch)
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        setTheme(R.style.Theme_JCode)
+        setTheme(R.style.Theme_QCode)
         super.onCreate(savedInstanceState)
         // Hardware acceleration is opt-out via Settings → Performance. The manifest disables it for
         // this activity (window level can only ENABLE), so apply the flag here — before setContent,
@@ -55,7 +55,7 @@ class MainActivity : ComponentActivity() {
         }
         enableEdgeToEdge()
         // Draw into the display cutout unless the user opted to respect it (Settings). Mutable, so
-        // JCodeShell also updates it live; set here for the first frame. Mirrored from DataStore.
+        // QCodeShell also updates it live; set here for the first frame. Mirrored from DataStore.
         val respectCutout = getSharedPreferences(UI_STARTUP_PREFS, Context.MODE_PRIVATE)
             .getBoolean(KEY_RESPECT_CUTOUT, false)
         window.attributes = window.attributes.apply {
@@ -72,7 +72,7 @@ class MainActivity : ComponentActivity() {
             notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
         setContent {
-            JCodeRoot(viewModel = viewModel)
+            QCodeRoot(viewModel = viewModel)
         }
     }
 
@@ -149,7 +149,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-private fun JCodeRoot(viewModel: MainViewModel) {
+private fun QCodeRoot(viewModel: MainViewModel) {
     val densityMode = DensityMode.Compact
     val themeMode by viewModel.themeMode.collectAsStateWithLifecycle()
     val themeBundleId by viewModel.themeBundleId.collectAsStateWithLifecycle()
@@ -171,7 +171,7 @@ private fun JCodeRoot(viewModel: MainViewModel) {
         fileIconSet = fileIconSet,
     ) {
         WithoutExtractedIme {
-            JCodeApp(viewModel = viewModel, modifier = Modifier)
+            QCodeApp(viewModel = viewModel, modifier = Modifier)
         }
     }
 }
@@ -180,12 +180,12 @@ private fun JCodeRoot(viewModel: MainViewModel) {
  * Keep the keyboard out of extract mode, everywhere in the app.
  *
  * In landscape an IME covers the screen and edits a copy of the text in a window of its own unless
- * the editor asks it not to. That is wrong for every field JCode has — a commit message wants the
+ * the editor asks it not to. That is wrong for every field QCode has — a commit message wants the
  * diff still visible behind it, a find field wants its results, a merge wants both versions — and it
  * is a property of the app, not of any one screen, so it is set once here rather than remembered at
  * each field.
  *
- * The flag lives on the `EditorInfo` that `onCreateInputConnection` fills in. JCode's own editor,
+ * The flag lives on the `EditorInfo` that `onCreateInputConnection` fills in. QCode's own editor,
  * terminal and browser are Views and override that method directly; Compose builds the object
  * itself, and this interceptor is the supported way to reach it. `createInputConnection` has to run
  * first — it is what populates the object being amended.

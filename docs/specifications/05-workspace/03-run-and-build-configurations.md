@@ -115,7 +115,7 @@ data class RunPlan(val kindLabel: String, val readyPort: Int, val terminals: Lis
 |---|---|
 | `loadProjectConfigs(project)` / `saveProjectConfigs(project, configs)` | Persist `run.yaml` |
 | `effectiveRuns(project)` / `effectiveBuilds(project)` | Stored configurations, falling back to detection |
-| `detectRunPlan(project)` | Probe a project opened without a JCode template |
+| `detectRunPlan(project)` | Probe a project opened without a QCode template |
 | `runConfigToPlan(config)` | Adapt a stored configuration to a plan |
 | `upsertRun` / `upsertRuns` / `upsertBuild` / `deleteRun` / `deleteBuild` | Editing |
 | `suggestRunTriggers(project, extensionPresets)` | Run suggestion list (§5) |
@@ -222,7 +222,7 @@ An Android run reaches a device through `adb`, and which device that is comes fr
 | `effective(key)` | The device shown in the panel's target row |
 | `serialFor(key)` | The serial to force, or blank |
 
-The runtime's adb server is the **only** source of devices: JCode's own virtual device and this phone
+The runtime's adb server is the **only** source of devices: QCode's own virtual device and this phone
 both become reachable by being connected to it, so anything it does not list cannot be launched on.
 
 `serialFor` returns blank unless there is an explicit pick that is **still connected**, and
@@ -230,7 +230,7 @@ both become reachable by being connected to it, so anything it does not list can
 exactly as it did before there was a picker, and a pick for a device that has since gone away
 degrades to the default instead of sending the run nowhere.
 
-> The virtual device is reachable **both** ways: as an adb target (JCode's own daemon serves
+> The virtual device is reachable **both** ways: as an adb target (QCode's own daemon serves
 > `install` and `am start`) and through the container recipe, which only builds and is handed the APK
 > by the workbench afterwards. The container path uses no adb at all, which is why it still works on a
 > phone that was never paired — and why the panel shows it its own row rather than a target picker.

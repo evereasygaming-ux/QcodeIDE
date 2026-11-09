@@ -25,34 +25,34 @@ import androidx.window.layout.FoldingFeature
 import androidx.window.layout.WindowInfoTracker
 import androidx.window.core.layout.WindowSizeClass
 
-enum class JCodeWindowWidthClass {
+enum class QCodeWindowWidthClass {
     Compact,
     Medium,
     Expanded,
 }
 
-enum class JCodeWindowHeightClass {
+enum class QCodeWindowHeightClass {
     Compact,
     Medium,
     Expanded,
 }
 
-enum class JCodePosture {
+enum class QCodePosture {
     Flat,
     TableTop,
     Book,
 }
 
-data class JCodeWindowInfo(
-    val widthClass: JCodeWindowWidthClass,
-    val heightClass: JCodeWindowHeightClass,
-    val posture: JCodePosture,
+data class QCodeWindowInfo(
+    val widthClass: QCodeWindowWidthClass,
+    val heightClass: QCodeWindowHeightClass,
+    val posture: QCodePosture,
     val hasPhysicalKeyboard: Boolean,
 )
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
-fun rememberJCodeWindowInfo(): State<JCodeWindowInfo> {
+fun rememberQCodeWindowInfo(): State<QCodeWindowInfo> {
     val context = LocalContext.current
     val activity = remember(context) { context.findActivity() }
     val configuration = LocalConfiguration.current
@@ -95,10 +95,10 @@ fun rememberJCodeWindowInfo(): State<JCodeWindowInfo> {
     }
 
     return produceState(
-        initialValue = JCodeWindowInfo(
-            widthClass = adaptiveInfo.windowSizeClass.toJCodeWidthClass(),
-            heightClass = adaptiveInfo.windowSizeClass.toJCodeHeightClass(),
-            posture = JCodePosture.Flat,
+        initialValue = QCodeWindowInfo(
+            widthClass = adaptiveInfo.windowSizeClass.toQCodeWidthClass(),
+            heightClass = adaptiveInfo.windowSizeClass.toQCodeHeightClass(),
+            posture = QCodePosture.Flat,
             hasPhysicalKeyboard = hasPhysicalKeyboard,
         ),
         adaptiveInfo,
@@ -115,10 +115,10 @@ fun rememberJCodeWindowInfo(): State<JCodeWindowInfo> {
         lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
             tracker.windowLayoutInfo(activity).collect { layoutInfo ->
                 val foldingFeature = layoutInfo.displayFeatures.filterIsInstance<FoldingFeature>().firstOrNull()
-                value = JCodeWindowInfo(
-                    widthClass = adaptiveInfo.windowSizeClass.toJCodeWidthClass(),
-                    heightClass = adaptiveInfo.windowSizeClass.toJCodeHeightClass(),
-                    posture = foldingFeature.toJCodePosture(),
+                value = QCodeWindowInfo(
+                    widthClass = adaptiveInfo.windowSizeClass.toQCodeWidthClass(),
+                    heightClass = adaptiveInfo.windowSizeClass.toQCodeHeightClass(),
+                    posture = foldingFeature.toQCodePosture(),
                     hasPhysicalKeyboard = hasPhysicalKeyboard,
                 )
             }
@@ -126,11 +126,11 @@ fun rememberJCodeWindowInfo(): State<JCodeWindowInfo> {
     }
 }
 
-private fun FoldingFeature?.toJCodePosture(): JCodePosture = when {
-    this == null -> JCodePosture.Flat
-    state != FoldingFeature.State.HALF_OPENED -> JCodePosture.Flat
-    orientation == FoldingFeature.Orientation.HORIZONTAL -> JCodePosture.TableTop
-    else -> JCodePosture.Book
+private fun FoldingFeature?.toQCodePosture(): QCodePosture = when {
+    this == null -> QCodePosture.Flat
+    state != FoldingFeature.State.HALF_OPENED -> QCodePosture.Flat
+    orientation == FoldingFeature.Orientation.HORIZONTAL -> QCodePosture.TableTop
+    else -> QCodePosture.Book
 }
 
 private tailrec fun Context.findActivity(): Activity? = when (this) {
@@ -139,14 +139,14 @@ private tailrec fun Context.findActivity(): Activity? = when (this) {
     else -> null
 }
 
-private fun WindowSizeClass.toJCodeWidthClass(): JCodeWindowWidthClass = when {
-    isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND) -> JCodeWindowWidthClass.Expanded
-    isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND) -> JCodeWindowWidthClass.Medium
-    else -> JCodeWindowWidthClass.Compact
+private fun WindowSizeClass.toQCodeWidthClass(): QCodeWindowWidthClass = when {
+    isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND) -> QCodeWindowWidthClass.Expanded
+    isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND) -> QCodeWindowWidthClass.Medium
+    else -> QCodeWindowWidthClass.Compact
 }
 
-private fun WindowSizeClass.toJCodeHeightClass(): JCodeWindowHeightClass = when {
-    isHeightAtLeastBreakpoint(WindowSizeClass.HEIGHT_DP_EXPANDED_LOWER_BOUND) -> JCodeWindowHeightClass.Expanded
-    isHeightAtLeastBreakpoint(WindowSizeClass.HEIGHT_DP_MEDIUM_LOWER_BOUND) -> JCodeWindowHeightClass.Medium
-    else -> JCodeWindowHeightClass.Compact
+private fun WindowSizeClass.toQCodeHeightClass(): QCodeWindowHeightClass = when {
+    isHeightAtLeastBreakpoint(WindowSizeClass.HEIGHT_DP_EXPANDED_LOWER_BOUND) -> QCodeWindowHeightClass.Expanded
+    isHeightAtLeastBreakpoint(WindowSizeClass.HEIGHT_DP_MEDIUM_LOWER_BOUND) -> QCodeWindowHeightClass.Medium
+    else -> QCodeWindowHeightClass.Compact
 }

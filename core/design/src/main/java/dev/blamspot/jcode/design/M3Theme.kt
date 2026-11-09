@@ -8,7 +8,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.sp
 
-private val JCodeTypography = Typography(
+private val QCodeTypography = Typography(
     bodyMedium = TextStyle(
         fontSize = 13.sp,
         lineHeight = 16.9.sp,
@@ -47,7 +47,7 @@ fun M3Theme(
     ) {
         MaterialTheme(
             colorScheme = themeBundle.colorScheme(darkTheme),
-            typography = JCodeTypography,
+            typography = QCodeTypography,
             content = content,
         )
     }

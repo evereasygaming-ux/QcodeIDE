@@ -17,7 +17,7 @@ import java.io.File
 /**
  * Calls into the native libraries that [NativeLibrariesSmokeTest] only loads.
  *
- * Loading proves very little on its own: JCode binds JNI implicitly, by symbol name, so an entry
+ * Loading proves very little on its own: QCode binds JNI implicitly, by symbol name, so an entry
  * point that no longer matches its Kotlin declaration links fine and fails at the first *call*.
  * `dlopen` succeeding is exactly what that failure looks like right up until something calls it.
  * These three are the libraries no other instrumented test reaches — buffer and the editor core are

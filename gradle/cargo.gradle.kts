@@ -37,7 +37,7 @@ fun registerCargoNdkBuildTask(taskName: String, buildMode: String) =
 
             // One target for every variant, matching the app's arm64-only packaging (the ABI
             // filter and the reason for it live in the root build.gradle.kts). Building a second
-            // one would only hand the jniLibs merger a library no JCode APK can carry.
+            // one would only hand the jniLibs merger a library no QCode APK can carry.
             project.exec {
                 workingDir = manifest.parentFile
                 environment("CARGO_HOME", cargoHome ?: "")

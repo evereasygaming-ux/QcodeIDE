@@ -49,7 +49,7 @@ import dev.blamspot.jcode.design.CompactSearchField
 import dev.blamspot.jcode.design.FileTypeIcon
 import dev.blamspot.jcode.design.IconSize
 import dev.blamspot.jcode.design.LocalFileIconSet
-import dev.blamspot.jcode.design.JCodeIcon
+import dev.blamspot.jcode.design.QCodeIcon
 import dev.blamspot.jcode.design.ManagerFilterChip
 import dev.blamspot.jcode.design.Radius
 import dev.blamspot.jcode.design.Space

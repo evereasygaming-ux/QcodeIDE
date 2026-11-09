@@ -191,7 +191,7 @@ class TerminalSessionManager(
     @Volatile
     var userEnvVars: Map<String, String> = emptyMap()
 
-    /** Loopback port of the JCode ADB relay, or 0 when the bridge is off. Non-zero makes bare `adb`,
+    /** Loopback port of the QCode ADB relay, or 0 when the bridge is off. Non-zero makes bare `adb`,
      *  `gradlew installDebug` and `flutter run` target this phone with no `-s` flag. Pushed from
      *  AdbBridge. */
     @Volatile
@@ -221,10 +221,10 @@ class TerminalSessionManager(
     }
 
     /**
-     * `adb connect` spec for JCode's OWN adbd — the virtual device — or empty when it is not running.
+     * `adb connect` spec for QCode's OWN adbd — the virtual device — or empty when it is not running.
      *
      * A `localfilesystem:` socket rather than an address, because that daemon is reachable only from
-     * inside JCode's own storage and deliberately has no port for anything else on the phone to
+     * inside QCode's own storage and deliberately has no port for anything else on the phone to
      * find. Takes precedence over [adbRelayPort]: when both are up, guest tooling should address the
      * virtual device, since running it at all means the user asked not to go through the host phone.
      */
@@ -235,7 +235,7 @@ class TerminalSessionManager(
      * Present the virtual device by its serial rather than by the socket it is bound to.
      *
      * adb takes a transport's serial to be whatever it was connected with, so where every other
-     * device reports a serial this one reported the path of a socket inside JCode's storage — to
+     * device reports a serial this one reported the path of a socket inside QCode's storage — to
      * `adb devices`, and to everything downstream of it. The socket is named after the device's
      * serial now (the pack does that half), and this shim is what keeps the `localfilesystem:/run/`
      * in front of it off the listing. /usr/local/bin is early on PATH, so it shadows the distro's
@@ -275,7 +275,7 @@ class TerminalSessionManager(
         }
         if (adbRelayPort <= 0) return emptyMap()
         return mapOf(
-            "JCODE_ADB_PORT" to adbRelayPort.toString(),
+            "QCODE_ADB_PORT" to adbRelayPort.toString(),
             "ANDROID_SERIAL" to "127.0.0.1:$adbRelayPort",
         )
     }
@@ -405,8 +405,8 @@ class TerminalSessionManager(
             val body = when {
                 spec.isNotEmpty() -> "$ADB_PROFILE_MARKER\nexport ANDROID_SERIAL=\"$spec\"\n"
                 adbRelayPort > 0 ->
-                    "$ADB_PROFILE_MARKER\nJCODE_ADB_PORT=$adbRelayPort\nexport JCODE_ADB_PORT\n" +
-                        "export ANDROID_SERIAL=\"127.0.0.1:\$JCODE_ADB_PORT\"\n"
+                    "$ADB_PROFILE_MARKER\nQCODE_ADB_PORT=$adbRelayPort\nexport QCODE_ADB_PORT\n" +
+                        "export ANDROID_SERIAL=\"127.0.0.1:\$QCODE_ADB_PORT\"\n"
                 else -> null
             }
             if (body != null) {
@@ -826,7 +826,7 @@ class TerminalSessionManager(
     }
 }
 
-private val GUEST_SHELL_INTEGRATION = """# JCode shell integration (sourced via /etc/profile -> /etc/profile.d/*.sh).
+private val GUEST_SHELL_INTEGRATION = """# QCode shell integration (sourced via /etc/profile -> /etc/profile.d/*.sh).
 
 # Open a file in the editor from the terminal.
 # Usage: jcode <path>[:line[:col]] ...   (alias: code, when no real `code` exists)
@@ -974,13 +974,13 @@ private val NESTED_SHELL_WRAPPER_TEMPLATE = """#!/bin/sh
 self=__SELF__
 real='__REAL__'; [ -x "${'$'}real" ] || real="/bin/${'$'}self"
 
-# One-shot guard: the app marks a tab's own top shell (JCODE_NSH_TOP) so it never relocates itself;
+# One-shot guard: the app marks a tab's own top shell (QCODE_NSH_TOP) so it never relocates itself;
 # clearing it here lets that shell's own interactive sub-shells still relocate.
-[ -n "${'$'}{JCODE_NSH_TOP:-}" ] && { unset JCODE_NSH_TOP; exec "${'$'}real" "${'$'}@"; }
+[ -n "${'$'}{QCODE_NSH_TOP:-}" ] && { unset QCODE_NSH_TOP; exec "${'$'}real" "${'$'}@"; }
 # Not a real terminal on both ends (pipe / ${'$'}(...) / redirect / cron) => run inline.
 [ -t 0 ] && [ -t 1 ] || exec "${'$'}real" "${'$'}@"
 # Explicit per-invocation opt-out.
-[ -n "${'$'}{JCODE_NSH_INLINE:-}" ] && exec "${'$'}real" "${'$'}@"
+[ -n "${'$'}{QCODE_NSH_INLINE:-}" ] && exec "${'$'}real" "${'$'}@"
 
 # Relocate only a bare interactive shell: bail to inline on -c, a script operand, or an operand after --.
 relocate=1; want_arg=0; ddash=0
@@ -1059,7 +1059,7 @@ esac
 // Default htop config seeded into a fresh $HOME/.config/htop/htoprc. A compact, phone-width column
 // set (PID/CPU%/MEM%/Command) so process NAMES are visible instead of being pushed off-screen by
 // htop's desktop-width default, with userland threads hidden so a multi-threaded process (e.g. the
-// JCode app's own JVM, ~40 threads) shows as one row. htop rewrites this file when the user changes
+// QCode app's own JVM, ~40 threads) shows as one row. htop rewrites this file when the user changes
 // settings, so it only shapes the first run and never overrides a deliberate choice.
 private val DEFAULT_HTOPRC = """# Beware! This file is rewritten by htop when settings are changed in the interface.
 # The parser is also very primitive, and not human-friendly.

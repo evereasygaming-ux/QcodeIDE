@@ -26,7 +26,7 @@ this document in step when adding a key.
 id, name, publisher, author, authors, type, version, description,
 longDescription, shortDescription, samples, templates, language, languages,
 settings, api, requires, suggests, contributes, entry, images,
-minJCodeVersion, targetJCodeVersion, maxJCodeVersion, category, subcategory
+minQCodeVersion, targetQCodeVersion, maxQCodeVersion, category, subcategory
 ```
 
 | Key | Type | Required | Notes |
@@ -51,9 +51,9 @@ minJCodeVersion, targetJCodeVersion, maxJCodeVersion, category, subcategory
 | `contributes` | map | No | See §6 |
 | `entry` | map | No | `ui`: relative path to the web-UI HTML |
 | `images` | map | No | `icon`: relative path |
-| `minJCodeVersion` | string | No | Install refused below this |
-| `maxJCodeVersion` | string | No | Install refused above this; absent means no ceiling |
-| `targetJCodeVersion` | string | No | Accepted; informational |
+| `minQCodeVersion` | string | No | Install refused below this |
+| `maxQCodeVersion` | string | No | Install refused above this; absent means no ceiling |
+| `targetQCodeVersion` | string | No | Accepted; informational |
 | `category` / `subcategory` | string | No | Marketplace classification |
 
 ### 2.1 `api`
@@ -104,19 +104,19 @@ entry:
         icon: image
 ```
 
-A native extension is loaded into **JCode's own process** by `NativeExtensionLoader`, with JCode's
+A native extension is loaded into **QCode's own process** by `NativeExtensionLoader`, with QCode's
 class loader as its parent, so it shares one Compose runtime with the workbench.
 
 | Key | Meaning |
 |---|---|
 | `apk` / `dex` | the payload, relative to the install directory. `dex` is enough for a plugin that resolves no resources; `apk` is required for one with its own drawables, ids or assets, because a resource table needs an archive for `addAssetPath` to attach |
-| `class` | the entry class, implementing `JCodeNativeExtension`. **One per extension** — a plugin that draws several surfaces dispatches on `Params.VIEW` rather than declaring several entries |
-| `guest` | *(added at ABI 8)* a class implementing `JCodeVirtualDeviceGuest`, loaded into the `:guest` process by the app's `GuestSessionService` stub. Declaring it is also **how JCode knows an installed pack provides the virtual device** — see [App sandbox §1a](../08-virtual-device/01-app-sandbox-architecture.md#1a-where-this-lives-and-why-it-is-split) |
-| `abi` | must equal the host's `JCODE_EXT_ABI` exactly; a mismatch is refused with a message naming both numbers |
+| `class` | the entry class, implementing `QCodeNativeExtension`. **One per extension** — a plugin that draws several surfaces dispatches on `Params.VIEW` rather than declaring several entries |
+| `guest` | *(added at ABI 8)* a class implementing `QCodeVirtualDeviceGuest`, loaded into the `:guest` process by the app's `GuestSessionService` stub. Declaring it is also **how QCode knows an installed pack provides the virtual device** — see [App sandbox §1a](../08-virtual-device/01-app-sandbox-architecture.md#1a-where-this-lives-and-why-it-is-split) |
+| `abi` | must equal the host's `QCODE_EXT_ABI` exactly; a mismatch is refused with a message naming both numbers |
 | `claims` | which files this plugin draws. A file type alone is too broad, so a rule may also require a `pathContains` fragment or a `contains` substring of the file's own text |
 
 **Only officially signed extensions load native code**, because loading it means running it inside
-JCode. The one way past that is `Settings → Developer options`, which also permits unsigned
+QCode. The one way past that is `Settings → Developer options`, which also permits unsigned
 sideloading — it exists so a pack that ships the virtual device can be worked on at all, since
 otherwise every test round would need the package signed first.
 
@@ -256,7 +256,7 @@ The four action lists share one shape:
 ```yaml
 - id: myext.doThing          # required; the entry is dropped without it
   label: Do the thing        # defaults to id
-  icon: Run                  # optional JCodeIcon name
+  icon: Run                  # optional QCodeIcon name
   fileExtensions: [ts, tsx]  # optional; leading "." stripped, lowercased
   targets: [file, directory] # optional; only "file"/"directory" survive
 ```
@@ -326,7 +326,7 @@ Gradle tasks a preset already covers is then dropped, so installing a pack that 
 
 ### 6.4 `iconSets`
 
-An icon pack ships art plus an index. JCode reads two independent kinds of set — **UI icons** (the
+An icon pack ships art plus an index. QCode reads two independent kinds of set — **UI icons** (the
 app's own chrome) and **file icons** (the badge on every file and folder it lists) — and a pack may
 provide either, both, and **any number of each** as variants.
 
@@ -384,7 +384,7 @@ authors: [Ada Lovelace, Grace Hopper]
 type: language
 version: 1.2.0
 description: HTML, CSS and JSON support with project templates.
-minJCodeVersion: "1.3.5"
+minQCodeVersion: "1.3.5"
 
 api:
   minApiVersion: 1
@@ -437,9 +437,9 @@ images:
 6a. `contributes.iconSets` resolution runs even with no `contributes:` block; every other
    contribution point resolves to empty in that case.
 7. `formatterCommand` is currently inert.
-8. `entry.native.abi` must equal the host's `JCODE_EXT_ABI` exactly — not "at least".
+8. `entry.native.abi` must equal the host's `QCODE_EXT_ABI` exactly — not "at least".
 9. An extension declaring `entry.native.guest` is offering to provide the virtual device; at most one
-   installed extension should, and JCode takes the first it finds.
+   installed extension should, and QCode takes the first it finds.
 
 ---
 

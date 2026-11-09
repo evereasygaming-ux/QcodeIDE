@@ -1,14 +1,14 @@
 package dev.blamspot.jcode.feature.editor.pane
 
 import androidx.compose.runtime.compositionLocalOf
-import dev.blamspot.jcode.design.JCodeIcon
+import dev.blamspot.jcode.design.QCodeIcon
 
 /** One extension-contributed editor context-menu item, already filtered for the active file. */
 data class EditorMenuContribution(
     /** Stable key ("extensionId:actionId") identifying the contribution to the host. */
     val key: String,
     val label: String,
-    val icon: JCodeIcon,
+    val icon: QCodeIcon,
 )
 
 /**
@@ -23,7 +23,7 @@ data class EditorMenuExtras(
     /** What to call that toggle. A rendered Markdown file is previewed; a layout is designed. */
     val previewLabel: String = "Preview",
     /** And what it looks like, so a claiming extension describes the whole item. */
-    val previewIcon: JCodeIcon = JCodeIcon.Preview,
+    val previewIcon: QCodeIcon = QCodeIcon.Preview,
     /** Opens the shared Go-to-line dialog for the active file tab. */
     val onGoToLine: (() -> Unit)? = null,
     /** Opens the Find-in-Files panel seeded with the pressed word (may be empty). */

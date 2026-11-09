@@ -83,7 +83,7 @@ fun SettingsResettableRow(
                 onDismissRequest = { menuAt = null },
                 offset = at,
                 listActions = listOf(
-                    ContextAction(JCodeIcon.Discard, "Reset this setting", enabled = modified) { onReset() },
+                    ContextAction(QCodeIcon.Discard, "Reset this setting", enabled = modified) { onReset() },
                 ),
             )
         }

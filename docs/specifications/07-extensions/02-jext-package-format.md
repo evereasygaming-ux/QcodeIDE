@@ -11,7 +11,7 @@
 
 ## 1. Purpose and scope
 
-The binary format of a JCode extension package, its integrity and authenticity guarantees, and
+The binary format of a QCode extension package, its integrity and authenticity guarantees, and
 exactly what those guarantees do and do not cover.
 
 Packages are produced by the [`j-code-make-tools`](https://github.com/blamspotdev/j-code-make-tools)
@@ -85,7 +85,7 @@ The source states the boundary explicitly:
 
 | Property | Guaranteed? |
 |---|---|
-| **Authenticity** — the package was signed by the JCode key | **Yes**, via Ed25519 |
+| **Authenticity** — the package was signed by the QCode key | **Yes**, via Ed25519 |
 | **Integrity** — the package was not modified after signing | **Yes**, via Ed25519 and GCM |
 | **Confidentiality** — contents are secret from the device owner | **No.** The symmetric key ships in the APK |
 
@@ -154,12 +154,12 @@ Step 5 is what binds the downloaded artifact to the index entry the user chose.
 ## 6. Legacy `.jehm` header
 
 Packages built before the header merge carry `extension.jehm`, a Markdown-ish file whose **YAML
-frontmatter** holds the install id (`uniqueName`) and `minJCodeVersion`:
+frontmatter** holds the install id (`uniqueName`) and `minQCodeVersion`:
 
 ```
 ---
 uniqueName: dev.example.mypack
-minJCodeVersion: 1.3.5
+minQCodeVersion: 1.3.5
 ---
 …prose…
 ```
@@ -174,13 +174,13 @@ purely for older archives.
 
 ```kotlin
 requireCompatible(minVersion, appVersion, name)
-// error("$name requires JCode $minVersion or newer (you have $appVersion)")
+// error("$name requires QCode $minVersion or newer (you have $appVersion)")
 ```
 
-A blank or absent `minJCodeVersion` means "no floor", and a blank or absent `maxJCodeVersion`
+A blank or absent `minQCodeVersion` means "no floor", and a blank or absent `maxQCodeVersion`
 means "no ceiling". Both bounds include the version they name: `1.7.0`–`1.8.4` runs on both ends
 and not on 1.9. Comparison is semantic, not lexical. `jext pack` refuses a ceiling below the floor,
-since that describes no JCode at all.
+since that describes no QCode at all.
 
 ---
 
@@ -224,8 +224,8 @@ filesDir/extensions/
 | Signature mismatch | `signed .jext failed signature check — not an official package or it was tampered with` |
 | GCM tag mismatch | `AEADBadTagException` from `doFinal` |
 | Any manifest check | See §5.3 |
-| `minJCodeVersion` too new | `<name> requires JCode <v> or newer (you have <appVersion>)` |
-| `maxJCodeVersion` too old | `<name> supports JCode up to <v> (you have <appVersion>)` |
+| `minQCodeVersion` too new | `<name> requires QCode <v> or newer (you have <appVersion>)` |
+| `maxQCodeVersion` too old | `<name> supports QCode up to <v> (you have <appVersion>)` |
 
 ---
 

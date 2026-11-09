@@ -4,7 +4,7 @@
 |---|---|
 | **Status** | Implemented |
 | **Modules** | `:core:design`, `:core:adaptive` |
-| **Primary sources** | core/design/src/main/java/dev/blamspot/jcode/design/DesignSystem.kt (532 lines), core/design/src/main/java/dev/blamspot/jcode/design/ThemeBundle.kt (227), core/design/src/main/java/dev/blamspot/jcode/design/UiIconSet.kt, core/design/src/main/java/dev/blamspot/jcode/design/JCodeLineIconSet.kt, core/design/src/main/java/dev/blamspot/jcode/design/FileIconSet.kt, core/design/src/main/java/dev/blamspot/jcode/design/IconPackLoader.kt, core/design/src/main/java/dev/blamspot/jcode/design/SvgImageVector.kt, core/design/src/main/java/dev/blamspot/jcode/design/IconArt.kt, core/design/src/main/java/dev/blamspot/jcode/design/ManagerUi.kt (713), core/design/src/main/java/dev/blamspot/jcode/design/ContextMenu.kt, core/design/src/main/java/dev/blamspot/jcode/design/Tooltip.kt, app/src/main/java/dev/blamspot/jcode/MonoFontCatalog.kt |
+| **Primary sources** | core/design/src/main/java/dev/blamspot/jcode/design/DesignSystem.kt (532 lines), core/design/src/main/java/dev/blamspot/jcode/design/ThemeBundle.kt (227), core/design/src/main/java/dev/blamspot/jcode/design/UiIconSet.kt, core/design/src/main/java/dev/blamspot/jcode/design/QCodeLineIconSet.kt, core/design/src/main/java/dev/blamspot/jcode/design/FileIconSet.kt, core/design/src/main/java/dev/blamspot/jcode/design/IconPackLoader.kt, core/design/src/main/java/dev/blamspot/jcode/design/SvgImageVector.kt, core/design/src/main/java/dev/blamspot/jcode/design/IconArt.kt, core/design/src/main/java/dev/blamspot/jcode/design/ManagerUi.kt (713), core/design/src/main/java/dev/blamspot/jcode/design/ContextMenu.kt, core/design/src/main/java/dev/blamspot/jcode/design/Tooltip.kt, app/src/main/java/dev/blamspot/jcode/MonoFontCatalog.kt |
 | **Verified against** | commit `cea581c`, 2026-08-09 |
 
 ---
@@ -21,13 +21,13 @@ manager chrome, and the accessibility rules every screen must meet.
 ```kotlin
 data class ThemeBundle(
     val id: String, val name: String, val description: String,
-    val author: String = "JCode",
+    val author: String = "QCode",
     val dark: ColorScheme, val light: ColorScheme,
-    val darkSemantic: JCodeSemanticColors, val lightSemantic: JCodeSemanticColors,
+    val darkSemantic: QCodeSemanticColors, val lightSemantic: QCodeSemanticColors,
     val fontFamily: FontFamily? = null,
 ) {
     fun colorScheme(darkTheme: Boolean): ColorScheme
-    fun semanticColors(darkTheme: Boolean): JCodeSemanticColors
+    fun semanticColors(darkTheme: Boolean): QCodeSemanticColors
 }
 ```
 
@@ -35,7 +35,7 @@ A bundle carries **both** a dark and a light Material 3 `ColorScheme`, so switch
 falls back to a generated scheme.
 
 ```kotlin
-data class JCodeSemanticColors(
+data class QCodeSemanticColors(
     val success: Color, val onSuccess: Color,
     val warning: Color, val onWarning: Color,
     val info: Color, val onInfo: Color,
@@ -76,7 +76,7 @@ has no effect on the editor unless the host explicitly pushes the new theme into
 
 ## 3. Icon sets
 
-JCode draws its icons from **two independent sets**, chosen separately in Settings.
+QCode draws its icons from **two independent sets**, chosen separately in Settings.
 
 | Set | Covers | Built-ins |
 |---|---|---|
@@ -84,7 +84,7 @@ JCode draws its icons from **two independent sets**, chosen separately in Settin
 | **File icon set** | The badge on every file and folder the app lists | **none** — extensions only |
 
 ```kotlin
-enum class JCodeIcon { Run, Stop, Terminal, Files, Folder, …, Restore }   // ~90 members
+enum class QCodeIcon { Run, Stop, Terminal, Files, Folder, …, Restore }   // ~90 members
 
 sealed interface IconArt {
     data class Vector(val image: ImageVector) : IconArt
@@ -93,17 +93,17 @@ sealed interface IconArt {
 
 class UiIconSet(
     val id: String, val name: String, val description: String,
-    val author: String = "JCode",
+    val author: String = "QCode",
     val providerId: String? = null,            // null for a built-in
-    private val overrides: Map<JCodeIcon, IconArt>,
+    private val overrides: Map<QCodeIcon, IconArt>,
     private val fallback: UiIconSet? = null,
 ) {
-    fun art(icon: JCodeIcon): IconArt
+    fun art(icon: QCodeIcon): IconArt
     val filledSlots: Int
 }
 ```
 
-Every icon in the app is referenced through the `JCodeIcon` enum, never as a direct
+Every icon in the app is referenced through the `QCodeIcon` enum, never as a direct
 `Icons.Rounded.*`, so a set can replace the whole chrome.
 
 Art is an `IconArt`, not an `ImageVector`, because an installed pack may ship SVG **or** PNG — so
@@ -114,7 +114,7 @@ host composables that take an icon parameter (`WorkbenchIconActionButton`, `Stat
 | UI set | `id` | Description |
 |---|---|---|
 | Material Rounded | `material` | The built-in Material Rounded set; the complete map |
-| JCode Line | `jcode-line` | Hand-drawn vector line pack, with `fallback = defaultUiIconSet` for unfilled slots |
+| QCode Line | `jcode-line` | Hand-drawn vector line pack, with `fallback = defaultUiIconSet` for unfilled slots |
 
 `UiIconSetRegistry.builtIns = listOf(defaultUiIconSet) + customUiIconSets`; `byId(id, installed)`
 resolves against the built-ins plus whatever extensions provide, falling back to the default. Access
@@ -139,7 +139,7 @@ class FileIconSet(…) {
 }
 ```
 
-There are no built-in file icon sets: with none selected, files and folders use two `JCodeIcon`
+There are no built-in file icon sets: with none selected, files and folders use two `QCodeIcon`
 slots from the active UI set. `LocalFileIconSet` is therefore **nullable**, and the Settings card is
 hidden entirely while no installed extension provides one.
 
@@ -183,7 +183,7 @@ Caching runs at three levels, because all three are re-derived far more often th
 | Decoded art (`IconArtLoader`) | art path + mtime, bounded LRU (256) | the same |
 | Resolved name → icon (`FileIconSet`) | file name + kind + expanded, bounded LRU (512) | the set being replaced |
 
-A UI set is decoded **eagerly** when loaded — it fills at most one slot per `JCodeIcon` and all of
+A UI set is decoded **eagerly** when loaded — it fills at most one slot per `QCodeIcon` and all of
 them are on screen at once. A file set stays **lazy**: a pack may define hundreds of icons of which a
 project shows a dozen, so art is decoded off the main thread on first use, with the host's own glyph
 drawn until it arrives.
@@ -202,17 +202,17 @@ The on-disk index format is specified in
 ## 4. Tokens
 
 ```kotlin
-data class JCodeSpacing(val xs: Dp = 4.dp, val sm: Dp = 8.dp, val md: Dp = 12.dp,
+data class QCodeSpacing(val xs: Dp = 4.dp, val sm: Dp = 8.dp, val md: Dp = 12.dp,
                         val lg: Dp = 16.dp, val xl: Dp = 24.dp)
 
 enum class DensityMode { Compact, Comfortable }
 
 val LocalDensityMode = compositionLocalOf { DensityMode.Comfortable }
 val LocalIconSize    = compositionLocalOf { 18.dp }
-val LocalSpacing     = /* JCodeSpacing() */
+val LocalSpacing     = /* QCodeSpacing() */
 ```
 
-Accessed as `JCodeTheme.spacing`. `DensityMode` drives control heights (28 dp compact,
+Accessed as `QCodeTheme.spacing`. `DensityMode` drives control heights (28 dp compact,
 40 dp comfortable) so a compact-density screen does not need per-widget overrides.
 
 ### 4.1 Typography
@@ -224,7 +224,7 @@ UI text uses the system sans.
 glyphs like `⏵` render in the terminal; the default system font lacks them.
 
 `MonoFontCatalog` backs the font-family picker. `Local*Typeface` values are hoisted into the outer
-`JCodeApp` composable rather than the shell — the shell sits at the ART verifier's per-method
+`QCodeApp` composable rather than the shell — the shell sits at the ART verifier's per-method
 register limit.
 
 ---
@@ -255,7 +255,7 @@ filter chips, so they stay reachable however many categories exist.
 
 ```kotlin
 data class ContextAction(
-    val icon: JCodeIcon, val label: String,
+    val icon: QCodeIcon, val label: String,
     val destructive: Boolean = false, val enabled: Boolean = true,
     val onClick: () -> Unit,
 )
@@ -294,12 +294,12 @@ These are project requirements, not suggestions:
 
 ## 7. Invariants and constraints
 
-1. Icons are referenced through `JCodeIcon`, never `Icons.*` directly.
+1. Icons are referenced through `QCodeIcon`, never `Icons.*` directly.
 2. A theme bundle must supply both a dark and a light `ColorScheme`.
 3. The editor and terminal do not inherit `MaterialTheme` — push the theme explicitly.
-4. Use `JCodeTheme.spacing` rather than literal `dp` padding.
+4. Use `QCodeTheme.spacing` rather than literal `dp` padding.
 5. Every long-press menu uses `CompactContextMenu`.
-6. Typefaces are created in the outer `JCodeApp`, not inside the shell.
+6. Typefaces are created in the outer `QCodeApp`, not inside the shell.
 7. Unknown bundle ids fall back to the default rather than failing.
 
 ---

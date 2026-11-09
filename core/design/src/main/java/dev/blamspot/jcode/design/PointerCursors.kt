@@ -10,7 +10,7 @@ import androidx.compose.ui.platform.LocalContext
 /**
  * What the cursor turns into over a surface.
  *
- * JCode was written for a touchscreen, where a pointer has no shape and nothing to say before it is
+ * QCode was written for a touchscreen, where a pointer has no shape and nothing to say before it is
  * put down. With a mouse attached the cursor is the only thing that tells you what a surface *is*
  * before you commit to clicking it — whether a row is pressable, whether text can be selected,
  * whether an edge can be dragged. Until now it was an arrow over all of them.

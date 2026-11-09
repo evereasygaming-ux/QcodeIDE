@@ -50,7 +50,7 @@ import android.content.res.Configuration
 import dev.blamspot.jcode.design.CompactContextMenu
 import dev.blamspot.jcode.design.CompactSearchField
 import dev.blamspot.jcode.design.ContextAction
-import dev.blamspot.jcode.design.JCodeIcon
+import dev.blamspot.jcode.design.QCodeIcon
 import dev.blamspot.jcode.design.Radius
 import dev.blamspot.jcode.design.Space
 import dev.blamspot.jcode.design.StrokeWidth
@@ -59,8 +59,8 @@ import dev.blamspot.jcode.design.LocalCutoutSetting
 import dev.blamspot.jcode.design.LocalSyntaxPalette
 import dev.blamspot.jcode.design.LocalMarkdownPreviewSetting
 import dev.blamspot.jcode.findActivity
-import dev.blamspot.jcode.design.JCodeSemanticColors
-import dev.blamspot.jcode.design.JCodeTheme
+import dev.blamspot.jcode.design.QCodeSemanticColors
+import dev.blamspot.jcode.design.QCodeTheme
 import dev.blamspot.jcode.editor.MarkdownHtml
 import dev.blamspot.jcode.editor.TokenPalette
 import dev.blamspot.jcode.feature.editor.pane.EditorTab
@@ -98,7 +98,7 @@ fun MarkdownPreviewPage(
     val menuExtras = LocalEditorMenuExtras.current
     val clipboard = LocalClipboardManager.current
     val colorScheme = MaterialTheme.colorScheme
-    val semantic = JCodeTheme.semanticColors
+    val semantic = QCodeTheme.semanticColors
     val backgroundArgb = colorScheme.background.toArgb()
 
     var webView by remember { mutableStateOf<WebView?>(null) }
@@ -342,20 +342,20 @@ fun MarkdownPreviewPage(
                     onDismissRequest = { menuAt = null },
                     offset = offset,
                     quickActions = listOf(
-                        ContextAction(JCodeIcon.Copy, "Copy", enabled = selectedText.isNotEmpty()) {
+                        ContextAction(QCodeIcon.Copy, "Copy", enabled = selectedText.isNotEmpty()) {
                             clipboard.setText(AnnotatedString(selectedText))
                         },
                     ),
                     listActions = listOfNotNull(
-                        ContextAction(JCodeIcon.Cursor, "Select Text") {
+                        ContextAction(QCodeIcon.Cursor, "Select Text") {
                             webView?.evaluateJavascript(selectBlockJs(x, y)) { res ->
                                 selectedText = decodeJsString(res)
                             }
                         },
-                        ContextAction(JCodeIcon.Search, "Find text") { findVisible = true },
-                        ContextAction(JCodeIcon.GoToLine, "Go to line") { goToLineVisible = true },
+                        ContextAction(QCodeIcon.Search, "Find text") { findVisible = true },
+                        ContextAction(QCodeIcon.GoToLine, "Go to line") { goToLineVisible = true },
                         menuExtras.previewToggle?.let { toggle ->
-                            ContextAction(JCodeIcon.Code, "View Source Code") { toggle() }
+                            ContextAction(QCodeIcon.Code, "View Source Code") { toggle() }
                         },
                     ),
                 )
@@ -439,13 +439,13 @@ private fun FindBar(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             IconButton(onClick = onPrev, enabled = total > 0, modifier = Modifier.size(32.dp)) {
-                Icon(jcIcon(JCodeIcon.ChevronUp), contentDescription = "Previous match")
+                Icon(jcIcon(QCodeIcon.ChevronUp), contentDescription = "Previous match")
             }
             IconButton(onClick = onNext, enabled = total > 0, modifier = Modifier.size(32.dp)) {
-                Icon(jcIcon(JCodeIcon.ChevronDown), contentDescription = "Next match")
+                Icon(jcIcon(QCodeIcon.ChevronDown), contentDescription = "Next match")
             }
             IconButton(onClick = onClose, modifier = Modifier.size(32.dp)) {
-                Icon(jcIcon(JCodeIcon.Close), contentDescription = "Close find")
+                Icon(jcIcon(QCodeIcon.Close), contentDescription = "Close find")
             }
         }
     }
@@ -503,7 +503,7 @@ return sel.toString();
 }catch(e){return ''}})($x,$y)
 """.trimIndent()
 
-private fun themeVars(colorScheme: ColorScheme, semantic: JCodeSemanticColors): List<Pair<String, String>> {
+private fun themeVars(colorScheme: ColorScheme, semantic: QCodeSemanticColors): List<Pair<String, String>> {
     fun hex(c: Color): String = String.format("#%06X", 0xFFFFFF and c.toArgb())
     return listOf(
         "--jcode-background" to hex(colorScheme.background),
@@ -526,7 +526,7 @@ private fun themeVars(colorScheme: ColorScheme, semantic: JCodeSemanticColors): 
  *  diagrams — cached by source hash so live typing only re-renders the fence being edited. */
 private fun shellDocument(
     colorScheme: ColorScheme,
-    semantic: JCodeSemanticColors,
+    semantic: QCodeSemanticColors,
     dark: Boolean,
     withMermaid: Boolean,
 ): String {

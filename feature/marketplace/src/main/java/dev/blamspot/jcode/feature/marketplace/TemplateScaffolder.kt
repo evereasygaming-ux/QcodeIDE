@@ -119,12 +119,12 @@ class TemplateScaffolder internal constructor(
         // A script step gets the same values the inline form gets as `{{tokens}}`, but as environment
         // variables — a file cannot have text substituted into it and still be the file that runs.
         val env = buildMap {
-            put("JCODE_PROJECT_DIR", request.projectDir)
-            put("JCODE_PROJECT_NAME", request.projectName)
-            put("JCODE_STAGING_DIR", staging)
-            template.dir?.let { put("JCODE_TEMPLATE_DIR", it.absolutePath) }
+            put("QCODE_PROJECT_DIR", request.projectDir)
+            put("QCODE_PROJECT_NAME", request.projectName)
+            put("QCODE_STAGING_DIR", staging)
+            template.dir?.let { put("QCODE_TEMPLATE_DIR", it.absolutePath) }
             template.inputs.forEach { input ->
-                put("JCODE_INPUT_" + envSuffix(input.id), request.inputs[input.id] ?: input.defaultValue)
+                put("QCODE_INPUT_" + envSuffix(input.id), request.inputs[input.id] ?: input.defaultValue)
             }
         }
 

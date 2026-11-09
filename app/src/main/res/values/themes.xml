@@ -2,7 +2,7 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Startup theme used only for the system launch window. Android 11 and below use the centered
          layer-list icon; Android 12+ uses the platform splash attributes. -->
-    <style name="Theme.JCode.Starting" parent="android:Theme.Material.Light.NoActionBar">
+    <style name="Theme.QCode.Starting" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:windowBackground">@drawable/splash_screen</item>
         <item name="android:colorBackground">@color/ic_launcher_background</item>
         <item name="android:statusBarColor">@color/ic_launcher_background</item>
@@ -14,7 +14,7 @@
 
     <!-- Runtime app theme. Keep the dark window background so there is no white flash before Compose
          draws. Parent kept Light so any android-themed component is unchanged. -->
-    <style name="Theme.JCode" parent="android:Theme.Material.Light.NoActionBar">
+    <style name="Theme.QCode" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:windowBackground">@color/ic_launcher_background</item>
         <item name="android:colorBackground">@color/ic_launcher_background</item>
         <item name="android:statusBarColor">@color/ic_launcher_background</item>
@@ -32,11 +32,11 @@
 
          Two themes rather than a night-qualified one: the workbench's own theme setting can differ
          from the device's, and this has to follow the workbench. -->
-    <style name="Theme.JCode.Web.Light" parent="android:Theme.Material.Light.NoActionBar">
+    <style name="Theme.QCode.Web.Light" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:isLightTheme">true</item>
     </style>
 
-    <style name="Theme.JCode.Web.Dark" parent="android:Theme.Material.NoActionBar">
+    <style name="Theme.QCode.Web.Dark" parent="android:Theme.Material.NoActionBar">
         <item name="android:isLightTheme">false</item>
     </style>
 </resources>

@@ -48,13 +48,13 @@ func BuildFramedHeader(token string) string {
 	return Prefix + token + Suffix
 }
 
-// getTokenFilePath returns ~/.antigem_bridge/csrf_token.txt
+// getTokenFilePath returns ~/.qcode_bridge/csrf_token.txt
 func getTokenFilePath() string {
 	home, err := os.UserHomeDir()
 	if err != nil || home == "" {
 		home = "/data/data/com.termux/files/home"
 	}
-	return filepath.Join(home, ".antigem_bridge", "csrf_token.txt")
+	return filepath.Join(home, ".qcode_bridge", "csrf_token.txt")
 }
 
 // ResolveToken determines the active token from CLI argument, file, or new generation.
@@ -349,6 +349,6 @@ func AuthMiddleware(token string, next http.Handler) http.Handler {
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte(`{"error":"unauthorized","message":"Missing or invalid AntiGem security token header"}`))
+		w.Write([]byte(`{"error":"unauthorized","message":"Missing or invalid QCODE security token header"}`))
 	})
 }

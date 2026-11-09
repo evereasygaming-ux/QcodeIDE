@@ -5,7 +5,7 @@ import dev.blamspot.jcode.feature.marketplace.ExtensionActivation
 
 /**
  * Per-extension activation mode, shared (via [LocalExtensionActivation]) with the extension detail page
- * so the mode selector can read the current mode + change it without threading params through JCodeShell
+ * so the mode selector can read the current mode + change it without threading params through QCodeShell
  * (which is at the ART verifier's register limit). [modeFor] returns the mode for an extension id
  * ([ExtensionActivation.Default] when unset); [onChange] persists a new mode.
  */

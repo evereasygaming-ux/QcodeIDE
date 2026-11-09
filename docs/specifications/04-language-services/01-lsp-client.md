@@ -337,7 +337,7 @@ rust-analyzer an index) and a phone has no room for idle ones.
 ### 8.4 Missing servers
 
 Opening a file whose catalog server is not installed emits `missingServer` once per server per
-session. `JCodeShell` turns that into a snackbar with an **Install** action routed through
+session. `QCodeShell` turns that into a snackbar with an **Install** action routed through
 `installLspCatalogEntry`, which resolves `requiredSdks` first. It stays an explicit choice because
 some servers pull a whole SDK (jdtls a JDK, csharp-ls the .NET SDK).
 
@@ -347,7 +347,7 @@ some servers pull a whole SDK (jdtls a JDK, csharp-ls the .NET SDK).
 
 | Feature | Path |
 |---|---|
-| Squiggles + Issues panel | `LspSession.diagnostics` → `DiagnosticsBus` → `JCodeShell` decorations / `IssuesPanel` |
+| Squiggles + Issues panel | `LspSession.diagnostics` → `DiagnosticsBus` → `QCodeShell` decorations / `IssuesPanel` |
 | Completions | `CompletionSource` → `MainViewModel.lspCompletions` → merged with Dev Pack keywords ([Syntax highlighting and completion §4](../02-editor/05-syntax-highlighting-and-completion.md#4-completions)) |
 | Go to Definition | `editorLanguageAction` → single result opens directly, several open the location picker |
 | Find References | `editorLanguageAction` → location picker (file, line, source preview) |

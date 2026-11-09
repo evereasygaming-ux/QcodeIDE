@@ -11,9 +11,9 @@
 
 ## 1a. Where this lives, and why it is split
 
-**The device is not part of JCode any more.** Everything that makes an APK run inside the IDE — the
+**The device is not part of QCode any more.** Everything that makes an APK run inside the IDE — the
 container, the framework hooks, the launcher, the status bar, the navigation bar, the adb daemon's
-device end — ships in the **Android Dev Pack**. A JCode with no Android pack installed has no virtual
+device end — ships in the **Android Dev Pack**. A QCode with no Android pack installed has no virtual
 device, the same way it has no Kotlin completions without the Kotlin pack.
 
 Four things could not go with it, because an installed extension is a directory of files that a
@@ -36,8 +36,8 @@ Each of those is a **stub**. It holds no device logic and forwards to whatever p
 with none installed they answer emptily rather than failing, because the phone's Files app queries
 every `DocumentsProvider` it can see whether or not a dev pack was ever installed.
 
-The contract between the two halves is `dev.blamspot.jcode.ext.api.JCodeVirtualDevice` (the IDE
-process), `JCodeVirtualDeviceGuest` (the `:guest` process, named by `entry.native.guest` in the
+The contract between the two halves is `dev.blamspot.jcode.ext.api.QCodeVirtualDevice` (the IDE
+process), `QCodeVirtualDeviceGuest` (the `:guest` process, named by `entry.native.guest` in the
 pack's manifest) and `VirtualDeviceComponents` (the four names above, agreed once). `:app`'s entire
 view of the device is `VirtualDeviceBridge`.
 
@@ -52,10 +52,10 @@ does nothing.
 
 ## 1. Purpose and scope
 
-Running a built APK **inside JCode** — no install, no ADB, no root — so a developer can build and
+Running a built APK **inside QCode** — no install, no ADB, no root — so a developer can build and
 try an Android app on the same device, in an editor tab.
 
-**The virtual device mirrors the host device's capabilities, isolated within JCode**, with some of
+**The virtual device mirrors the host device's capabilities, isolated within QCode**, with some of
 them simulated rather than passed through. That is the whole design in one sentence, and both halves
 carry weight:
 
@@ -71,26 +71,26 @@ carry weight:
   must not be the way that build sees through the user's camera or learns where they are.
 
 **Everything on the device is volatile.** Its apps, their data and its internal storage live in
-JCode's *cache* and are emptied on every start — so they cost nothing to lose, the platform may
+QCode's *cache* and are emptied on every start — so they cost nothing to lose, the platform may
 reclaim them under pressure, and **Clear cache** is a legitimate way to reset the device (§7g,
 `VirtualDeviceFiles`). The one exception is the external volume, which is a folder in the workspace
 precisely so that what should survive can.
 
 > **This is a sandboxed preview, not a security boundary.** The guest runs in a separate *process*
-> of JCode, but shares JCode's uid, permissions and data directory. Never run untrusted APKs in it.
+> of QCode, but shares QCode's uid, permissions and data directory. Never run untrusted APKs in it.
 
 ---
 
 ## 2. One presentation: a tab, or the drawer beside it
 
 **Where** is the pack's setting; **that there is only one** is the invariant. `deviceSurface` on the
-Android Dev Pack chooses between an editor tab and the workbench's right drawer, and JCode reads it
+Android Dev Pack chooses between an editor tab and the workbench's right drawer, and QCode reads it
 and routes — `VirtualDeviceHost.openDeviceTab` is one request either way, answered by opening the tab
 or by bringing the drawer up on the device's own panel. Switching to the drawer closes the editor
 tab, and a selection left pointing at the drawer's panel falls back when the setting moves the device
 out of it.
 
-JCode reads that as three states (`MainViewModel.VirtualDeviceSurface`), not two: `Drawer`, `Tab`,
+QCode reads that as three states (`MainViewModel.VirtualDeviceSurface`), not two: `Drawer`, `Tab`,
 and `None` for no installed pack providing a device. `None` has to be its own answer because
 uninstalling the pack changes the same flow a setting change does — read as a move to `Tab`, an
 uninstall ended by opening the device it had just removed. Uninstalling a device pack instead stops
@@ -141,7 +141,7 @@ full-screen guest had left the only surface the device had to show a notificatio
 notifications had to be mirrored onto the **phone's** shade to appear anywhere. A device that borrows
 the user's phone in order to say something has stopped being a device.
 
-It was not free in the other direction either. A full-screen guest shared JCode's task, and measured
+It was not free in the other direction either. A full-screen guest shared QCode's task, and measured
 on the Odin2 the activity manager's crash cleanup for one finished `MainActivity` along with it — a
 guest's bug took the IDE off the screen.
 
@@ -306,7 +306,7 @@ Child windows (dialogs, popups, spinners) need extra work — see
 A `MotionEvent` holds two positions. `getX`/`getY` are shifted by every `ViewGroup` on the way down
 the tree; `getRawX`/`getRawY` are not, because they are where the finger landed on the *display*.
 Relaying an event into the tab shifts the first and leaves the second, so a guest reading the second
-is told the tab's offset down JCode's window — and the device's screen appears to start a couple of
+is told the tab's offset down QCode's window — and the device's screen appears to start a couple of
 hundred pixels above the top of itself.
 
 That is not a corner case. `getRawX`/`getRawY` are what GameActivity hands native code as
@@ -452,7 +452,7 @@ running app's label on the left, and what it has posted on the right.
 | Drag down from the top strip | Opens the shade **over the whole screen**, as a phone's does: quick-settings tiles, then one row per notification, then **Clear all** when there is something to clear |
 | Drag up, or tap the empty part of an open shade | Closes it |
 | `back` | Closes the shade first, the way a phone answers, before the guest ever sees the key |
-| Tap the pill in the middle | JCode's own control bar — back, keyboard, the hardware bench, restart, stop, and a warning only when this guest actually lost something. IDE chrome, not the device's |
+| Tap the pill in the middle | QCode's own control bar — back, keyboard, the hardware bench, restart, stop, and a warning only when this guest actually lost something. IDE chrome, not the device's |
 
 It is a child of `EmbeddedGuest`'s container, added **last** so it is the topmost view, rather than
 composed over the tab by the IDE. That one decision is what makes it part of the device:
@@ -474,7 +474,7 @@ screen belongs to the guest, because pagers live there.
 
 | | |
 |---|---|
-| **Icon** | The notification's own `smallIcon`, loaded against the **guest's** context — its resource id is from the guest's table and a package the real `PackageManager` has never heard of, so JCode's context would resolve nothing, or worse, whatever JCode has at that id. Falls back to the app icon. One per app in the bar, deduped; one per row in the shade |
+| **Icon** | The notification's own `smallIcon`, loaded against the **guest's** context — its resource id is from the guest's table and a package the real `PackageManager` has never heard of, so QCode's context would resolve nothing, or worse, whatever QCode has at that id. Falls back to the app icon. One per app in the bar, deduped; one per row in the shade |
 | **Actions** | `Notification.actions`, drawn as buttons that fire the `PendingIntent` |
 | **Ongoing** | `FLAG_ONGOING_EVENT` or `FLAG_NO_CLEAR`, **and** anything handed to `startForeground` — the platform treats a foreground service's notification as ongoing whether or not the app also said so, and most do not because on a phone they never had to. Measured on NewPipe, whose player notification arrives with no flags at all |
 
@@ -486,7 +486,7 @@ app's only handle away while the app kept running. Only the app takes those down
 > from `3 notifications` to `1 notification`.
 
 **A guest's buttons do not reach the guest's own components, and cannot from here.** The token is
-real — minted under JCode's package by `GuestActivityManagerHook` — but the *component* inside it
+real — minted under QCode's package by `GuestActivityManagerHook` — but the *component* inside it
 names a package the real system has never heard of, so it resolves to nothing and reports no error.
 Neither end can be caught: `PendingIntent.send` marshals the token to the real activity manager
 rather than calling anything this process can stand in front of (traced across a tap, a wrapped
@@ -498,7 +498,7 @@ normally; what is lost is an app's buttons on its own screens, where its own UI 
 #### The bar follows the app under it
 
 A bar that is the same colour and the same presence over every app is not a device's status bar, it
-is a strip JCode drew. `GuestWindow.statusBarStyleOf` reads the foreground activity's window, the
+is a strip QCode drew. `GuestWindow.statusBarStyleOf` reads the foreground activity's window, the
 same places the platform reads it, and `EmbeddedGuest.followForegroundApp` reshapes the bar around
 the answer — on every layout pass, because an app changes its mind at runtime (full screen for a
 video, back afterwards) and nothing else tells the container.
@@ -527,7 +527,7 @@ Uninstall for those (§7h). The launcher itself is one of the six: it is an app 
 any other (§7a), and the only one of the seven that is not is the hardware fixture.
 
 **The browser** (`vdevice-apps/browser`) is the one that makes the device usable: it opens a URL
-without reaching for the phone's browser, which would take the user out of JCode and load the page
+without reaching for the phone's browser, which would take the user out of QCode and load the page
 under their own profile — their cookies, their signed-in accounts. Inside the device, what it loads
 is wiped with the device, including the WebView profile (§7d). Being resource-free is a packaging
 constraint — one Java file, so plain `javac` and `aapt2` can produce it without a Gradle project —
@@ -565,7 +565,7 @@ real bugs on its first run (§7i, §7j), and making the home screen one of them 
 ### 7d. What a guest leaves behind
 
 Nothing, and WebView was the exception that proved it needed saying. WebView keeps its profile beside
-JCode's own — under the suffix `GuestRuntime` gives it, which is what stops the two colliding — and
+QCode's own — under the suffix `GuestRuntime` gives it, which is what stops the two colliding — and
 that directory is outside `filesDir/vdevice/`, so nothing in the reset ever touched it. Cookies,
 local storage and any session an app signed into survived a restart and would have been handed to
 whatever app was installed next. `resetOnStart` now clears it too.
@@ -644,7 +644,7 @@ answered `CAMERA=granted RECORD_AUDIO=denied ACCESS_FINE_LOCATION=denied`.
 | `Context.checkSelfPermission` | **`GuestContext`**, which overrides the three public `check*Permission` members. It has to be in front rather than underneath: `PermissionManager` memoises the answer in a cache only the system can invalidate, and `disablePermissionCache` is blocked — measured, a camera granted while an app was running went on reading as denied through the binder hook |
 | The same, from anywhere without a guest `Context` | `GuestActivityManagerHook`, on `IActivityManager.checkPermission` |
 | `PackageManager.checkPermission`, `hasSystemFeature` | `GuestPackageHook` |
-| `Activity.requestPermissions` | `GuestPermissions.consume`, off the start-activity hook. **This was broken outright before**: the intent went to the real permission controller, which was being asked to grant a permission to *JCode*, and the result came back addressed to an activity token no `ActivityRecord` answers to — so no dialog, no callback, and an app that waits for one stopped there. What is already decided is answered from the policy; what is still Ask goes to the person through the device's own dialog, over the session AIDL |
+| `Activity.requestPermissions` | `GuestPermissions.consume`, off the start-activity hook. **This was broken outright before**: the intent went to the real permission controller, which was being asked to grant a permission to *QCode*, and the result came back addressed to an activity token no `ActivityRecord` answers to — so no dialog, no callback, and an app that waits for one stopped there. What is already decided is answered from the policy; what is still Ask goes to the person through the device's own dialog, over the session AIDL |
 | `getSystemService(SENSOR_SERVICE)`, and every location call | `GuestSensorManager` and `GuestLocation` — see [Guest runtime §5c](02-guest-runtime-and-hidden-api.md#5c-the-devices-own-hardware) |
 
 > **One runtime request per activity instance.** `Activity.requestPermissions` sets
@@ -753,7 +753,7 @@ a device turning about its vertical does not tip.
 A device with no filesystem is a device most apps cannot finish a sentence on — an app opens a
 document, saves an export, unpacks its assets, writes a log. Before this the container had nowhere
 for any of that to go, so those calls either failed or landed in the **phone's** shared storage,
-among the user's own files, under JCode's `MANAGE_EXTERNAL_STORAGE`.
+among the user's own files, under QCode's `MANAGE_EXTERNAL_STORAGE`.
 
 There are two volumes, because the device needs storage for two different lifetimes and one volume
 cannot have both.
@@ -762,7 +762,7 @@ cannot have both.
 |---|---|---|
 | Device path | `/sdcard` | `/storage/external` |
 | Lives in | `cacheDir/vdevice/storage` | the workspace, as `vDevice_ExtStorage` |
-| Survives a JCode restart | **no** | yes |
+| Survives a QCode restart | **no** | yes |
 | Survives **Clear cache** | **no** | yes |
 | Visible in the IDE | no | yes, beside your projects |
 
@@ -773,13 +773,13 @@ tree — it is deleted on the next start regardless — so keeping it in `filesD
 durability the device neither has nor wants. `VirtualDeviceFiles` is the one place that says where
 it lives; six files used to work it out for themselves.
 
-The trade is that the tree can go away *while JCode is running*, and that is handled rather than
+The trade is that the tree can go away *while QCode is running*, and that is handled rather than
 hoped about: `VirtualDeviceApps.healIfEmptied` puts the built-ins back when it finds **nothing**
 installed, which is a state no start-up path produces and so can only mean the tree went away. The
 test is deliberately "nothing at all" rather than "a built-in is missing" — somebody who uninstalls
 the hardware fixture wants it gone, and having it reappear would be the app arguing with them.
 
-> Device-verified: `rm -rf` of the whole tree while JCode ran, then reopening the device — all five
+> Device-verified: `rm -rf` of the whole tree while QCode ran, then reopening the device — all five
 > built-ins were back, and the external volume was untouched.
 
 **Internal is the clean room**, emptied on every start with the installed apps and for the same
@@ -788,7 +788,7 @@ installed under that package name next. `seed` puts the empty media directories 
 starts as a formatted phone does rather than as a bare directory.
 
 **External is the way out.** A photo the device took, a file an app exported — on a clean-room device
-those are gone the next time JCode starts, which is right for a sandbox and useless for the thing a
+those are gone the next time QCode starts, which is right for a sandbox and useless for the thing a
 sandbox is for. It is an ordinary folder in the workspace, so what an app writes there is still there
 tomorrow, is visible in the project explorer, is editable in the IDE, and is reachable from the Linux
 environment at `/workspace/vDevice_ExtStorage`.
@@ -802,7 +802,7 @@ which is which, and the Files app opens on the choice between them.
 > **The bug this shipped with, found by looking.** `WorkspaceHostPaths` is a process-wide latch the
 > IDE sets at startup, and `:guest` is a different process that never ran that code — so it fell back
 > to the *legacy* shared path and created the device's external volume at
-> `/storage/emulated/0/JCode/projects/vDevice_ExtStorage`: **in the user's own storage**, the exact
+> `/storage/emulated/0/QCode/projects/vDevice_ExtStorage`: **in the user's own storage**, the exact
 > leak this container exists to prevent. `GuestRuntime.install` now initialises it before anything
 > can touch storage.
 
@@ -952,11 +952,11 @@ at all, and an app that chose for itself would be disagreeing with the switch so
 and making them the same app here means the screen that answers `ACTION_OPEN_DOCUMENT` is one
 somebody has actually used. It answers with a **device path** under `dev.blamspot.jcode.vdevice.DEVICE_PATH`,
 and `GuestDocuments.addressed` turns that into the `content://` URI the requester receives — a tree
-URI for a folder request, a document URI otherwise. The URI belongs to JCode's documents provider,
+URI for a folder request, a document URI otherwise. The URI belongs to QCode's documents provider,
 whose authority and document-id encoding are the container's business; an app that guessed at them
 would be coupled to a format it cannot see change.
 
-> **`/sdcard` is a presentation path, and this is where that bites.** The bytes live in JCode's
+> **`/sdcard` is a presentation path, and this is where that bites.** The bytes live in QCode's
 > app-private tree and the container redirects the `Context` storage APIs onto it;
 > `Environment.getExternalStorageDirectory()` is not among them (§7g) and still answers the phone's
 > path. So `new File("/sdcard/…")` in a guest reads the **user's real storage** — and a file explorer
@@ -1028,7 +1028,7 @@ parses natively. That is not a hard piece of work so much as an unbounded one.
 
 So `CameraManager` is left alone — it is `final` and could not be substituted anyway — and the device
 says so. `getCameraIdList()` from a guest returns `[]`, which is both the honest answer and, checked
-deliberately, **not a leak**: JCode holds no `CAMERA` permission, so the phone's own cameras are not
+deliberately, **not a leak**: QCode holds no `CAMERA` permission, so the phone's own cameras are not
 enumerable from inside the sandbox either.
 
 > This is a refusal with evidence rather than an intention. If a future platform unblocks those
@@ -1091,8 +1091,8 @@ could catch by fetching something.
 ### 7m. The device's Settings app, and the two layers of control
 
 A device you can only configure from outside itself is a device with a piece missing. The hardware
-bench and Manage permissions are **JCode's** screens, in JCode's window, reached by the person
-driving the IDE — right for JCode, and no use to somebody looking at the device, to an agent driving
+bench and Manage permissions are **QCode's** screens, in QCode's window, reached by the person
+driving the IDE — right for QCode, and no use to somebody looking at the device, to an agent driving
 it through `input tap`, or to an app that sends `ACTION_MANAGE_APPLICATIONS` and expects something to
 answer.
 
@@ -1103,7 +1103,7 @@ the same ones the bench writes, in the same file, with the same effect on a runn
 
 This is the distinction the whole design turns on, and collapsing it was the first version's mistake.
 
-| | The bench (JCode) | Settings (on the device) |
+| | The bench (QCode) | Settings (on the device) |
 |---|---|---|
 | Asks | *Does this device have the hardware?* | *Is it switched on?* |
 | Answers | Off / Simulated / Real | On / Off |
@@ -1133,7 +1133,7 @@ What that cost, before it was understood: switching the camera on at the bench r
 `GuestPackageHook`, which answered the feature query **true**, and the app was still handed the
 frozen **false** in front of it. The device's Camera app read "This device has no camera" for as long
 as the process lived, and because every guest shares one process, one app asking early settled it for
-all of them. Restarting JCode was the only way through — and it looked exactly like a broken camera.
+all of them. Restarting QCode was the only way through — and it looked exactly like a broken camera.
 
 So `VirtualDevicePolicy.setMode` ends the `:guest` process when a change crosses the `Off` boundary
 for hardware that declares features, and the tab returns to its launcher. The next app to start is
@@ -1194,7 +1194,7 @@ there makes the Bluetooth tile say `1 paired`.
 
 > **No app on the device sees any of this, and none of it is a leak either way.** A guest's scan goes
 > to the phone's `WifiManager`, which could not be stood in for (below). That manager answers a
-> caller holding no location permission with an empty list and `<unknown ssid>`, and JCode's manifest
+> caller holding no location permission with an empty list and `<unknown ssid>`, and QCode's manifest
 > declares no location permission at all — checked, not assumed. So a guest learns neither these
 > names nor the phone's real ones. They exist for the device's own screens, the way the camera's
 > scene does.
@@ -1221,7 +1221,7 @@ so the screen says *Hardware Fixture wants a video*.
 
 `VirtualSettingsProvider` is how the app reaches any of it: `call()` rather than rows, because "tell
 me everything on this screen" and "change this one thing" are not tables. It does **not** claim to
-tell one guest from another — every guest runs under JCode's uid, so `getCallingPackage()` is JCode
+tell one guest from another — every guest runs under QCode's uid, so `getCallingPackage()` is QCode
 for all of them and a check would be reading a claim the caller makes about itself. Any app on the
 device can read and change these settings, which is the same trade the container makes everywhere;
 what the provider does instead is **write down who asked**, so a setting that changed on its own has
@@ -1253,7 +1253,7 @@ nothing would be worse than saying so.
 ### 7n. Sleeping
 
 A guest used to be RESUMED from the moment it started until it was destroyed. Nothing paused one:
-not another activity opening over it, not the tab being switched away, not JCode going to the
+not another activity opening over it, not the tab being switched away, not QCode going to the
 background. `destroyEmbedded` was the only code in the container that ever called `onPause`, and it
 called it on the way to `onDestroy`.
 
@@ -1270,7 +1270,7 @@ lived.
 |---|---|
 | An activity opens over another | The one going behind is paused, not merely hidden |
 | The device's tab leaves the composition | `IGuestSession.setVisible(false)` |
-| JCode goes to the background | The same, from a `Lifecycle` observer on the tab |
+| QCode goes to the background | The same, from a `Lifecycle` observer on the tab |
 
 Both halves of the last two matter and neither implies the other: switching editor tabs takes the
 composition away without stopping the activity, and pressing Home stops the activity without taking
@@ -1290,16 +1290,16 @@ was polling four times a second, delivering nothing, for as long as the app live
 now. The location feed backs off from one second to five on the same reasoning.
 
 > Device-verified on Android 13, with the Camera app open and its viewfinder running:
-> **11.5–18.5%** CPU in the `:guest` process with JCode in front, **0.0%** with JCode in the
+> **11.5–18.5%** CPU in the `:guest` process with QCode in front, **0.0%** with QCode in the
 > background — and the *cumulative* CPU time identical across samples four seconds apart, so the
-> process did no work at all rather than a little. Bringing JCode back resumed it at 11.5% with the
+> process did no work at all rather than a little. Bringing QCode back resumed it at 11.5% with the
 > viewfinder live and no lifecycle damage.
 
 ### 7o. The device's navigation bar — `VirtualNavigationBar`
 
 Back, Home and Recents, along the bottom of the device's screen, in AOSP's order.
 
-**Back used to be a button on JCode's toolbar, and it was in the wrong window.** The tab's control
+**Back used to be a button on QCode's toolbar, and it was in the wrong window.** The tab's control
 bar is the IDE's chrome, so `adb shell screencap` of the device did not show it, `uiautomator dump`
 did not list it, and `input tap` could not reach it — an agent driving the device could see an app
 waiting for a Back press and had no way to press it. That is the same argument the phone's IME lost
@@ -1391,7 +1391,7 @@ about the change by being handed its own unchanged `Configuration` — a notific
 
 An app started **from the home screen** is sized before it is built, the way the first guest is.
 Until it was, only the app the IDE started got the device's screen: measured, the launcher ran at
-411×844dp while the app it opened ran at the tablet JCode itself was on.
+411×844dp while the app it opened ran at the tablet QCode itself was on.
 
 `vdevice-apps/fixtures/lifecycle` is the app that proves all of this. It reports every callback it is given
 and declares no `configChanges`, which makes it the one app on the device that a screen change must
@@ -1489,7 +1489,7 @@ The same gap ran through the notification's **Stop & close**, which is the one c
 whole app is finished. `BackendService.shutdownRuntimeAndExit` flushed buffers, closed terminals,
 reaped the proot trees and killed *its own* process — and the device is not in that process.
 Measured: `:guest` and the `logcat` a guest had open outlived a Stop & close, holding 198 MB with no
-JCode left to show them in. It now turns the device off through its own door first and then ends
+QCode left to show them in. It now turns the device off through its own door first and then ends
 every remaining process under the app's uid, which `/proc`'s hidepid mount makes exactly this app's
 tree and nothing else: the guest, whatever a guest forked, any proot still standing, and the detached
 adb daemon whose parent is `init` and which nothing else would ever reap. Swipe-away-to-exit takes
@@ -1506,8 +1506,8 @@ the same path, so it means the same thing.
 5. Capture and hierarchy dumps go through a file path, not a `Bundle`.
 6. Unbinding takes the *guest* down and leaves the device on; only `shutdown()` ends the `:guest`
    process, and only closing the tab means it — see §3.
-7. Treat every guest as trusted code — it shares JCode's uid.
-8. The device is emptied on every JCode start. Nothing may assume an app installed in a previous
+7. Treat every guest as trusted code — it shares QCode's uid.
+8. The device is emptied on every QCode start. Nothing may assume an app installed in a previous
    session is still there, or a file written to its storage.
 9. Everything installed goes through `VirtualDeviceApps`; nothing else writes `filesDir/vdevice/`.
 10. An event handed to a guest carries the **device's** coordinates in both its local and its raw
@@ -1546,7 +1546,7 @@ the same path, so it means the same thing.
   `PendingIntent` the system will act on, an SDK that interrogates its own activity — cannot have one
   here, and the container answers what it can itself instead — §2.
 - The device cannot draw at all without a hardware-accelerated window — §2.
-- The guest shares JCode's uid and permissions — no isolation, by design.
+- The guest shares QCode's uid and permissions — no isolation, by design.
 - `Environment.getExternalStorageDirectory()` reports the phone's path, not the device's — §7g.
 - Camera2 gets no frames; only `ACTION_IMAGE_CAPTURE` is answered — §7k.
 - `Environment.getExternalStorageDirectory()` reports the phone's path, not the device's — §7g.

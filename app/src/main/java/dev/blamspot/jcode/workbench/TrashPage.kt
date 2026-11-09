@@ -48,7 +48,7 @@ import dev.blamspot.jcode.design.CompactFilledButton
 import dev.blamspot.jcode.design.CompactOutlinedButton
 import dev.blamspot.jcode.design.IconSize
 import dev.blamspot.jcode.design.FileTypeIcon
-import dev.blamspot.jcode.design.JCodeIcon
+import dev.blamspot.jcode.design.QCodeIcon
 import dev.blamspot.jcode.design.JcTooltip
 import dev.blamspot.jcode.design.Space
 import dev.blamspot.jcode.design.StrokeWidth
@@ -380,7 +380,7 @@ private fun Preview(
                 JcTooltip("Back") {
                     IconButton(onClick = back, modifier = Modifier.size(32.dp)) {
                         Icon(
-                            painter = jcIcon(JCodeIcon.ArrowBack),
+                            painter = jcIcon(QCodeIcon.ArrowBack),
                             contentDescription = "Back",
                             modifier = Modifier.size(IconSize.md),
                         )

@@ -39,7 +39,7 @@ import dev.blamspot.jcode.core.debug.DebugState
 import dev.blamspot.jcode.core.distro.AppProcesses
 import dev.blamspot.jcode.core.term.TerminalSessionManager
 import dev.blamspot.jcode.design.IconSize
-import dev.blamspot.jcode.design.JCodeIcon
+import dev.blamspot.jcode.design.QCodeIcon
 import dev.blamspot.jcode.design.JcTooltip
 import dev.blamspot.jcode.design.Space
 import dev.blamspot.jcode.design.jcIcon
@@ -56,7 +56,7 @@ private data class HostMemory(val availKb: Long, val totalKb: Long)
 
 /**
  * Task Manager access to background extensions (persistent WebView hosts + their service.start
- * servers), provided by [JCodeApp] via CompositionLocal so the Tasks panel can list and stop them
+ * servers), provided by [QCodeApp] via CompositionLocal so the Tasks panel can list and stop them
  * without threading the ViewModel through the shell. [snapshot] is polled on the panel's refresh tick.
  */
 internal data class TaskManagerBackgroundActions(
@@ -270,7 +270,7 @@ private fun TaskRow(
             JcTooltip(actionDescription) {
                 IconButton(onClick = onStop) {
                     Icon(
-                        painter = jcIcon(JCodeIcon.Stop),
+                        painter = jcIcon(QCodeIcon.Stop),
                         contentDescription = actionDescription,
                         tint = MaterialTheme.colorScheme.error,
                         modifier = Modifier.size(IconSize.lg),
@@ -332,7 +332,7 @@ private fun BackgroundExtensionRow(
                 JcTooltip("Start extension") {
                     IconButton(onClick = onStart) {
                         Icon(
-                            painter = jcIcon(JCodeIcon.Run),
+                            painter = jcIcon(QCodeIcon.Run),
                             contentDescription = "Start extension",
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(IconSize.lg),
@@ -343,7 +343,7 @@ private fun BackgroundExtensionRow(
                 JcTooltip("Stop extension") {
                     IconButton(onClick = onStop) {
                         Icon(
-                            painter = jcIcon(JCodeIcon.Stop),
+                            painter = jcIcon(QCodeIcon.Stop),
                             contentDescription = "Stop extension",
                             tint = MaterialTheme.colorScheme.error,
                             modifier = Modifier.size(IconSize.lg),
@@ -431,7 +431,7 @@ private fun ProcessRow(proc: AppProcesses.Process, isSelf: Boolean, onKill: () -
             // Killing our own process would just crash the IDE; keep the slot for alignment.
             IconButton(onClick = {}, enabled = false) {
                 Icon(
-                    painter = jcIcon(JCodeIcon.Stop),
+                    painter = jcIcon(QCodeIcon.Stop),
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.25f),
                     modifier = Modifier.size(IconSize.md),
@@ -441,7 +441,7 @@ private fun ProcessRow(proc: AppProcesses.Process, isSelf: Boolean, onKill: () -
             JcTooltip("Kill process") {
                 IconButton(onClick = onKill) {
                     Icon(
-                        painter = jcIcon(JCodeIcon.Stop),
+                        painter = jcIcon(QCodeIcon.Stop),
                         contentDescription = "Kill process",
                         tint = MaterialTheme.colorScheme.error,
                         modifier = Modifier.size(IconSize.md),

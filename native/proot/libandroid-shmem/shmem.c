@@ -1,4 +1,4 @@
-/* JCode modification: memfd_create needs _GNU_SOURCE in bionic headers. */
+/* QCode modification: memfd_create needs _GNU_SOURCE in bionic headers. */
 #define _GNU_SOURCE 1
 
 #include <android/log.h>
@@ -21,7 +21,7 @@
 
 #define DBG(...) __android_log_print(ANDROID_LOG_INFO, "shmem", __VA_ARGS__)
 /*
- * JCode modification: named-key registry symlinks live in the app's own tmp dir
+ * QCode modification: named-key registry symlinks live in the app's own tmp dir
  * (the Termux build hardcoded /data/data/com.termux/files/usr/tmp/, which does
  * not exist here — named-key shmget would spin forever on a failing symlink()).
  *
@@ -128,7 +128,7 @@ static int ancil_recv_fd(int sock)
 }
 
 /*
- * JCode modification: regions are plain memfds instead of ashmem.
+ * QCode modification: regions are plain memfds instead of ashmem.
  * /dev/ashmem cannot be opened by apps targeting SDK >= 29 (SELinux W^X
  * companion rules) and the ashmem char device is gone from modern kernels
  * entirely; memfd_create has been available since kernel 3.17 and needs no

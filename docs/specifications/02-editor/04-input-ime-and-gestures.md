@@ -15,7 +15,7 @@
 edits, and hosts the renderer. It is the largest file in `:core:editor` and the place where the
 byte/char, touch/text, and IME/buffer impedance mismatches are resolved.
 
-The in-app soft keyboard was removed; JCode uses the **system IME**.
+The in-app soft keyboard was removed; QCode uses the **system IME**.
 
 ---
 

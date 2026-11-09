@@ -80,10 +80,10 @@ object AppUpdateInstaller {
         }
     }
 
-    /** Whether the user has granted "install unknown apps" to JCode. */
+    /** Whether the user has granted "install unknown apps" to QCode. */
     fun canInstall(context: Context): Boolean = context.packageManager.canRequestPackageInstalls()
 
-    /** Open the system "install unknown apps" screen for JCode so the user can allow it. */
+    /** Open the system "install unknown apps" screen for QCode so the user can allow it. */
     fun openUnknownSourceSettings(context: Context) {
         runCatching {
             context.startActivity(
@@ -198,7 +198,7 @@ object AppUpdateInstaller {
             connectTimeout = 30_000
             readTimeout = 60_000
             instanceFollowRedirects = true
-            setRequestProperty("User-Agent", "JCode-Android")
+            setRequestProperty("User-Agent", "QCode-Android")
         }
         try {
             conn.connect()

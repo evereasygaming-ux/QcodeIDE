@@ -16,14 +16,14 @@ data class SdkCatalogEntry(
     /** Optional: prints the installable versions, one per line, newest first (line 1 is treated as
      *  "latest"). Empty = no version picker; [installScript] resolves the latest version itself.
      *  The chosen version is substituted for the `{{version}}` placeholder in the install/uninstall
-     *  scripts (and exported as `JCODE_VERSION`); "latest" is passed through so the script can resolve it. */
+     *  scripts (and exported as `QCODE_VERSION`); "latest" is passed through so the script can resolve it. */
     val versionsScript: String = "",
     /** For [multiVersion]: prints the currently-installed versions, one per line, newest first. A line
      *  may mark the one currently on PATH as `version<TAB>active`; when none does, the newest is
      *  assumed active. Empty = fall back to the binary [verifyScript] (installed / not-installed only). */
     val installedVersionsScript: String = "",
     /** For [multiVersion]: makes an already-installed version the active one (the one on PATH), the
-     *  equivalent of `nvm use` / `rustup default`. The version arrives as `JCODE_VERSION` and via the
+     *  equivalent of `nvm use` / `rustup default`. The version arrives as `QCODE_VERSION` and via the
      *  `{{version}}` placeholder. Empty = this tool has no single active version (Android SDK platforms
      *  and .NET SDK bands are all usable at once), and no Use action is offered. */
     val useVersionScript: String = "",

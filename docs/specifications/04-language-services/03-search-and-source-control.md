@@ -206,7 +206,7 @@ or deleted from the file tree.
 data class ExplorerContextAction(
     val key: String,                              // "extensionId:actionId"
     val label: String,
-    val icon: JCodeIcon,
+    val icon: QCodeIcon,
     val fileExtensions: List<String> = emptyList(),   // lowercase, no dot; empty = every file
     val targets: List<String> = emptyList(),          // "file" / "directory"; empty = both
 )

@@ -82,7 +82,7 @@ func (h *Handler) HealthHandler(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) ShutdownHandler(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]interface{}{
 		"success": true,
-		"message": "antiGem Go server is shutting down...",
+		"message": "QCODE IDE bridge is shutting down...",
 	})
 
 	if h.OnShutdown != nil {
@@ -521,7 +521,7 @@ func (h *Handler) ExportConversationArchiveHandler(w http.ResponseWriter, r *htt
 
 	manifest := map[string]interface{}{
 		"version":         1,
-		"format":          "antigem_chat_archive",
+		"format":          "qcode_chat_archive",
 		"conversation_id": convID,
 		"title":           title,
 		"exported_at":     time.Now().UTC().Format(time.RFC3339),
@@ -535,7 +535,7 @@ func (h *Handler) ExportConversationArchiveHandler(w http.ResponseWriter, r *htt
 	if sanitizedTitle == "" {
 		sanitizedTitle = "conversation"
 	}
-	fileName := fmt.Sprintf("%s_%s.antigem", sanitizedTitle, time.Now().Format("20060102_150405"))
+	fileName := fmt.Sprintf("%s_%s.qcode", sanitizedTitle, time.Now().Format("20060102_150405"))
 
 	w.Header().Set("Content-Type", "application/octet-stream")
 	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", fileName))
@@ -684,7 +684,7 @@ func (h *Handler) RestoreConversationHandler(w http.ResponseWriter, r *http.Requ
 
 	zipReader, err := zip.NewReader(readerAt, size)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid zip/.antigem format: " + err.Error()})
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid zip/.qcode format: " + err.Error()})
 		return
 	}
 
@@ -906,7 +906,7 @@ func (h *Handler) getSavedProjectsPath() string {
 	if err != nil {
 		home = h.Cfg.HomeDir
 	}
-	return filepath.Join(home, ".antigem", "projects.json")
+	return filepath.Join(home, ".qcode", "projects.json")
 }
 
 func (h *Handler) loadSavedProjects() []models.ProjectSummary {
@@ -934,7 +934,7 @@ func (h *Handler) ProjectsHandler(w http.ResponseWriter, r *http.Request) {
 	seenPaths := make(map[string]bool)
 	var projects []models.ProjectSummary
 
-	// 1. Saved projects from ~/.antigem/projects.json
+	// 1. Saved projects from ~/.qcode/projects.json
 	saved := h.loadSavedProjects()
 	for _, p := range saved {
 		clean := filepath.Clean(expandHome(p.Path))
@@ -1083,7 +1083,7 @@ func (h *Handler) CreateProjectHandler(w http.ResponseWriter, r *http.Request) {
 	switch req.Template {
 	case "python":
 		_ = os.WriteFile(filepath.Join(targetDir, "main.py"), []byte("def main():\n    print(\"Hello from Python IDE!\")\n\nif __name__ == '__main__':\n    main()\n"), 0644)
-		_ = os.WriteFile(filepath.Join(targetDir, "README.md"), []byte("# "+projectName+"\n\nPython project created in antiGem IDE.\n"), 0644)
+		_ = os.WriteFile(filepath.Join(targetDir, "README.md"), []byte("# "+projectName+"\n\nPython project created in QCODE IDE.\n"), 0644)
 	case "node":
 		_ = os.WriteFile(filepath.Join(targetDir, "index.js"), []byte("console.log('Hello from Node.js IDE!');\n"), 0644)
 		_ = os.WriteFile(filepath.Join(targetDir, "package.json"), []byte(fmt.Sprintf("{\n  \"name\": \"%s\",\n  \"version\": \"1.0.0\",\n  \"main\": \"index.js\"\n}\n", projectName)), 0644)

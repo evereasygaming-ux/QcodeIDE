@@ -619,7 +619,7 @@ class DistroService(
     /**
      * Run every entry's verify (and, for verified entries, its update-check) in ONE proot exec
      * instead of one spawn per script: each probe is wrapped in a subshell that prints a
-     * `JCODE_VERIFY <id> OK|FAIL` / `JCODE_UPDATE <id> YES` marker line, and the markers are parsed
+     * `QCODE_VERIFY <id> OK|FAIL` / `QCODE_UPDATE <id> YES` marker line, and the markers are parsed
      * back into per-entry results. The scripts are arbitrary multi-line shell from the catalogs, so
      * the generated script is written into the rootfs and run with `bash <file>` — no inline
      * quoting. Runs under the same user/env as the old per-entry path (login shell paid once, not
@@ -641,12 +641,12 @@ class DistroService(
                 buildString {
                     for (p in probes) {
                         append("if (\n").append(p.verifyScript).append("\n) >/dev/null 2>&1; then\n")
-                        append("echo \"JCODE_VERIFY ${p.id} OK\"\n")
+                        append("echo \"QCODE_VERIFY ${p.id} OK\"\n")
                         if (p.updateCheckScript.isNotBlank()) {
                             append("if (\n").append(p.updateCheckScript)
-                                .append("\n) >/dev/null 2>&1; then echo \"JCODE_UPDATE ${p.id} YES\"; fi\n")
+                                .append("\n) >/dev/null 2>&1; then echo \"QCODE_UPDATE ${p.id} YES\"; fi\n")
                         }
-                        append("else\necho \"JCODE_VERIFY ${p.id} FAIL\"\nfi\n")
+                        append("else\necho \"QCODE_VERIFY ${p.id} FAIL\"\nfi\n")
                     }
                 },
             )
@@ -654,13 +654,13 @@ class DistroService(
         }.getOrNull()
         runCatching { scriptFile.delete() }
 
-        if (batch != null && batch.stdout.lineSequence().any { it.startsWith("JCODE_VERIFY ") }) {
+        if (batch != null && batch.stdout.lineSequence().any { it.startsWith("QCODE_VERIFY ") }) {
             for (line in batch.stdout.lineSequence()) {
                 val parts = line.trim().split(' ')
                 if (parts.size != 3) continue
                 when {
-                    parts[0] == "JCODE_VERIFY" && parts[2] == "OK" -> installed.add(parts[1])
-                    parts[0] == "JCODE_UPDATE" && parts[2] == "YES" -> updatable.add(parts[1])
+                    parts[0] == "QCODE_VERIFY" && parts[2] == "OK" -> installed.add(parts[1])
+                    parts[0] == "QCODE_UPDATE" && parts[2] == "YES" -> updatable.add(parts[1])
                 }
             }
         } else {
@@ -1691,7 +1691,7 @@ class DistroService(
      * status of a pipeline is its last member's).
      *
      * Both are defined unconditionally so a script can call them on either execution path; without a
-     * PTY (`JCODE_PROGRESS_TOKEN` unset) the marker is simply not emitted. Every helper ends by
+     * PTY (`QCODE_PROGRESS_TOKEN` unset) the marker is simply not emitted. Every helper ends by
      * returning 0 — a script running under `set -e` would otherwise abort on a progress call whose
      * last comparison happened to be false.
      */
@@ -2253,11 +2253,11 @@ class DistroService(
     }
 
     /** Substitute a chosen version into a catalog script: replaces the `{{version}}` placeholder and
-     *  exports `JCODE_VERSION` so scripts can branch on it. No-op when [version] is null/blank. */
+     *  exports `QCODE_VERSION` so scripts can branch on it. No-op when [version] is null/blank. */
     private fun applyVersion(script: String, version: String?): String {
         if (version.isNullOrBlank()) return script
         val quoted = "'" + version.replace("'", "'\\''") + "'"
-        return "export JCODE_VERSION=$quoted\n" + script.replace("{{version}}", version)
+        return "export QCODE_VERSION=$quoted\n" + script.replace("{{version}}", version)
     }
 
     /** Parse a [SdkCatalogEntry.versionsScript] into tagged versions. Each line is `version` or
@@ -2445,14 +2445,14 @@ class DistroService(
 
         /** Shell helpers prepended to every catalog install/uninstall — see [withCatalogHelpers]. */
         private val CATALOG_SHELL_HELPERS: String = """
-            # --- JCode catalog helpers (injected by DistroService) ---
+            # --- QCode catalog helpers (injected by DistroService) ---
             __jc_last_pct=-1
             jcode_progress() {
               __jc_p=${'$'}1
               case "${'$'}__jc_p" in ''|*[!0-9]*) return 0 ;; esac
               [ "${'$'}__jc_p" -gt 100 ] && __jc_p=100
-              if [ -n "${'$'}{JCODE_PROGRESS_TOKEN:-}" ]; then
-                printf '\033]7716;%s;%s;%s\007' "${'$'}JCODE_PROGRESS_TOKEN" "${'$'}__jc_p" "${'$'}2"
+              if [ -n "${'$'}{QCODE_PROGRESS_TOKEN:-}" ]; then
+                printf '\033]7716;%s;%s;%s\007' "${'$'}QCODE_PROGRESS_TOKEN" "${'$'}__jc_p" "${'$'}2"
               fi
               if [ "${'$'}__jc_p" != "${'$'}__jc_last_pct" ]; then
                 __jc_last_pct=${'$'}__jc_p
@@ -2517,7 +2517,7 @@ class DistroService(
               __jc_apt_run "${'$'}__ja0" "${'$'}__ja_q" "${'$'}__ja2" update || true
               __jc_apt_run "${'$'}__ja_q" "${'$'}__ja1" "${'$'}__ja2" install "${'$'}@"
             }
-            # --- end JCode catalog helpers ---
+            # --- end QCode catalog helpers ---
 
         """.trimIndent()
     }

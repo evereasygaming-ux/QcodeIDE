@@ -17,7 +17,7 @@ import dev.blamspot.jcode.design.Radius
 import dev.blamspot.jcode.design.Space
 import dev.blamspot.jcode.editor.languagePackCompletionItems
 import dev.blamspot.jcode.design.LocalEditorSaveActions
-import dev.blamspot.jcode.design.JCodeIcon
+import dev.blamspot.jcode.design.QCodeIcon
 import dev.blamspot.jcode.design.JcTooltip
 import dev.blamspot.jcode.design.EditorDragSetting
 import dev.blamspot.jcode.design.LocalEditorDragMovesCursor
@@ -189,10 +189,10 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
-import dev.blamspot.jcode.adaptive.JCodeWindowInfo
-import dev.blamspot.jcode.adaptive.JCodeWindowHeightClass
-import dev.blamspot.jcode.adaptive.JCodeWindowWidthClass
-import dev.blamspot.jcode.adaptive.rememberJCodeWindowInfo
+import dev.blamspot.jcode.adaptive.QCodeWindowInfo
+import dev.blamspot.jcode.adaptive.QCodeWindowHeightClass
+import dev.blamspot.jcode.adaptive.QCodeWindowWidthClass
+import dev.blamspot.jcode.adaptive.rememberQCodeWindowInfo
 import dev.blamspot.jcode.core.config.ConfigScope
 import dev.blamspot.jcode.core.config.EffectiveConfig
 import dev.blamspot.jcode.core.config.ProjectConfig
@@ -440,11 +440,11 @@ private fun commandOf(
     ?.command?.takeIf { it.isNotBlank() }
 
 @Composable
-fun JCodeApp(
+fun QCodeApp(
     viewModel: MainViewModel,
     modifier: Modifier = Modifier,
 ) {
-    val windowInfo by rememberJCodeWindowInfo()
+    val windowInfo by rememberQCodeWindowInfo()
     val workspace by viewModel.currentWorkspace.collectAsStateWithLifecycle()
     val breadcrumb by viewModel.breadcrumb.collectAsStateWithLifecycle()
     val selectedProject by viewModel.selectedProject.collectAsStateWithLifecycle()
@@ -539,8 +539,8 @@ fun JCodeApp(
                 )
             },
             valueOf = viewModel::extensionSettingValue,
-            // The manifest names a command; JCode owns what it does. An id it does not have runs
-            // nothing, which is the right outcome for a pack written against a newer JCode.
+            // The manifest names a command; QCode owns what it does. An id it does not have runs
+            // nothing, which is the right outcome for a pack written against a newer QCode.
             onAction = { extId, key ->
                 commandOf(installedExtensions, extId, key)?.let { CommandRegistry.run(it) }
             },
@@ -610,7 +610,7 @@ fun JCodeApp(
         )
     }
     val hideTabCloseButton by viewModel.hideTabCloseButton.collectAsStateWithLifecycle()
-    // Carried via CompositionLocal (not a JCodeShell param — that composable is at the ART verifier's
+    // Carried via CompositionLocal (not a QCodeShell param — that composable is at the ART verifier's
     // register limit) so both the tab UIs and the settings toggle can read value + setter.
     val tabCloseSetting = remember(hideTabCloseButton) {
         TabCloseButtonSetting(hideTabCloseButton, viewModel::setHideTabCloseButton)
@@ -781,15 +781,15 @@ fun JCodeApp(
                 // landscape, where there is far less height to work with.
                 Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                     Text(
-                        "Choose a JCode extension (.jext) or a VS Code extension (.vsix). Which one it " +
+                        "Choose a QCode extension (.jext) or a VS Code extension (.vsix). Which one it " +
                             "is comes from what is inside the file, so a package saved under any name " +
                             "still lands where it belongs.\n\n" +
                             "Neither is verified by the marketplace and both run code in the Linux " +
                             "runtime, so import one only from a publisher you trust.\n\n" +
-                            "From a .vsix, JCode runs the part of the VS Code API that extensions built " +
+                            "From a .vsix, QCode runs the part of the VS Code API that extensions built " +
                             "around a webview use — a side panel, commands, settings, and the current " +
                             "file and theme. Extensions that add languages, themes, snippets, debuggers " +
-                            "or tasks will not work: JCode has its own systems for those, and you will " +
+                            "or tasks will not work: QCode has its own systems for those, and you will " +
                             "be told what is missing, both on import and if it is asked for while " +
                             "running.\n\n" + signingNote,
                     )
@@ -817,7 +817,7 @@ fun JCodeApp(
                 Text(
                     buildString {
                         append("Your environment, projects, extensions and settings are now here.\n\n")
-                        append("The ${cleanup.bytes / (1024 * 1024)} MB migration bundle in the shared JCode folder ")
+                        append("The ${cleanup.bytes / (1024 * 1024)} MB migration bundle in the shared QCode folder ")
                         append("is a copy and can go — ")
                         if (cleanup.oldAppInstalled) {
                             append("the old app still has everything until you remove it.\n\n")
@@ -990,7 +990,7 @@ fun JCodeApp(
         activeDebugEngineId in debugCatalogState.installedEntryIds
     // remember-ed so the holder is stable across recompositions (its callbacks are bound viewModel
     // refs, which allocate a fresh — thus unequal — instance every pass; an unremembered holder
-    // provided as a CompositionLocal invalidates every reader on any JCodeApp recomposition).
+    // provided as a CompositionLocal invalidates every reader on any QCodeApp recomposition).
     val debugSessionUi = remember(debugState, debugCallStack, debugVariables, debugOutput, activeDebugFile, canDebug) {
         DebugSessionUi(
             state = debugState,
@@ -1222,7 +1222,7 @@ fun JCodeApp(
             is AppUpdateInstaller.State.NeedsUnknownSourcePermission -> {
                 viewModel.resetUpdateInstall()
                 AppUpdateInstaller.openUnknownSourceSettings(updateContext)
-                snackbarHostState.showSnackbar("Allow JCode to install apps, then tap Update again.")
+                snackbarHostState.showSnackbar("Allow QCode to install apps, then tap Update again.")
             }
             is AppUpdateInstaller.State.Failed -> {
                 viewModel.resetUpdateInstall()
@@ -1280,7 +1280,7 @@ fun JCodeApp(
     val menuIsFileTab = menuTab?.editorState != null
     val menuFileName = menuTab?.let { t -> t.filePath.name.ifBlank { t.title } }.orEmpty()
     // "Go to line" / "Find text" from the editor menu. The menu is built in this parent scope but the
-    // go-to-line dialog and search panel live inside JCodeShell, so the taps bump trigger state that
+    // go-to-line dialog and search panel live inside QCodeShell, so the taps bump trigger state that
     // is passed down as params and reacted to there (find carries a nonce so the same word re-seeds).
     var editorGoToLineNonce by remember { mutableStateOf(0) }
     var editorFindRequest by remember { mutableStateOf<Pair<Int, String>?>(null) }
@@ -1308,7 +1308,7 @@ fun JCodeApp(
             previewLabel = nativeClaim?.previewLabel ?: "Preview",
             previewIcon = nativeClaim?.previewIcon
                 ?.let { contributedMenuIcon(it) }
-                ?: JCodeIcon.Preview,
+                ?: QCodeIcon.Preview,
             onGoToLine = if (menuIsFileTab) {
                 { editorGoToLineNonce++ }
             } else {
@@ -1743,7 +1743,7 @@ fun JCodeApp(
             )
         },
     ) {
-    JCodeShell(
+    QCodeShell(
         modifier = modifier,
         editorGoToLineNonce = editorGoToLineNonce,
         editorFindRequest = editorFindRequest,
@@ -1940,7 +1940,7 @@ fun JCodeApp(
             title = { Text("Switch environment?") },
             text = {
                 Text(
-                    "JCode restarts to switch to ${pending.environmentId}. Editors and unsaved changes " +
+                    "QCode restarts to switch to ${pending.environmentId}. Editors and unsaved changes " +
                         "are kept; these will be stopped:\n" +
                         pending.running.joinToString("\n") { "•  $it" },
                     style = MaterialTheme.typography.bodyMedium,
@@ -1999,7 +1999,7 @@ fun JCodeApp(
 /**
  * How an extension's snackbar reaches the app's.
  *
- * The same one everything else in JCode uses, so a word from an extension arrives where the user
+ * The same one everything else in QCode uses, so a word from an extension arrives where the user
  * already looks for one — and carries an action, which is the difference between mentioning a
  * result and making someone dismiss a dialog to get past it.
  */
@@ -2075,7 +2075,7 @@ private fun NoVirtualDeviceNotice(modifier: Modifier = Modifier) {
     ) {
         Text("No virtual device", style = MaterialTheme.typography.titleSmall)
         Text(
-            text = "Running an APK inside JCode comes from the Android Dev Pack. " +
+            text = "Running an APK inside QCode comes from the Android Dev Pack. " +
                 "Install it from the Marketplace and open this again.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -2085,11 +2085,11 @@ private fun NoVirtualDeviceNotice(modifier: Modifier = Modifier) {
 
 @OptIn(ExperimentalLayoutApi::class) // WindowInsets.imeAnimationTarget (snap IME padding)
 @Composable
-private fun JCodeShell(
+private fun QCodeShell(
     editorGoToLineNonce: Int,
     editorFindRequest: Pair<Int, String>?,
     onEditorFind: () -> Unit,
-    windowInfo: JCodeWindowInfo,
+    windowInfo: QCodeWindowInfo,
     workspace: Workspace?,
     selectedProject: Project?,
     editorGroup: EditorGroup,
@@ -2167,7 +2167,7 @@ private fun JCodeShell(
     // the editor-page dispatch is invoked in a subcomposition where the local would fall back to default.
     val vcs = LocalVcsActions.current
     val appContext = LocalContext.current.applicationContext
-    // The guest runs in JCode's task, so the container is handed the hosting activity when there is
+    // The guest runs in QCode's task, so the container is handed the hosting activity when there is
     // one (the application context would push it into a task of its own).
     val hostActivity = LocalContext.current.findActivity()
     val virtualDevice = LocalVirtualDevice.current
@@ -2178,11 +2178,11 @@ private fun JCodeShell(
     // A phone in landscape is WIDE (Expanded width) but SHORT (Compact height); a real tablet in
     // landscape is tall too. Key off height, not width, so phones keep the modal drawers they use in
     // portrait instead of switching to the cramped persistent side panels a tablet would want.
-    val isMobileLandscapeMode = isLandscape && windowInfo.heightClass == JCodeWindowHeightClass.Compact
+    val isMobileLandscapeMode = isLandscape && windowInfo.heightClass == QCodeWindowHeightClass.Compact
     val usesModalWorkspace = !isLandscape || isMobileLandscapeMode
-    val isPortraitMobileMode = usesModalWorkspace && windowInfo.widthClass == JCodeWindowWidthClass.Compact
+    val isPortraitMobileMode = usesModalWorkspace && windowInfo.widthClass == QCodeWindowWidthClass.Compact
     val canShowRightSidebar = true
-    val leftSidebarWidth = if (windowInfo.widthClass == JCodeWindowWidthClass.Expanded) 284.dp else 236.dp
+    val leftSidebarWidth = if (windowInfo.widthClass == QCodeWindowWidthClass.Expanded) 284.dp else 236.dp
     // Opt-in (Settings → Appearance) landscape split. It deliberately does NOT go through
     // usesModalWorkspace: that also drives the LEFT ModalNavigationDrawer, and docking the left
     // drawer on a phone would leave no editor at all. Only the right side changes.
@@ -2293,7 +2293,7 @@ private fun JCodeShell(
         }
     }
     var leftSidebarExpanded by rememberSaveable(isLandscape, windowInfo.widthClass) {
-        mutableStateOf(isLandscape && windowInfo.widthClass != JCodeWindowWidthClass.Compact)
+        mutableStateOf(isLandscape && windowInfo.widthClass != QCodeWindowWidthClass.Compact)
     }
     val isPersistentLeftSidebarVisible = !usesModalWorkspace && leftSidebarExpanded
     // Source Control shows a live working tree, but the app only ever hinted at disk changes it made
@@ -2371,7 +2371,7 @@ private fun JCodeShell(
     fun selectRightPanelTab(tab: RightPanelTab) = selectRightPanel(RightPanelSelection.Builtin(tab))
 
     // The pack asked for its device and its setting puts it here, so this is the half of
-    // VirtualDeviceBridge.revealDevice that JCodeApp does not handle: it opens the editor tab when
+    // VirtualDeviceBridge.revealDevice that QCodeApp does not handle: it opens the editor tab when
     // the device is a tab, and this brings the drawer up on the device's own panel when it is not.
     // Exactly one of the two fires for any one request.
     LaunchedEffect(devicePlacedInDrawer) {
@@ -2568,7 +2568,7 @@ private fun JCodeShell(
     // relocate the tab's own top shell; mark it so the wrapper inlines just this invocation (the shell's
     // own sub-shells still relocate). The default "/bin/bash --login" is absolute and never affected.
     val terminalShellCommand = if (nestedShellTabsEnabled && !rawShellCommand.trimStart().startsWith("/")) {
-        "JCODE_NSH_TOP=1 $rawShellCommand"
+        "QCODE_NSH_TOP=1 $rawShellCommand"
     } else {
         rawShellCommand
     }
@@ -3054,7 +3054,7 @@ private fun JCodeShell(
     // nothing left to go back to, the second back within 2s exits — but if foreground work is running
     // (terminal program, Build & Run, debug session) it asks first: terminate it all, keep it running
     // in the background, or cancel. Extracted into its own composable so its locals stay out of
-    // JCodeShell's (already huge) generated method. Sits below runningItems/teardownRunning because
+    // QCodeShell's (already huge) generated method. Sits below runningItems/teardownRunning because
     // it captures them.
     WorkbenchBackHandler(
         activeTabIsPage = editorGroup.activeTab?.isPage == true,
@@ -3226,7 +3226,7 @@ private fun JCodeShell(
         CommandRegistry.clear()
         // A configurable command registers only while enabled in Settings → Command Palette AND its
         // context applies (view/focus-dependent entries stay out of the list entirely otherwise).
-        fun registerConfigurable(id: String, title: String, group: String, icon: JCodeIcon, visible: Boolean = true, action: () -> Unit) {
+        fun registerConfigurable(id: String, title: String, group: String, icon: QCodeIcon, visible: Boolean = true, action: () -> Unit) {
             if (id in paletteSetting.disabledIds || !visible) return
             CommandRegistry.register(id = id, title = title, group = group, action = action, icon = icon)
         }
@@ -3234,60 +3234,60 @@ private fun JCodeShell(
             id = "view.orientationLock",
             title = if (orientationLockedMode) "Unlock Screen Orientation" else "Lock Screen Orientation",
             group = "View",
-            icon = JCodeIcon.ScreenRotation,
+            icon = QCodeIcon.ScreenRotation,
         ) { WindowModeState.orientationLocked.value = !orientationLockedMode }
         registerConfigurable(
             id = "view.fullscreen",
             title = if (fullscreenMode) "Exit Fullscreen" else "Enter Fullscreen",
             group = "View",
-            icon = JCodeIcon.Fullscreen,
+            icon = QCodeIcon.Fullscreen,
         ) { WindowModeState.fullscreen.value = !fullscreenMode }
         registerConfigurable(
             id = "view.keepAwake",
             title = if (keepAwakeMode) "Keep Awake: Turn Off" else "Keep Awake: Turn On",
             group = "View",
-            icon = JCodeIcon.KeepAwake,
+            icon = QCodeIcon.KeepAwake,
         ) { WindowModeState.keepAwake.value = !keepAwakeMode }
         registerConfigurable(
             id = "view.hideChrome",
             title = if (chromeHidden) "Show Header and Tabs" else "Hide Header and Tabs",
             group = "View",
-            icon = JCodeIcon.Collapse,
+            icon = QCodeIcon.Collapse,
             visible = paletteHasTabs,
         ) { chromeHidden = !chromeHidden }
         registerConfigurable(
             id = "editor.goToLine",
             title = "Go to Line…",
             group = "Editor",
-            icon = JCodeIcon.Cursor,
+            icon = QCodeIcon.Cursor,
             visible = paletteEditorActive,
         ) { goToLineVisible = true }
         registerConfigurable(
             id = "editor.formatDocument",
             title = "Format Document",
             group = "Editor",
-            icon = JCodeIcon.Format,
+            icon = QCodeIcon.Format,
             visible = paletteEditorActive && paletteLanguageIdentified,
         ) { paletteSaveActions.onFormat() }
         registerConfigurable(
             id = "editor.fontSizeIncrease",
             title = "Increase Editor Font Size",
             group = "Editor",
-            icon = JCodeIcon.TextIncrease,
+            icon = QCodeIcon.TextIncrease,
             visible = paletteEditorActive,
         ) { onUpdateEditorFontSize(paletteFontScope, (paletteFontSize + 1f).coerceIn(8f, 72f)) }
         registerConfigurable(
             id = "editor.fontSizeDecrease",
             title = "Decrease Editor Font Size",
             group = "Editor",
-            icon = JCodeIcon.TextDecrease,
+            icon = QCodeIcon.TextDecrease,
             visible = paletteEditorActive,
         ) { onUpdateEditorFontSize(paletteFontScope, (paletteFontSize - 1f).coerceIn(8f, 72f)) }
         registerConfigurable(
             id = "tools.colorSearch",
             title = "Color Search (pick from screen)",
             group = "Tools",
-            icon = JCodeIcon.Palette,
+            icon = QCodeIcon.Palette,
         ) { colorPickActive = true }
         // The device is worth opening on its own now that it has a launcher on it: without this it
         // is only ever reached by finishing a virtual-device build, which is no way to get at the
@@ -3296,7 +3296,7 @@ private fun JCodeShell(
             id = "tools.virtualDevice",
             title = "Open Virtual Device",
             group = "Tools",
-            icon = JCodeIcon.Destinations,
+            icon = QCodeIcon.Destinations,
         ) { VirtualDeviceBridge.requestOpen(null) }
         // The browser had a toolbar and nothing else. That is fine while you are looking at it and no
         // use at all from anywhere else, which is where the palette is reached from — so opening it
@@ -3306,13 +3306,13 @@ private fun JCodeShell(
             id = "browser.open",
             title = "Open Browser",
             group = "Tools",
-            icon = JCodeIcon.Browser,
+            icon = QCodeIcon.Browser,
         ) { BuiltinBrowser.requestOpen() }
         registerConfigurable(
             id = "browser.back",
             title = "Browser: Back",
             group = "Browser",
-            icon = JCodeIcon.ArrowBack,
+            icon = QCodeIcon.ArrowBack,
             // Not merely "the browser exists": a Back with nowhere to go is a command that answers a
             // search and then does nothing, which is worse than not being offered.
             visible = paletteBrowserActive && paletteBrowserBack,
@@ -3321,7 +3321,7 @@ private fun JCodeShell(
             id = "browser.forward",
             title = "Browser: Forward",
             group = "Browser",
-            icon = JCodeIcon.ArrowForward,
+            icon = QCodeIcon.ArrowForward,
             visible = paletteBrowserActive && paletteBrowserForward,
         ) { BuiltinBrowser.controller?.goForward() }
         registerConfigurable(
@@ -3331,7 +3331,7 @@ private fun JCodeShell(
             // worth offering.
             title = if (paletteBrowserLoading) "Browser: Stop Loading" else "Browser: Reload Page",
             group = "Browser",
-            icon = if (paletteBrowserLoading) JCodeIcon.Stop else JCodeIcon.Refresh,
+            icon = if (paletteBrowserLoading) QCodeIcon.Stop else QCodeIcon.Refresh,
             visible = paletteBrowserActive,
         ) {
             val browser = BuiltinBrowser.controller
@@ -3342,59 +3342,59 @@ private fun JCodeShell(
             title = "New Folder",
             group = "Workspace",
             action = onCreateProject,
-            icon = JCodeIcon.NewFolder,
+            icon = QCodeIcon.NewFolder,
         )
         CommandRegistry.register(
             id = "workspace.openFolder",
             title = "Open Folder",
             group = "Workspace",
             action = { openFolderLauncher.launch(null) },
-            icon = JCodeIcon.Files,
+            icon = QCodeIcon.Files,
         )
         CommandRegistry.register(
             id = "workspace.autoSetupEnvironment",
             title = "Auto-Setup Environment",
             group = "Workspace",
             action = onAutoSetup,
-            icon = JCodeIcon.Sdk,
+            icon = QCodeIcon.Sdk,
         )
         CommandRegistry.register(
             id = "workbench.focusExplorer",
             title = "Focus Explorer",
             group = "Workbench",
             action = { selectedTool = WorkbenchTool.Explorer },
-            icon = JCodeIcon.Files,
+            icon = QCodeIcon.Files,
         )
         CommandRegistry.register(
             id = "workbench.showSearch",
             title = "Show Search Placeholder",
             group = "Workbench",
             action = { selectedTool = WorkbenchTool.Search },
-            icon = JCodeIcon.Search,
+            icon = QCodeIcon.Search,
         )
         CommandRegistry.register(
             id = "vdevice.reconnectAdb",
             title = "Reconnect the virtual device to adb",
             group = "Virtual device",
             // The pack's settings screen names this command; the palette offers it too. Both
-            // reach the same place, and neither has to know that the daemon is JCode's.
+            // reach the same place, and neither has to know that the daemon is QCode's.
             action = virtualDevice.onReconnect,
             whenPredicate = { virtualDevice.adbAvailable && virtualDevice.enabled },
-            icon = JCodeIcon.Refresh,
+            icon = QCodeIcon.Refresh,
         )
         CommandRegistry.register(
             id = "settings.openPage",
             title = "Open Settings",
             group = "Settings",
             action = onOpenSettingsPage,
-            icon = JCodeIcon.Settings,
+            icon = QCodeIcon.Settings,
         )
         CommandRegistry.register(
             id = "settings.openWorkspaceYaml",
             title = "Open Workspace YAML",
             group = "Settings",
             action = onOpenWorkspaceConfig,
-            icon = JCodeIcon.Code,
+            icon = QCodeIcon.Code,
         )
         CommandRegistry.register(
             id = "settings.openProjectYaml",
@@ -3402,7 +3402,7 @@ private fun JCodeShell(
             group = "Settings",
             action = onOpenProjectConfig,
             whenPredicate = { selectedProject?.fsPath is FsPath.Local },
-            icon = JCodeIcon.Code,
+            icon = QCodeIcon.Code,
         )
         paletteVsixCommands.forEach { (extension, commands) ->
             commands.forEach { command ->
@@ -4282,7 +4282,7 @@ private fun WorkspacePanel(
     sdkCatalogState: SdkCatalogState,
     lspCatalogState: LspCatalogState,
     workspaceManager: WorkspaceManager,
-    windowInfo: JCodeWindowInfo,
+    windowInfo: QCodeWindowInfo,
     breadcrumb: List<WorkspaceCrumb>,
     onCloseWorkspace: () -> Unit,
     onCloseProject: () -> Unit,
@@ -4517,7 +4517,7 @@ private fun WorkspacePanel(
 
 @Composable
 private fun EditorWorkspace(
-    windowInfo: JCodeWindowInfo,
+    windowInfo: QCodeWindowInfo,
     workspace: Workspace?,
     selectedProject: Project?,
     editorGroup: EditorGroup,
@@ -4664,7 +4664,7 @@ private fun EditorWorkspace(
         }
         if (chrome.chromeHidden) {
             FloatingRestorePill(
-                icon = jcIcon(JCodeIcon.ChevronDown),
+                icon = jcIcon(QCodeIcon.ChevronDown),
                 contentDescription = "Show header and tabs",
                 onClick = { chrome.onSetChromeHidden(false) },
                 modifier = Modifier
@@ -4697,7 +4697,7 @@ private fun dev.blamspot.jcode.core.debug.DapVariable.asInspected() =
     )
 
 /**
- * Recents + folder actions for the empty-editor "no project" state. Provided by [JCodeApp] and read by
+ * Recents + folder actions for the empty-editor "no project" state. Provided by [QCodeApp] and read by
  * [EditorEmptyState] via CompositionLocal so the (register-pressured) shell composable's signature stays
  * untouched.
  */
@@ -4716,7 +4716,7 @@ internal val LocalEditorEmptyActions = compositionLocalOf { EditorEmptyActions()
 
 /**
  * Clone / Remote-Repo state + callbacks for the VCS editor pages and the drawer "Open Folder" dropdown.
- * Provided by [JCodeApp] (which holds the ViewModel) and read by the inner shell via CompositionLocal.
+ * Provided by [QCodeApp] (which holds the ViewModel) and read by the inner shell via CompositionLocal.
  */
 internal data class VcsActions(
     val drawerActions: List<MainViewModel.ShellContribution> = emptyList(),
@@ -4769,7 +4769,7 @@ private fun EditorEmptyHint(
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
-                        painter = jcIcon(JCodeIcon.Files),
+                        painter = jcIcon(QCodeIcon.Files),
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary,
                     )
@@ -4843,7 +4843,7 @@ private fun EditorRecents(actions: EditorEmptyActions, modifier: Modifier = Modi
  * The mark is the launcher icon's foreground layer alone, without the tile a launcher masks it
  * into: on a page this is a logo, not an app entry in a grid. Both it and the name come from the
  * installed icon rather than a fixed resource, so each build answers for itself - debug draws the
- * whole mark hollow and says "JCode (debug)", beta hollows out the J. The version is otherwise
+ * whole mark hollow and says "QCode (debug)", beta hollows out the J. The version is otherwise
  * only reachable through Settings > Updates.
  */
 @Composable
@@ -4863,7 +4863,7 @@ private fun EditorStartHeader() {
     }
     val label = remember(context) {
         runCatching { context.packageManager.getApplicationLabel(context.applicationInfo).toString() }
-            .getOrNull().orEmpty().ifEmpty { "JCode" }
+            .getOrNull().orEmpty().ifEmpty { "QCODE IDE" }
     }
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -4925,7 +4925,7 @@ private fun RecentRow(recent: RecentEntity, onOpen: () -> Unit, onExport: () -> 
                         name = recentDisplayName(recent),
                         isDirectory = true,
                         size = IconSize.sm,
-                        fallback = JCodeIcon.Code,
+                        fallback = QCodeIcon.Code,
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
@@ -4950,7 +4950,7 @@ private fun RecentRow(recent: RecentEntity, onOpen: () -> Unit, onExport: () -> 
                 Box {
                     IconButton(onClick = { menuOpen = true }, modifier = Modifier.size(32.dp)) {
                         Icon(
-                            painter = jcIcon(JCodeIcon.MoreVert),
+                            painter = jcIcon(QCodeIcon.MoreVert),
                             contentDescription = "Recent project actions",
                             modifier = Modifier.size(IconSize.md),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -4960,7 +4960,7 @@ private fun RecentRow(recent: RecentEntity, onOpen: () -> Unit, onExport: () -> 
                         expanded = menuOpen,
                         onDismissRequest = { menuOpen = false },
                         listActions = listOf(
-                            ContextAction(JCodeIcon.Save, "Export to storage") { onExport() },
+                            ContextAction(QCodeIcon.Save, "Export to storage") { onExport() },
                         ),
                     )
                 }
@@ -5084,7 +5084,7 @@ private fun WorkbenchRightSidebar(
                     vsixExtensions.forEach { ext ->
                         RightPanelTabItem(
                             label = ext.tabName,
-                            icon = JCodeIcon.Extensions,
+                            icon = QCodeIcon.Extensions,
                             selected = selected == RightPanelSelection.Extension(ext.id),
                             onClick = { onSelected(RightPanelSelection.Extension(ext.id)) },
                             iconFile = ext.iconFile,
@@ -5097,7 +5097,7 @@ private fun WorkbenchRightSidebar(
                     VsixTitleActionsMenu(activeVsix)
                 }
                 WorkbenchIconActionButton(
-                    icon = jcIcon(JCodeIcon.Close),
+                    icon = jcIcon(QCodeIcon.Close),
                     contentDescription = "Close",
                     onClick = onHide,
                 )
@@ -5190,7 +5190,7 @@ private fun WorkspaceSplitHandle(onDrag: (Float) -> Unit, onDragStopped: () -> U
 @Composable
 private fun RightPanelTabItem(
     label: String,
-    icon: JCodeIcon,
+    icon: QCodeIcon,
     selected: Boolean,
     onClick: () -> Unit,
     /** An extension's shipped icon, drawn in place of [icon] once it has decoded. */
@@ -5256,7 +5256,7 @@ private fun VsixTitleActionsMenu(extension: dev.blamspot.jcode.feature.marketpla
     }
     Box {
         WorkbenchIconActionButton(
-            icon = jcIcon(JCodeIcon.MoreVert),
+            icon = jcIcon(QCodeIcon.MoreVert),
             contentDescription = "${extension.name} actions",
             onClick = {
                 canPasteImage = hasClipboardImage(context)
@@ -5270,7 +5270,7 @@ private fun VsixTitleActionsMenu(extension: dev.blamspot.jcode.feature.marketpla
                 // Ctrl+V covers a hardware keyboard; this is the same paste for touch, where
                 // Chromium's own menu offers nothing for an image on the clipboard.
                 if (canPasteImage) {
-                    add(ContextAction(JCodeIcon.Paste, "Paste image") { session.pasteClipboardImage() })
+                    add(ContextAction(QCodeIcon.Paste, "Paste image") { session.pasteClipboardImage() })
                 }
                 actions.forEach { action ->
                     add(ContextAction(contributedMenuIcon(action.codicon), action.title) { session.execute(action.id) })
@@ -5533,7 +5533,7 @@ private fun TerminalSidebarContent(
                             // Pinned terminal shows a leading pin instead of a "×" (close via long-press).
                             if (isPinned) {
                                 Icon(
-                                    painter = jcIcon(JCodeIcon.Pin),
+                                    painter = jcIcon(QCodeIcon.Pin),
                                     contentDescription = "Pinned",
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.size(IconSize.xxs),
@@ -5583,21 +5583,21 @@ private fun TerminalSidebarContent(
                             expanded = menuForId == sessionId,
                             onDismissRequest = { menuForId = null },
                             quickActions = listOf(
-                                ContextAction(JCodeIcon.Close, "Close") { requestCloseTerminals(listOf(sessionId)) },
+                                ContextAction(QCodeIcon.Close, "Close") { requestCloseTerminals(listOf(sessionId)) },
                             ),
                             listActions = buildList {
                                 if (!isRelocated) {
-                                    add(ContextAction(JCodeIcon.Pin, if (isPinned) "Unpin" else "Pin") {
+                                    add(ContextAction(QCodeIcon.Pin, if (isPinned) "Unpin" else "Pin") {
                                         onSetTerminalPinned(sessionId, !isPinned)
                                     })
                                 }
-                                add(ContextAction(JCodeIcon.Clear, "Clear") {
+                                add(ContextAction(QCodeIcon.Clear, "Clear") {
                                     terminalSessionFor(sessionId)?.pty?.write(byteArrayOf(0x0C))
                                 })
-                                add(ContextAction(JCodeIcon.Close, "Close others") {
+                                add(ContextAction(QCodeIcon.Close, "Close others") {
                                     requestCloseTerminals(terminalSessionIds.filter { it != sessionId && it !in pinnedTerminalIds })
                                 })
-                                add(ContextAction(JCodeIcon.Close, "Close all") {
+                                add(ContextAction(QCodeIcon.Close, "Close all") {
                                     requestCloseTerminals(terminalSessionIds.filter { it !in pinnedTerminalIds })
                                 })
                             },
@@ -5630,7 +5630,7 @@ private fun TerminalSidebarContent(
                 verticalArrangement = Arrangement.Center,
             ) {
                 Icon(
-                    painter = jcIcon(JCodeIcon.Sdk),
+                    painter = jcIcon(QCodeIcon.Sdk),
                     contentDescription = null,
                     modifier = Modifier.size(48.dp),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
@@ -5749,14 +5749,14 @@ private fun TerminalSidebarContent(
                         offset = menuOffset,
                         quickActions = buildList {
                             if (req.view.hasSelection()) {
-                                add(ContextAction(JCodeIcon.Copy, "Copy") { req.view.contextCopy() })
+                                add(ContextAction(QCodeIcon.Copy, "Copy") { req.view.contextCopy() })
                             }
-                            add(ContextAction(JCodeIcon.Paste, "Paste") { req.view.contextPaste() })
+                            add(ContextAction(QCodeIcon.Paste, "Paste") { req.view.contextPaste() })
                         },
                         listActions = listOf(
-                            ContextAction(JCodeIcon.Cursor, "Select Text") { req.view.beginTextSelection() },
-                            ContextAction(JCodeIcon.SelectAll, "Select all") { req.view.contextSelectAll() },
-                            ContextAction(JCodeIcon.Clear, "Clear") { req.view.contextClear() },
+                            ContextAction(QCodeIcon.Cursor, "Select Text") { req.view.beginTextSelection() },
+                            ContextAction(QCodeIcon.SelectAll, "Select all") { req.view.contextSelectAll() },
+                            ContextAction(QCodeIcon.Clear, "Clear") { req.view.contextClear() },
                         ),
                     )
                 }
@@ -5772,7 +5772,7 @@ private fun TerminalSidebarContent(
                     verticalArrangement = Arrangement.spacedBy(Space.sm),
                 ) {
                     Icon(
-                        painter = jcIcon(JCodeIcon.Terminal),
+                        painter = jcIcon(QCodeIcon.Terminal),
                         contentDescription = null,
                         modifier = Modifier.size(48.dp),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
@@ -5845,7 +5845,7 @@ private fun OutputSidebarContent(
         if (lines.isNotEmpty()) {
             Box(modifier = Modifier.align(Alignment.TopEnd).padding(Space.xs)) {
                 WorkbenchIconActionButton(
-                    icon = jcIcon(JCodeIcon.Clear),
+                    icon = jcIcon(QCodeIcon.Clear),
                     contentDescription = "Clear output",
                     onClick = { OutputLog.clear() },
                 )
@@ -5923,7 +5923,7 @@ private fun WorkbenchBackHandler(
     exitPromptItems?.let { items ->
         AlertDialog(
             onDismissRequest = { exitPromptItems = null },
-            title = { Text("Exit JCode?") },
+            title = { Text("Exit QCode?") },
             text = {
                 Text("Still running:\n" + items.joinToString("\n") { "•  $it" })
             },
@@ -5964,25 +5964,25 @@ private data class TerminalMenuRequest(
  * the two vocabularies overlap enough that one table is clearer than two. Anything unrecognised falls
  * back to the generic extension mark — the action's label already says what it does.
  */
-private fun contributedMenuIcon(name: String?): JCodeIcon = when (name?.lowercase()) {
-    "scm", "source-control", "git" -> JCodeIcon.Scm
-    "database", "db" -> JCodeIcon.Database
-    "vm" -> JCodeIcon.Vm
-    "run" -> JCodeIcon.Run
-    "debug" -> JCodeIcon.Debug
-    "terminal" -> JCodeIcon.Terminal
-    "browser", "web" -> JCodeIcon.Browser
-    "search", "search-fuzzy" -> JCodeIcon.Search
-    "settings", "gear", "settings-gear" -> JCodeIcon.Settings
-    "chat", "comment", "comment-discussion" -> JCodeIcon.Chat
-    "image" -> JCodeIcon.Image
-    "code" -> JCodeIcon.Code
-    "preview", "eye", "open-preview" -> JCodeIcon.Preview
-    "format" -> JCodeIcon.Format
-    "add", "plus", "new-file" -> JCodeIcon.Add
-    "link-external", "go-to-file" -> JCodeIcon.Open
-    "refresh", "sync" -> JCodeIcon.Refresh
-    "trash", "clear-all" -> JCodeIcon.Delete
-    "history", "clock" -> JCodeIcon.Logs
-    else -> JCodeIcon.Extensions
+private fun contributedMenuIcon(name: String?): QCodeIcon = when (name?.lowercase()) {
+    "scm", "source-control", "git" -> QCodeIcon.Scm
+    "database", "db" -> QCodeIcon.Database
+    "vm" -> QCodeIcon.Vm
+    "run" -> QCodeIcon.Run
+    "debug" -> QCodeIcon.Debug
+    "terminal" -> QCodeIcon.Terminal
+    "browser", "web" -> QCodeIcon.Browser
+    "search", "search-fuzzy" -> QCodeIcon.Search
+    "settings", "gear", "settings-gear" -> QCodeIcon.Settings
+    "chat", "comment", "comment-discussion" -> QCodeIcon.Chat
+    "image" -> QCodeIcon.Image
+    "code" -> QCodeIcon.Code
+    "preview", "eye", "open-preview" -> QCodeIcon.Preview
+    "format" -> QCodeIcon.Format
+    "add", "plus", "new-file" -> QCodeIcon.Add
+    "link-external", "go-to-file" -> QCodeIcon.Open
+    "refresh", "sync" -> QCodeIcon.Refresh
+    "trash", "clear-all" -> QCodeIcon.Delete
+    "history", "clock" -> QCodeIcon.Logs
+    else -> QCodeIcon.Extensions
 }

@@ -7,7 +7,7 @@ import android.database.Cursor
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
-import dev.blamspot.jcode.ext.api.JCodeVirtualDevice
+import dev.blamspot.jcode.ext.api.QCodeVirtualDevice
 import dev.blamspot.jcode.ext.api.VirtualDeviceComponents
 
 /**
@@ -27,7 +27,7 @@ class VirtualSettingsProvider : ContentProvider() {
     private val delegate: ContentProvider? by lazy {
         val context = context ?: return@lazy null
         VirtualDeviceBridge.init(context)
-        VirtualDeviceBridge.provider(JCodeVirtualDevice.Roles.SETTINGS)?.also { attach(it, context) }
+        VirtualDeviceBridge.provider(QCodeVirtualDevice.Roles.SETTINGS)?.also { attach(it, context) }
     }
 
     private fun attach(provider: ContentProvider, context: Context) {

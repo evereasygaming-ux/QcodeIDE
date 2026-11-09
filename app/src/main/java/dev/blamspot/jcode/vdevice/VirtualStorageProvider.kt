@@ -10,7 +10,7 @@ import android.os.ParcelFileDescriptor
 import android.provider.DocumentsContract
 import android.provider.DocumentsProvider
 import android.util.Log
-import dev.blamspot.jcode.ext.api.JCodeVirtualDevice
+import dev.blamspot.jcode.ext.api.QCodeVirtualDevice
 import dev.blamspot.jcode.ext.api.VirtualDeviceComponents
 import java.io.FileNotFoundException
 
@@ -40,7 +40,7 @@ class VirtualStorageProvider : DocumentsProvider() {
     private fun resolve(): DocumentsProvider? {
         val context = context ?: return null
         VirtualDeviceBridge.init(context)
-        val provider = VirtualDeviceBridge.provider(JCodeVirtualDevice.Roles.FILES) as? DocumentsProvider
+        val provider = VirtualDeviceBridge.provider(QCodeVirtualDevice.Roles.FILES) as? DocumentsProvider
             ?: return null
         return provider.also { attach(it, context) }
     }

@@ -14,7 +14,7 @@
 What an extension is, how it is installed and updated, when its contributions become active, and how
 its capabilities are governed.
 
-Extensions come from the [JCode marketplace](https://github.com/blamspotdev/j-code-marketplace) as
+Extensions come from the [QCode marketplace](https://github.com/blamspotdev/j-code-marketplace) as
 cryptographically verified `.jext` packages, or are sideloaded (unsigned, developer only), or are
 imported from a VS Code `.vsix`.
 
@@ -152,7 +152,7 @@ flowchart TB
     open --> zip["inner plain .jext ZIP"]
     dev --> zip
     zip --> fp["verify .jext-manifest.json<br/>per-file SHA-256 + package fingerprint"]
-    fp --> ver["requireCompatible(min/maxJCodeVersion, appVersion)"]
+    fp --> ver["requireCompatible(min/maxQCodeVersion, appVersion)"]
     ver --> tmp["unpack to extensions/.tmp-&lt;id&gt;"]
     tmp --> swap["atomic swap → extensions/&lt;id&gt;"]
     swap --> load["loadInstalled(dir) → InstalledExtension"]
@@ -161,7 +161,7 @@ flowchart TB
 - Install root: `filesDir/extensions/<safeDirName(id)>`.
 - Unpacking goes to `.tmp-<id>` first and is swapped in, so a failed install cannot leave a
   half-written extension in place.
-- The install id and `minJCodeVersion` now live in `extension.yaml`; a legacy `extension.jehm` is
+- The install id and `minQCodeVersion` now live in `extension.yaml`; a legacy `extension.jehm` is
   read as a fallback for packages built before the header merge.
 - `installedVersionOf(dir)` reads `extension.yaml` — **the manifest's `version` is authoritative**,
   not the filename.
@@ -216,7 +216,7 @@ one of two prompts, chosen by what the extension left behind:
 
 | Condition | Prompt | Action |
 |---|---|---|
-| `NativeExtensionLoader.hasLoadedCode(id)` — its dex loaded into this process | **Restart JCode** | `restartApp()`; Android cannot unload a `DexClassLoader`, so nothing less finishes it |
+| `NativeExtensionLoader.hasLoadedCode(id)` — its dex loaded into this process | **Restart QCode** | `restartApp()`; Android cannot unload a `DexClassLoader`, so nothing less finishes it |
 | Otherwise, a live host / `.vsix` session / page tab of its own | **Reload** | `unloadRemovedExtension(id)` — destroys its view holders and closes its page tabs |
 
 Its *detail* page and its source attribution deliberately survive both: that page is where the
@@ -241,7 +241,7 @@ An **unsigned** package installs like any other and is marked `dev = true`; the 
 it was unsigned rather than refusing it. Developer options does not gate importing. What it gates is
 what an unsigned extension may then *do*: only `dev` extensions appear in the Ext Dev tools, where
 their `console` output is captured to the **Ext Dev log** rather than logcat, and
-`NativeExtensionLoader` refuses to load a `dev` extension's **native code** into JCode's process
+`NativeExtensionLoader` refuses to load a `dev` extension's **native code** into QCode's process
 unless it is on.
 
 Signed marketplace packages are always `dev = false` and are not debuggable.
@@ -267,8 +267,8 @@ Signed marketplace packages are always `dev = false` and are not debuggable.
 |---|---|
 | Signature verification fails | Install aborted: "not an official package or it was tampered with" |
 | File SHA-256 or package fingerprint mismatch | Install aborted |
-| `minJCodeVersion` newer than the app | Install refused with a version message |
-| `maxJCodeVersion` older than the app | Install refused; the Extensions list badges the row **Unsupported** and disables Install before anything downloads |
+| `minQCodeVersion` newer than the app | Install refused with a version message |
+| `maxQCodeVersion` older than the app | Install refused; the Extensions list badges the row **Unsupported** and disables Install before anything downloads |
 | `api.minApiVersion` newer than the host | Validation error; the extension will not run |
 | Extension has no `extension.yaml` id | Install fails: "package has no extension.yaml id" |
 | Interrupted install | The `.tmp-<id>` directory is discarded; the previous version stays intact |

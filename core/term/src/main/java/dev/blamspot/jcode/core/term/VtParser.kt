@@ -34,7 +34,7 @@ class VtParser(rows: Int, cols: Int) : AutoCloseable {
     }
 
     /**
-     * Drain the JCode shell-integration OSC events (7711 open-file, 7712 tab-title, 7713
+     * Drain the QCode shell-integration OSC events (7711 open-file, 7712 tab-title, 7713
      * task-complete, 7714 open-url, 7715 nested-shell open, 7716 task progress) queued by the native
      * parser during [feed]. Each native entry is encoded "<code>;<payload>" and split at the FIRST
      * ';' — payloads may themselves contain ';' (7713's is "<token>;<exitCode>"; 7716's is

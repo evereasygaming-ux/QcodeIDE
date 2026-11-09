@@ -91,8 +91,8 @@ Covered in detail in
 - Roots resolve to app-private ext4 (`filesDir/workspace/{projects,workspaces/default}`) **once**
   `filesDir/workspace/.migrated-ext4` exists.
 - Until then they resolve to the legacy shared paths
-  (`DEFAULT_SHARED_PROJECTS_ROOT = /storage/emulated/0/JCode/projects`,
-  `DEFAULT_SHARED_WORKSPACE_ROOT = /storage/emulated/0/JCode/workspaces/default`).
+  (`DEFAULT_SHARED_PROJECTS_ROOT = /storage/emulated/0/QCode/projects`,
+  `DEFAULT_SHARED_WORKSPACE_ROOT = /storage/emulated/0/QCode/workspaces/default`).
 - `migrateProjectsToExt4IfNeeded()` performs the one-time copy, rewrites project `location` rows
   through a `remap` function, and writes the marker last, so an interrupted migration is retried
   rather than half-applied.

@@ -40,7 +40,7 @@ import androidx.compose.ui.unit.dp
 import dev.blamspot.jcode.design.AlertDialog
 import dev.blamspot.jcode.design.CompactOutlinedButton
 import dev.blamspot.jcode.design.CompactFilledButton
-import dev.blamspot.jcode.design.JCodeIcon
+import dev.blamspot.jcode.design.QCodeIcon
 import dev.blamspot.jcode.design.Radius
 import dev.blamspot.jcode.design.Space
 import dev.blamspot.jcode.design.jcIcon
@@ -174,14 +174,14 @@ internal fun VariableInspectHeader(
             // Inspect only when there is something the peek could not show; Copy value always, since
             // reading a value off the screen and retyping it is the thing a peek most invites.
             if (hasMore) {
-                CompactOutlinedButton(text = "Inspect", onClick = onInspect, icon = JCodeIcon.Search)
+                CompactOutlinedButton(text = "Inspect", onClick = onInspect, icon = QCodeIcon.Search)
             }
             // A container copies as JSON — walking it costs a round-trip per level, hence the
             // wait — and a scalar as its own text. Never the peek's rendering: "3 items" describes
             // a list, it isn't one.
             CompactOutlinedButton(
                 text = if (copying) "Copying…" else "Copy value",
-                icon = JCodeIcon.Copy,
+                icon = QCodeIcon.Copy,
                 enabled = !copying,
                 onClick = {
                     copying = true
@@ -332,7 +332,7 @@ private fun VariableTreeRow(row: TreeRow, onToggle: () -> Unit) {
     ) {
         if (row.value.expandable) {
             Icon(
-                painter = jcIcon(if (row.open) JCodeIcon.ChevronDown else JCodeIcon.ChevronRight),
+                painter = jcIcon(if (row.open) QCodeIcon.ChevronDown else QCodeIcon.ChevronRight),
                 contentDescription = if (row.open) "Collapse" else "Expand",
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(14.dp),

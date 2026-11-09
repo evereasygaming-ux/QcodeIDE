@@ -56,8 +56,8 @@ val jcodeVersionCode: Int = runCatching {
 // A non-empty `-PjcodeIdSuffix` (e.g. ".beta") gives this build its own applicationId AND launcher
 // label so it installs ALONGSIDE the normal release app instead of replacing it (the release script
 // passes ".beta" for a Beta build). Its private data (Linux rootfs, settings, sessions) is isolated
-// under the suffixed package; only the shared /storage/emulated/0/JCode projects folder is common.
-// Empty (the default) keeps the normal dev.blamspot.jcode / "JCode" release identity.
+// under the suffixed package; only the shared /storage/emulated/0/QCode projects folder is common.
+// Empty (the default) keeps the normal dev.blamspot.jcode / "QCODE IDE" release identity.
 val jcodeIdSuffix: String =
     (project.findProperty("jcodeIdSuffix") as? String)?.trim().orEmpty()
 
@@ -135,19 +135,19 @@ android {
         buildConfigField("String", "UPDATE_CHANNEL", "\"$jcodeUpdateChannel\"")
 
         // Launcher name (AndroidManifest android:label="${appLabel}"). The Beta build overrides this
-        // to "JCode.beta" in the release block below.
-        manifestPlaceholders["appLabel"] = "QCode"
+        // to "QCODE IDE (beta)" in the release block below.
+        manifestPlaceholders["appLabel"] = "QCODE IDE"
 
         // Launcher icon (AndroidManifest android:icon/roundIcon). Every build sits on the same
-        // tile; Debug and Beta swap in an adaptive icon whose mark is hollow instead (Beta's J,
-        // Debug's whole <J>) so they're distinguishable on the home screen without a second colour
+        // tile; Debug and Beta swap in an adaptive icon whose mark is hollow instead (Beta's mark,
+        // Debug's whole mark) so they're distinguishable on the home screen without a second colour
         // scheme. The plain release build keeps ic_launcher.
         manifestPlaceholders["appIcon"] = "@mipmap/ic_launcher"
         manifestPlaceholders["appIconRound"] = "@mipmap/ic_launcher_round"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        // JCode ships for arm64-v8a and nothing else. The library modules filter themselves (root
+        // QCode ships for arm64-v8a and nothing else. The library modules filter themselves (root
         // build.gradle.kts), but the APK is where it has to be guaranteed: this keeps a dependency
         // that happens to carry another ABI's .so out of the package, and it is what makes the
         // installer refuse a non-arm64 device rather than let one install an app whose embedded
@@ -164,10 +164,10 @@ android {
 
     buildTypes {
         debug {
-            // Dev builds install as a separate app (dev.qcode.ide.debug / "QCode (debug)") so an
+            // Dev builds install as a separate app (dev.qcode.ide.debug / "QCODE IDE (debug)") so an
             // `installDebug` never overwrites an installed release or beta build.
             applicationIdSuffix = ".debug"
-            manifestPlaceholders["appLabel"] = "QCode (debug)"
+            manifestPlaceholders["appLabel"] = "QCODE IDE (debug)"
             manifestPlaceholders["appIcon"] = "@mipmap/ic_launcher_debug"
             manifestPlaceholders["appIconRound"] = "@mipmap/ic_launcher_debug_round"
         }
@@ -178,10 +178,10 @@ android {
                 "proguard-rules.pro"
             )
             // Side-by-side Beta: a distinct applicationId (dev.qcode.ide.beta) + launcher label
-            // ("JCode (beta)") so the Beta APK never overwrites an installed release build.
+            // ("QCODE IDE (beta)") so the Beta APK never overwrites an installed release build.
             if (jcodeIdSuffix.isNotEmpty()) {
                 applicationIdSuffix = jcodeIdSuffix
-                manifestPlaceholders["appLabel"] = "QCode (${jcodeIdSuffix.removePrefix(".")})"
+                manifestPlaceholders["appLabel"] = "QCODE IDE (${jcodeIdSuffix.removePrefix(".")})"
                 manifestPlaceholders["appIcon"] = "@mipmap/ic_launcher_beta"
                 manifestPlaceholders["appIconRound"] = "@mipmap/ic_launcher_beta_round"
             }

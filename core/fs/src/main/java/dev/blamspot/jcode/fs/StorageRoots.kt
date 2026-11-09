@@ -15,7 +15,7 @@ internal fun resolveStorageRoots(context: Context): StorageRoots {
     // unlike the shared /storage FUSE mount, and needs no runtime storage permission.
     // Trade-off: this location is wiped on app uninstall / "Clear data".
     //
-    // Existing shared /storage/emulated/0/JCode projects are copied here once by
+    // Existing shared /storage/emulated/0/QCode projects are copied here once by
     // WorkspaceManager.migrateProjectsToExt4IfNeeded, which writes the ".migrated-ext4" marker on
     // success. Until that marker exists we KEEP resolving to the legacy shared root, so the app and
     // the (still shared-pointing) DB rows agree on where projects physically live — otherwise a not-

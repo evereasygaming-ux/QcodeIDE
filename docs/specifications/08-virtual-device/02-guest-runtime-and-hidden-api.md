@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Implemented — verified on Android 13 with `targetSdk = 33`. The `targetSdk` that governs the hidden-API greylist is **JCode's**, not the pack's: the pack's archive is loaded, never installed, so it has no `targetSdk` of its own at runtime |
+| **Status** | Implemented — verified on Android 13 with `targetSdk = 33`. The `targetSdk` that governs the hidden-API greylist is **QCode's**, not the pack's: the pack's archive is loaded, never installed, so it has no `targetSdk` of its own at runtime |
 | **Modules** | The **Android Dev Pack** (`dev.jcode.ext.android.vdevice`, plus `android.hardware.GuestSensorManager`). All of it runs in `:app`'s `:guest` process, loaded there by the app's `GuestSessionService` stub — see [App sandbox §1a](01-app-sandbox-architecture.md#1a-where-this-lives-and-why-it-is-split) |
 | **Primary sources** | `native/src/main/java/dev/jcode/ext/android/vdevice/`: HiddenApi.kt, GuestLoader.kt, GuestContext.kt, GuestRuntime.kt, GuestHooks.kt, GuestInstrumentation.kt, GuestOverlay.kt, GuestPermissions.kt, GuestLocation.kt, GuestSensors.kt, VirtualIdentity.kt, EmbeddedWindows.kt, VirtualDeviceGuest.kt, and `native/src/main/java/android/hardware/GuestSensorManager.kt` |
 | **Verified against** | device-verified on Android 13, 2026-08-13 (`vdevice-apps/fixtures/appcompat`, `vdevice-apps/hardware`) |
@@ -74,17 +74,17 @@ default by `targetSdkVersion`. `selectDefaultTheme` reproduces that with the fou
 
 ### 2.1 Why the class loader's parent is the boot loader
 
-`DexClassLoader(apk, …, Context::class.java.classLoader)` — **not** JCode's own loader.
+`DexClassLoader(apk, …, Context::class.java.classLoader)` — **not** QCode's own loader.
 
-Parenting to JCode's would be parent-first, so every library the IDE also ships (AndroidX, Kotlin,
+Parenting to QCode's would be parent-first, so every library the IDE also ships (AndroidX, Kotlin,
 Compose) would be answered out of the IDE's dex rather than the guest's APK. The classes run, which
-is what makes the mistake so quiet, but each library's generated `R` then carries **JCode's**
+is what makes the mistake so quiet, but each library's generated `R` then carries **QCode's**
 resource ids while the guest's resource table only knows the guest's.
 
 > Measured: an `AppCompatActivity` whose theme *was* a `Theme.AppCompat` descendant, correctly
 > applied and resolving `android:windowBackground` out of the guest's table, still died on
 > `setContentView` with "You need to use a Theme.AppCompat theme (or descendant) with this
-> activity." — `AppCompatDelegate` was reading JCode's `windowActionBar` attr id, which the guest's
+> activity." — `AppCompatDelegate` was reading QCode's `windowActionBar` attr id, which the guest's
 > table has never heard of. `vdevice-apps/fixtures/appcompat` is the regression test.
 
 Isolating the parent gives the guest its own copy of everything it ships, which is what a real app
@@ -113,12 +113,12 @@ same file once an APK has been rebuilt).
 internal class GuestContext(base: Context, private val guest: LoadedGuest) : ContextWrapper(base)
 ```
 
-It wraps JCode's **real** `ContextImpl`, so every binder call still goes out under JCode's uid and
+It wraps QCode's **real** `ContextImpl`, so every binder call still goes out under QCode's uid and
 package — which is what makes those calls succeed — while reporting the *guest's* identity for
 everything the guest can observe about itself: package name, `ApplicationInfo`, resources, class
 loader, and a private storage tree under `filesDir/vdevice/<guest package>/`.
 
-> The storage redirect is what keeps a guest from ever seeing or writing into JCode's own data
+> The storage redirect is what keeps a guest from ever seeing or writing into QCode's own data
 > directory.
 
 A related constraint appears elsewhere in the system: some framework calls check that
@@ -131,16 +131,16 @@ Rewrites `Build`'s `static final` descriptive strings:
 
 | Field | Value |
 |---|---|
-| `Build.MODEL` | `JCode vDevice` |
+| `Build.MODEL` | `QCode vDevice` |
 | `Build.DEVICE` | `jcode_vdevice` |
 | `Build.PRODUCT` | `jcode_vdevice` |
-| `Build.SERIAL` | `JCODEVD00000000` |
+| `Build.SERIAL` | `QCODEVD00000000` |
 
 Design goal: **different identity, same hardware.** Only descriptive strings change; anything
 hardware-derived — CPU count, memory, display metrics, ABI list — is left alone, so a guest still
 measures the machine it is really running on.
 
-`MODEL` uses a space rather than an underscore so `adb devices -l` renders it as `JCode_vDevice`
+`MODEL` uses a space rather than an underscore so `adb devices -l` renders it as `QCode_vDevice`
 while `Build.MODEL` stays shaped like a real model name.
 
 Because `Build`'s fields are `static final`, this is **process-wide and irreversible**, so `apply`
@@ -196,7 +196,7 @@ Accessing these logs a warning and nothing more:
 
 | Member | Status | Workaround |
 |---|---|---|
-| `ContextThemeWrapper.mTheme` | `max-target-p` — cannot be cleared | Never needed: **`ContextThemeWrapper.setTheme(Resources.Theme)` is public SDK from API 29** and replaces `mTheme` outright. `GuestRuntime.bind` builds the theme from the guest's own `Resources` and installs it, so which table the theme belongs to is no longer a matter of when `mTheme` happened to be created. `onLaunchActivity` still rewrites `ActivityInfo.theme` to `0` so nothing is built against JCode's resources in the first place |
+| `ContextThemeWrapper.mTheme` | `max-target-p` — cannot be cleared | Never needed: **`ContextThemeWrapper.setTheme(Resources.Theme)` is public SDK from API 29** and replaces `mTheme` outright. `GuestRuntime.bind` builds the theme from the guest's own `Resources` and installs it, so which table the theme belongs to is no longer a matter of when `mTheme` happened to be created. `onLaunchActivity` still rewrites `ActivityInfo.theme` to `0` so nothing is built against QCode's resources in the first place |
 | `ActivityThread.startActivityNow` | Absent from declared members — the signature of a **denied** member | The embedded path uses the public `Instrumentation.newActivity` |
 | **Every** non-SDK member of `SurfaceControlViewHost`, including `SurfacePackage` | The class carries no `@UnsupportedAppUsage` at all | `EmbeddedWindows` reaches the host's view root through the container's public `getParent()`, and the root layer through `SurfacePackage`'s own public `Parcelable` contract |
 | `Activity.performStart` / `performResume` | Denied | Driven through the public lifecycle path |
@@ -225,10 +225,10 @@ reach code the container had never exercised.
 
 | Claim | Why |
 |---|---|
-| `WebView.setDataDirectorySuffix("jcode-guest")` | WebView takes an **exclusive lock** on its data directory and refuses to load in a second process of the same app without a suffix. JCode's own process always gets there first, so a guest that touched a WebView at all died with `Using WebView from more than one process at once with the same data directory is not supported`. Not a niche case: ad SDKs, sign-in flows, Cordova/Ionic apps and any in-app browser reach for one. Public API from API 28, and it must run before WebView is used — which is why it is the first thing `install` does |
+| `WebView.setDataDirectorySuffix("jcode-guest")` | WebView takes an **exclusive lock** on its data directory and refuses to load in a second process of the same app without a suffix. QCode's own process always gets there first, so a guest that touched a WebView at all died with `Using WebView from more than one process at once with the same data directory is not supported`. Not a niche case: ad SDKs, sign-in flows, Cordova/Ionic apps and any in-app browser reach for one. Public API from API 28, and it must run before WebView is used — which is why it is the first thing `install` does |
 | `GuestContext.getDatabasePath` accepting an **absolute** name | `ContextImpl` returns an absolute name as-is, and libraries rely on it: WorkManager hands Room a full path under `no_backup/`, and Room passes it straight back. Joining it onto `databases/` produced `…/databases/data/user/0/…/no_backup/androidx.work.workdb`, and the `SQLiteCantOpenDatabaseException` came back on a WorkManager thread where nothing catches it |
 
-> Both crashes killed `:guest`, and where a **full-screen** guest was in JCode's task the activity
+> Both crashes killed `:guest`, and where a **full-screen** guest was in QCode's task the activity
 > manager's crash cleanup finished `MainActivity` along with it — so a guest's bug took the IDE off
 > the screen. Embedded guests share no task and are unaffected.
 
@@ -313,8 +313,8 @@ and getting a light app.
 
 ## 4c. The notification service — `GuestNotificationHook`
 
-Every binder call a guest makes goes out under **JCode's** uid and package, so a guest that posts a
-notification puts it in the *phone's* real shade, attributed to JCode, where it outlives the device
+Every binder call a guest makes goes out under **QCode's** uid and package, so a guest that posts a
+notification puts it in the *phone's* real shade, attributed to QCode, where it outlives the device
 being emptied. The virtual device exists so an app can be tried without leaving anything on the
 phone, and the notification shade is part of the phone.
 
@@ -446,7 +446,7 @@ I VDEVICE  : raised android.opengl.GLSurfaceView above the window so it can be s
 The tab is magenta. The renderer string is the device's real GPU driver, which is the point: nothing
 about rendering is emulated or proxied for a guest. Its `SurfaceControl` comes from the real
 `SurfaceFlinger`, its EGL/GLES calls reach the vendor driver directly, and a `.so` shipped inside the
-guest APK is loaded into JCode's own process and links against the platform's `libEGL`/`libGLESv2`
+guest APK is loaded into QCode's own process and links against the platform's `libEGL`/`libGLESv2`
 like any other library. Only the **binder metadata** layer is proxied (§4); the pixel path is the
 host's, used first-hand. PPSSPP — native C++ on GL — renders its full UI embedded on that basis.
 
@@ -492,8 +492,8 @@ notification goes to the device's own status bar and shade instead — the same 
 stream: video renders in the tab and the player's notification appears in the device shade.
 
 **The real system is therefore never told the service is foreground**, so it confers no protection
-from being killed. That is not a gap to close: the guest runs inside JCode's own `:guest` process,
-and what keeps it alive is JCode's foreground state, not a claim made on the guest's behalf about a
+from being killed. That is not a gap to close: the guest runs inside QCode's own `:guest` process,
+and what keeps it alive is QCode's foreground state, not a claim made on the guest's behalf about a
 package that does not exist.
 
 > **In-process only, and that is the boundary.** Another app cannot query a hosted provider, no
@@ -600,7 +600,7 @@ rather than offered as hardware that never reports.
 ### Location — `GuestLocation`
 
 There is no passthrough mode and there never will be: a guest is somebody else's APK running under
-JCode's uid, and the single most valuable thing it could take is where the user is standing. What
+QCode's uid, and the single most valuable thing it could take is where the user is standing. What
 it *is* given — a fixed point, or a position walked between two of them — comes from the hardware
 bench, and every fix is worked out at the moment of asking rather than stored, so a route reports
 where it has got to along with the bearing and speed a receiver would have measured.
@@ -658,7 +658,7 @@ internal class EmbeddedWindow(val view: View, val frame: Rect)
 ## 7. Full-screen extras
 
 `GuestOverlay.install()` adds a floating pill and a back/close bar to a full-screen guest, since
-JCode draws nothing over it.
+QCode draws nothing over it.
 
 ---
 
@@ -673,7 +673,7 @@ JCode draws nothing over it.
 6. The guest's `dataDir` is always redirected under `filesDir/vdevice/<package>/`.
 7. `ActivityInfo.theme` is rewritten to `0`, and the activity's theme is then installed as an
    *object* built from the guest's `Resources` — a style id alone never says which table it means.
-8. The guest's class loader never delegates to JCode's. A library the IDE also ships must still come
+8. The guest's class loader never delegates to QCode's. A library the IDE also ships must still come
    out of the guest's APK, or its `R` ids belong to the wrong resource table.
 
 ---
@@ -683,7 +683,7 @@ JCode draws nothing over it.
 | Failure | Effect |
 |---|---|
 | A greylisted member is demoted by a platform update | The guarded step degrades; the affected capability stops working |
-| A guest library resolved from JCode's dex | Its `R` ids miss the guest's resource table — see §2.1 |
+| A guest library resolved from QCode's dex | Its `R` ids miss the guest's resource table — see §2.1 |
 | A child window without the host token | Not routed into the windowless session |
 | `EmbeddedWindows` not installed | Dialogs and popups draw at 1×1 in the top-left corner |
 | Guest APK missing a native library for this ABI | `UnsatisfiedLinkError` inside the guest |
@@ -699,7 +699,7 @@ JCode draws nothing over it.
   scope.
 - Only **config** splits are merged. A *feature* split that declares components of its own has its
   code and resources loaded, but its manifest is not scanned.
-- The guest's own permissions are not honoured; it inherits JCode's.
+- The guest's own permissions are not honoured; it inherits QCode's.
 - Compose guests can start with an empty view tree where the app gates its first composition on
   something the container does not provide — measured on AI Edge Gallery, which loads and starts
   clean but dumps a bare `FrameLayout`.

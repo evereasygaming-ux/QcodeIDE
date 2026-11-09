@@ -108,7 +108,7 @@ object TerminalSessionHost {
                     context.applicationContext,
                     RootfsDownloader(tmpDir = File(context.applicationContext.filesDir, "tmp")),
                 ),
-                // Matches the Settings default; JCodeShell keeps it in sync with the user's preference.
+                // Matches the Settings default; QCodeShell keeps it in sync with the user's preference.
                 maxSessions = 12,
             ).also { mgr ->
                 manager = mgr

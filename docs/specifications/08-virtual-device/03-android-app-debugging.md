@@ -11,7 +11,7 @@
 
 ## 1. Purpose and scope
 
-Debugging an Android application built inside JCode, on the same device JCode is running on: how the
+Debugging an Android application built inside QCode, on the same device QCode is running on: how the
 application module is identified, and how the app's ART JDWP channel is exposed to the Java debug
 adapter.
 
@@ -127,9 +127,9 @@ the flow routes to `prepareAndroidAttach` instead of a plain JVM launch. Everyth
 normal DAP session — see
 [Debug Adapter Protocol](../04-language-services/02-debug-adapter-protocol.md).
 
-The adapter is `java-debug`, wrapped by the Java Dev Pack's `adapter/` with JCode-specific providers
-(`JCodeSourceLookUpProvider`, `JCodeEvaluationProvider`, `JCodeCompletionsProvider`,
-`JCodeHotCodeReplaceProvider`, `JCodeVirtualMachineManagerProvider`).
+The adapter is `java-debug`, wrapped by the Java Dev Pack's `adapter/` with QCode-specific providers
+(`QCodeSourceLookUpProvider`, `QCodeEvaluationProvider`, `QCodeCompletionsProvider`,
+`QCodeHotCodeReplaceProvider`, `QCodeVirtualMachineManagerProvider`).
 
 ---
 
@@ -137,7 +137,7 @@ The adapter is `java-debug`, wrapped by the Java Dev Pack's `adapter/` with JCod
 
 The virtual device is *also* an adb target: `VirtualDeviceAdbService` answers
 `shell:am start -n`, `shell:pm list packages` and `exec:cmd package 'install' -S <n>` — so an app can
-be built, installed and launched inside JCode's own sandbox, then debugged over the same ADB bridge.
+be built, installed and launched inside QCode's own sandbox, then debugged over the same ADB bridge.
 See [ADB bridge](../03-runtime/05-adb-bridge.md) and
 [App sandbox architecture](01-app-sandbox-architecture.md).
 
@@ -172,7 +172,7 @@ See [ADB bridge](../03-runtime/05-adb-bridge.md) and
 
 ## 9. Known gaps
 
-- Hot code replace is wired through `JCodeHotCodeReplaceProvider` but not exercised in the documented
+- Hot code replace is wired through `QCodeHotCodeReplaceProvider` but not exercised in the documented
   device verification.
 - Source lookup depends on `sourceRoots(module)` finding `src/main/java` or `src/main/kotlin`; a
   non-standard layout will not resolve stack frames to files.

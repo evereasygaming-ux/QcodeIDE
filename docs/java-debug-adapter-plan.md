@@ -1,4 +1,4 @@
-# JCode JVM debugging — implementation plan (java-debug adapter)
+# QCode JVM debugging — implementation plan (java-debug adapter)
 
 > The adapter has since moved out of this repository: its source is the Java Dev Pack's `adapter/`.
 > Paths below are as they stood when this plan was carried out, and are left that way on purpose.
@@ -97,7 +97,7 @@ Resulting DAP `launch` request:
 
 ```json
 {
-  "type": "java", "request": "launch", "name": "JCode Debug",
+  "type": "java", "request": "launch", "name": "QCode Debug",
   "cwd": "<distroCwd>", "console": "internalConsole", "stopOnEntry": false,
   "mainClass": "com.example.Program",
   "classPaths": ["/tmp/jcode-java-classes"],
@@ -157,7 +157,7 @@ resolution lives in the JDT plugin we don't ship — which is exactly what
    on-device, and IPv4-pinning both JVMs is the mitigation. **Residual risk:**
    java-debug's connector could bind a host/IPv6 that `preferIPv4Stack` doesn't
    fully override, reproducing the js-debug stall. **Fallback:** attach mode —
-   JCode spawns the debuggee with `address=127.0.0.1:<port>,server=y,suspend=y`
+   QCode spawns the debuggee with `address=127.0.0.1:<port>,server=y,suspend=y`
    and the adapter sends a DAP `attach` to that literal port. Same source-lookup
    provider, so it's a transport fallback, not a redesign. **Must be verified
    on-device with a HelloWorld breakpoint before calling it done.**

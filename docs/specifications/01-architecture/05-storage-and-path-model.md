@@ -11,7 +11,7 @@
 
 ## 1. Purpose and scope
 
-JCode moves files across three naming domains — Android app-private storage, the guest Linux
+QCode moves files across three naming domains — Android app-private storage, the guest Linux
 filesystem, and the Storage Access Framework. Getting a path into the wrong domain is the single
 most common class of bug in this codebase, so the boundaries are specified here in one place.
 
@@ -32,7 +32,7 @@ ext4. The reasoning is recorded verbatim in `StorageRoots.kt`:
 
 ### 2.1 The ext4 migration latch
 
-Legacy installs had projects at `/storage/emulated/0/JCode/projects`. `WorkspaceManager`
+Legacy installs had projects at `/storage/emulated/0/QCode/projects`. `WorkspaceManager`
 copies them once and writes a marker file. Two independent modules compute the root, and both gate
 on that marker:
 
@@ -143,7 +143,7 @@ folder is editable but not buildable inside the distro.
 
 ### 5.2 Exposing projects back to the system
 
-`ProjectsDocumentsProvider` publishes `filesDir/workspace` as a browsable SAF root ("JCode
+`ProjectsDocumentsProvider` publishes `filesDir/workspace` as a browsable SAF root ("QCode
 Projects") so the system Files app can see projects that are otherwise app-private. Files never
 leave ext4. The authority is `${applicationId}.documents` (per-variant), and it is guarded by
 `android.permission.MANAGE_DOCUMENTS`, which only DocumentsUI holds.
@@ -171,7 +171,7 @@ runtime from a YAML file inside the folder:
    `WorkspaceHostPaths`. Change both or neither.
 2. Every host↔guest crossing goes through `WorkspaceHostPaths`; no ad-hoc string surgery.
 3. `WorkspaceHostPaths.init(filesDir)` must run before any translation. Reads before `init` fall
-   back to `DEFAULT_PROJECTS_HOST_PATH` (`/storage/emulated/0/JCode/projects`) so the result is
+   back to `DEFAULT_PROJECTS_HOST_PATH` (`/storage/emulated/0/QCode/projects`) so the result is
    still sane rather than empty.
 4. The migration marker is one-way. Nothing clears it.
 5. Path-bearing log lines are redacted — see

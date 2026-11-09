@@ -16,7 +16,7 @@ import (
 // bridge restarts) and history is cut at it.
 
 func (m *Manager) rewindsDir() string {
-	return filepath.Join(m.HomeDir, ".antigem", "claude-rewinds")
+	return filepath.Join(m.HomeDir, ".qcode", "claude-rewinds")
 }
 
 // rewindPoint returns the pending rewind of a session ("" = before the first prompt).

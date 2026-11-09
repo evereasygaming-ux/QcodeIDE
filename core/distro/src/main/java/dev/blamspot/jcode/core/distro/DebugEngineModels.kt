@@ -51,10 +51,10 @@ data class DebugEngineCatalogState(
 )
 
 /**
- * The debug adapters the Debug Engine manager offers: the ones JCode ships, plus the ones installed
+ * The debug adapters the Debug Engine manager offers: the ones QCode ships, plus the ones installed
  * extensions bring.
  *
- * An adapter for one language belongs to that language's Dev Pack rather than to the IDE — JCode is
+ * An adapter for one language belongs to that language's Dev Pack rather than to the IDE — QCode is
  * generic, and a Python-only user has no use for a JVM debugger. [BUILT_IN] is what is left after
  * that: adapters that serve languages with no pack of their own, or that several packs share.
  */

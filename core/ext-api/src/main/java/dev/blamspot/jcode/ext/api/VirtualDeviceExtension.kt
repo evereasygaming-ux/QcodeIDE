@@ -4,12 +4,12 @@ import android.content.Intent
 import android.os.IBinder
 
 /**
- * The contract between JCode and the extension that provides its **virtual device**.
+ * The contract between QCode and the extension that provides its **virtual device**.
  *
  * The device used to be part of the app. It is not any more: everything that makes an APK run inside
- * JCode — the container, the framework hooks, the launcher, the status bar, the adb daemon's device
+ * QCode — the container, the framework hooks, the launcher, the status bar, the adb daemon's device
  * end — ships in the Android Dev Pack, and what stays behind is this interface plus the four manifest
- * components that cannot come from anywhere else (see below). A JCode with no Android Dev Pack has no
+ * components that cannot come from anywhere else (see below). A QCode with no Android Dev Pack has no
  * virtual device, the same way it has no Kotlin completions without the Kotlin pack.
  *
  * **Why four components stay in the host.** An installed extension is a directory of files that a
@@ -28,7 +28,7 @@ import android.os.IBinder
  * supplies. With no pack installed they answer emptily rather than failing, because the phone's
  * Files app may query a `DocumentsProvider` whether or not the user ever installed a dev pack.
  */
-interface JCodeVirtualDevice {
+interface QCodeVirtualDevice {
 
     /**
      * Hand the device the workbench it is running inside. Called once, before anything else.
@@ -36,12 +36,12 @@ interface JCodeVirtualDevice {
      * Separate from construction because the pack is instantiated by the same loader that
      * instantiates its UI half, which knows nothing about devices; this is where the two meet.
      *
-     * [context] is JCode's application context — the device's storage, its cache and its package
+     * [context] is QCode's application context — the device's storage, its cache and its package
      * name all come from it. Passed rather than left for the pack to find, because the pack's other
      * entry points are a composition and a bound service, and neither of those has happened yet the
      * first time something asks for a device.
      *
-     * **This is also where the device is emptied.** Everything on it lives in JCode's cache and does
+     * **This is also where the device is emptied.** Everything on it lives in QCode's cache and does
      * not survive a restart, so something has to do the emptying and exactly one thing may — a second
      * pass would wipe an install that landed between the two. That used to be a race between the
      * workbench and the adb daemon, each calling a `resetOnStart` that had to be idempotent to be
@@ -130,7 +130,7 @@ interface JCodeVirtualDevice {
  * literal in an extension fails at runtime on a user's phone.
  *
  * The authorities are suffixes, not whole authorities: they are `${applicationId}`-scoped, so the
- * package name in front of them is the JCode build the pack finds itself inside.
+ * package name in front of them is the QCode build the pack finds itself inside.
  */
 object VirtualDeviceComponents {
 
@@ -155,15 +155,15 @@ object VirtualDeviceComponents {
 /**
  * The `:guest`-process half of the same extension, named by `entry.native.guest` in the manifest.
  *
- * Loaded by the host's `GuestSessionService` stub out of the same payload as [JCodeVirtualDevice],
- * in a different process, with JCode's own class loader as parent — the guest *app*'s loader is the
+ * Loaded by the host's `GuestSessionService` stub out of the same payload as [QCodeVirtualDevice],
+ * in a different process, with QCode's own class loader as parent — the guest *app*'s loader is the
  * boot-parented one, and this is not that.
  *
- * Kept apart from [JCodeVirtualDevice] because the two never coexist: this side installs framework
+ * Kept apart from [QCodeVirtualDevice] because the two never coexist: this side installs framework
  * hooks that would take the IDE down with them, and the IDE side draws Compose that has no business
  * in a process with a rewritten `Build`.
  */
-interface JCodeVirtualDeviceGuest {
+interface QCodeVirtualDeviceGuest {
 
     /**
      * Install the container's framework hooks into this process, once.
@@ -190,7 +190,7 @@ interface JCodeVirtualDeviceGuest {
 /**
  * What the virtual device may ask of the workbench.
  *
- * Deliberately tiny. The pack runs in JCode's process with JCode's `Context`, so nearly everything a
+ * Deliberately tiny. The pack runs in QCode's process with QCode's `Context`, so nearly everything a
  * device needs it can simply do; what it cannot do is navigate the workbench, which is the only
  * thing here that is not available from a `Context`.
  */

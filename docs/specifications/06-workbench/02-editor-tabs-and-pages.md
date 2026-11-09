@@ -11,7 +11,7 @@
 
 ## 1. Purpose and scope
 
-The tab model. JCode's editor area hosts more than files: settings, manager detail screens, an image
+The tab model. QCode's editor area hosts more than files: settings, manager detail screens, an image
 viewer, a browser, and a running Android app are all tabs. This document defines that model.
 
 ---
@@ -76,7 +76,7 @@ enum class EditorPageKind {
 | `Browser` | The in-app browser / web preview |
 | `ImageViewer` | Image files |
 | `AndroidDevice` | Connected-device tooling |
-| `AppSandbox` | A real APK running inside JCode |
+| `AppSandbox` | A real APK running inside QCode |
 
 Opening a binary file routes to `ImageViewer` or is refused, decided by `MainViewModel`'s private
 `OpenPrep` probe (`Missing` / `Image` / `Binary` / `Text`) so the check happens off the main thread.

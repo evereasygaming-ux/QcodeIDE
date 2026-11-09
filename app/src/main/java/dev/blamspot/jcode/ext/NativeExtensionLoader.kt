@@ -6,9 +6,9 @@ import android.content.res.AssetManager
 import android.content.res.Resources
 import android.util.Log
 import dalvik.system.DexClassLoader
-import dev.blamspot.jcode.ext.api.JCODE_EXT_ABI
-import dev.blamspot.jcode.ext.api.JCodeNativeExtension
-import dev.blamspot.jcode.ext.api.JCodeVirtualDeviceGuest
+import dev.blamspot.jcode.ext.api.QCODE_EXT_ABI
+import dev.blamspot.jcode.ext.api.QCodeNativeExtension
+import dev.blamspot.jcode.ext.api.QCodeVirtualDeviceGuest
 import dev.blamspot.jcode.feature.marketplace.InstalledExtension
 import dev.blamspot.jcode.feature.marketplace.NativeModule
 import dev.blamspot.jcode.feature.marketplace.nativeGuestModule
@@ -19,17 +19,17 @@ import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.ceil
 
 /**
- * Loads an extension's **native** UI — an APK it ships — into JCode's own process, on first use.
+ * Loads an extension's **native** UI — an APK it ships — into QCode's own process, on first use.
  *
  * The technique is the virtual device's guest loader's: a [DexClassLoader] over the archive and an
  * [AssetManager] with the archive's path added, so the plugin gets both its classes and its
  * resources. One decision is deliberately the **opposite** of that loader's, and it is the
  * whole reason this is a separate file:
  *
- * > **The parent is JCode's own class loader, not the boot loader.**
+ * > **The parent is QCode's own class loader, not the boot loader.**
  *
- * A guest app is another app and must not see JCode's libraries; a native extension *is* JCode's UI
- * and must see exactly one Compose runtime — the composition it returns is spliced into JCode's own.
+ * A guest app is another app and must not see QCode's libraries; a native extension *is* QCode's UI
+ * and must see exactly one Compose runtime — the composition it returns is spliced into QCode's own.
  * Delegating to the boot loader would give it a second copy of Compose and the two would not
  * interoperate.
  *
@@ -37,11 +37,11 @@ import kotlin.math.ceil
  * AndroidX**. The hazard the pack's own guest loader documents at length — a library present in both
  * loaders, each
  * with its own generated `R`, resolving ids against the wrong resource table — needs the library to
- * be present twice. With Compose and AndroidX resolved parent-first from JCode and nothing shared
+ * be present twice. With Compose and AndroidX resolved parent-first from QCode and nothing shared
  * bundled in the plugin, there is no second copy for an id to come from. The plugin's *own* `R` is
  * unique to its dex and indexes its own table, which is what `addAssetPath` supplies.
  *
- * Not a security boundary: a plugin runs with JCode's permissions because it is JCode's process.
+ * Not a security boundary: a plugin runs with QCode's permissions because it is QCode's process.
  * What keeps that honest is upstream — [resolve] refuses an extension that was not officially
  * signed, so "install an extension" cannot quietly mean "run this code".
  */
@@ -52,7 +52,7 @@ internal object NativeExtensionLoader {
     /** Why a plugin could not be used, in words meant for the Issues pane rather than a log. */
     class LoadFailure(message: String) : Exception(message)
 
-    private class Loaded(val instance: JCodeNativeExtension, val context: Context)
+    private class Loaded(val instance: QCodeNativeExtension, val context: Context)
 
     private val cache = ConcurrentHashMap<String, Loaded>()
 
@@ -97,7 +97,7 @@ internal object NativeExtensionLoader {
     }
 
     /**
-     * Whether an unsigned, sideloaded extension may load code into JCode's process.
+     * Whether an unsigned, sideloaded extension may load code into QCode's process.
      *
      * A plain field rather than a read of the preference, because [resolve] is called from the
      * composition and a DataStore read is suspending — blocking on one to draw a frame is worse than
@@ -161,14 +161,14 @@ internal object NativeExtensionLoader {
      * for.
      *
      * Throws [LoadFailure] with something worth showing the user; every refusal below is a case
-     * where the alternative is a crash inside the IDE's own UI that reads as JCode being broken.
+     * where the alternative is a crash inside the IDE's own UI that reads as QCode being broken.
      */
     @Throws(LoadFailure::class)
     fun resolve(
         host: Context,
         extension: InstalledExtension,
         module: NativeModule,
-    ): Pair<JCodeNativeExtension, Context> {
+    ): Pair<QCodeNativeExtension, Context> {
         registerForTrimming(host)
         loadedIds += extension.id
         cache[key(extension, module)]?.let { return it.instance to it.context }
@@ -187,7 +187,7 @@ internal object NativeExtensionLoader {
         if (extension.dev && !allowUnsigned) {
             throw LoadFailure(
                 "${extension.name} is an unsigned development build. Extensions that ship native " +
-                    "code run inside JCode itself, so only officially signed packages are loaded. " +
+                    "code run inside QCode itself, so only officially signed packages are loaded. " +
                     "Turn on Settings → Developer options to load unsigned ones while working on them.",
             )
         }
@@ -196,11 +196,11 @@ internal object NativeExtensionLoader {
         // API than its neighbour in the same pack. Named only when there IS a neighbour: a pack with
         // one module has an id nobody chose -- "Source Control (native-0)" tells a reader nothing
         // and reads like part of the fault.
-        if (module.abi != JCODE_EXT_ABI) {
+        if (module.abi != QCODE_EXT_ABI) {
             val which = if (extension.nativeModules.size > 1) "${extension.name} (${module.id})" else extension.name
             throw LoadFailure(
-                "$which was built for JCode extension API ${module.abi}; " +
-                    "this JCode implements $JCODE_EXT_ABI. Update the extension.",
+                "$which was built for QCode extension API ${module.abi}; " +
+                    "this QCode implements $QCODE_EXT_ABI. Update the extension.",
             )
         }
 
@@ -219,17 +219,17 @@ internal object NativeExtensionLoader {
      * Separate from [resolve] rather than another cache entry, because this runs in a **different
      * process**: `:guest` has its own copy of this object, its own class loader and its own instance
      * of the pack, and the two never see each other. What they share is the technique — a
-     * [DexClassLoader] over the same archive, parented on JCode's own loader.
+     * [DexClassLoader] over the same archive, parented on QCode's own loader.
      *
-     * Note the parent is JCode's loader here too, not the boot loader. The boot-parented one belongs
-     * to the *guest app* the container loads; this is the container itself, which is JCode's code
-     * running in a process of JCode's, and it must see exactly one copy of everything JCode ships.
+     * Note the parent is QCode's loader here too, not the boot loader. The boot-parented one belongs
+     * to the *guest app* the container loads; this is the container itself, which is QCode's code
+     * running in a process of QCode's, and it must see exactly one copy of everything QCode ships.
      *
      * No resources are attached: the container draws its status bar and its permission prompt from
      * the pack's own archive, so the caller supplies a context built the same way [resolve] does.
      */
     @Throws(LoadFailure::class)
-    fun resolveGuest(host: Context, extension: InstalledExtension): Pair<JCodeVirtualDeviceGuest, Context> {
+    fun resolveGuest(host: Context, extension: InstalledExtension): Pair<QCodeVirtualDeviceGuest, Context> {
         // Only the module that declares a guest — which is the whole point of loading per module
         // here: this process wants the container and nothing else the pack happens to ship.
         val module = extension.nativeGuestModule()
@@ -240,11 +240,11 @@ internal object NativeExtensionLoader {
         if (extension.dev && !allowUnsigned) {
             throw LoadFailure("${extension.name} is an unsigned development build.")
         }
-        if (module.abi != JCODE_EXT_ABI) {
+        if (module.abi != QCODE_EXT_ABI) {
             val which = if (extension.nativeModules.size > 1) "${extension.name} (${module.id})" else extension.name
             throw LoadFailure(
-                "$which was built for JCode extension API ${module.abi}; " +
-                    "this JCode implements $JCODE_EXT_ABI. Update the extension.",
+                "$which was built for QCode extension API ${module.abi}; " +
+                    "this QCode implements $QCODE_EXT_ABI. Update the extension.",
             )
         }
         val apk = File(extension.dir, entry)
@@ -262,8 +262,8 @@ internal object NativeExtensionLoader {
             )
             val instance = loader.loadClass(guestClass)
                 .getDeclaredConstructor()
-                .newInstance() as? JCodeVirtualDeviceGuest
-                ?: throw LoadFailure("$guestClass does not implement JCodeVirtualDeviceGuest.")
+                .newInstance() as? QCodeVirtualDeviceGuest
+                ?: throw LoadFailure("$guestClass does not implement QCodeVirtualDeviceGuest.")
             instance to pluginContext(host, apk, loader)
         }.getOrElse { throw asFailure(extension, it) }
     }
@@ -277,7 +277,7 @@ internal object NativeExtensionLoader {
      * own over the application context instead.
      *
      * The device needs this at all because its six built-in apps ship as assets **inside the pack**.
-     * Read through JCode's own AssetManager they are simply not there, and `assets.list` answers an
+     * Read through QCode's own AssetManager they are simply not there, and `assets.list` answers an
      * empty array rather than failing — so the device came up with nothing installed and nothing
      * logged.
      */
@@ -303,8 +303,8 @@ internal object NativeExtensionLoader {
         val entryClass = module.entryClass
         val instance = loader.loadClass(entryClass)
             .getDeclaredConstructor()
-            .newInstance() as? JCodeNativeExtension
-            ?: throw LoadFailure("$entryClass does not implement JCodeNativeExtension.")
+            .newInstance() as? QCodeNativeExtension
+            ?: throw LoadFailure("$entryClass does not implement QCodeNativeExtension.")
 
         return Loaded(instance, pluginContext(host, apk, loader))
     }
@@ -312,8 +312,8 @@ internal object NativeExtensionLoader {
     /**
      * A [Context] whose resources are the plugin's own and whose class loader is the plugin's.
      *
-     * Wrapping JCode's context rather than building one from nothing keeps everything the plugin
-     * does not override — files, preferences, system services — pointed at JCode, which is correct:
+     * Wrapping QCode's context rather than building one from nothing keeps everything the plugin
+     * does not override — files, preferences, system services — pointed at QCode, which is correct:
      * the plugin has no identity of its own on the device.
      */
     private fun pluginContext(host: Context, apk: File, loader: ClassLoader): Context {
@@ -346,7 +346,7 @@ internal object NativeExtensionLoader {
      *
      * `newInstance` wraps anything the plugin's constructor threw, and a linkage error's own message
      * is a class name with no hint of what to do about it — which is exactly the case that means
-     * "this plugin was built against a different JCode".
+     * "this plugin was built against a different QCode".
      */
     private fun asFailure(extension: InstalledExtension, cause: Throwable): LoadFailure {
         val real = (cause as? java.lang.reflect.InvocationTargetException)?.targetException ?: cause
@@ -356,7 +356,7 @@ internal object NativeExtensionLoader {
             is ClassNotFoundException, is NoClassDefFoundError, is NoSuchMethodError, is LinkageError ->
                 LoadFailure(
                     "${extension.name} could not be loaded — it was built against a different " +
-                        "version of JCode (${real.javaClass.simpleName}: ${real.message}). " +
+                        "version of QCode (${real.javaClass.simpleName}: ${real.message}). " +
                         "Updating the extension usually fixes it.",
                 )
             else -> LoadFailure("${extension.name} could not be loaded: ${real.message ?: real.javaClass.simpleName}")

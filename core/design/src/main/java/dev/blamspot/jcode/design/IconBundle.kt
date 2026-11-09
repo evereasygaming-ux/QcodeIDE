@@ -12,16 +12,16 @@ import androidx.compose.ui.graphics.vector.ImageVector
  * after its file, so `jcIcon` used to live in `dev.blamspot.jcode.design.IconBundleKt`. Renaming
  * `IconBundle.kt` to `UiIconSet.kt` moved it to `UiIconSetKt` and every already-published native
  * extension — Source Control, the SQL and Postgres clients, the VM manager — died on its first
- * frame with `NoClassDefFoundError: IconBundleKt`. A plugin is loaded into JCode's own process
- * against JCode's own classes, so the design system's JVM surface is part of the extension ABI
+ * frame with `NoClassDefFoundError: IconBundleKt`. A plugin is loaded into QCode's own process
+ * against QCode's own classes, so the design system's JVM surface is part of the extension ABI
  * whether or not anyone meant it to be.
  *
  * So `IconBundleKt` still exists, and still has exactly the one method those extensions call. The
  * Kotlin name differs (a package cannot hold two `jcIcon`s that differ only in return type) but
  * `@JvmName` restores the descriptor they were compiled against.
  *
- * Nothing in JCode calls this. It is here for packages built against JCode ≤ 1.7.1, and can be
- * deleted once every published native extension has been rebuilt — [JCODE_EXT_ABI] is the gate that
+ * Nothing in QCode calls this. It is here for packages built against QCode ≤ 1.7.1, and can be
+ * deleted once every published native extension has been rebuilt — [QCODE_EXT_ABI] is the gate that
  * makes that safe to check.
  */
 @Deprecated(
@@ -31,7 +31,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 )
 @JvmName("jcIcon")
 @Composable
-fun jcIconVector(icon: JCodeIcon): ImageVector = when (val art = LocalUiIconSet.current.art(icon)) {
+fun jcIconVector(icon: QCodeIcon): ImageVector = when (val art = LocalUiIconSet.current.art(icon)) {
     is IconArt.Vector -> art.image
     // An ImageVector cannot carry a bitmap. A PNG-based icon pack therefore does not reach an
     // extension still compiled against this signature; it gets the built-in glyph instead, which is

@@ -11,7 +11,7 @@
 
 ## 1. Purpose and scope
 
-The private wire protocol between programs running inside the guest Linux environment and the JCode
+The private wire protocol between programs running inside the guest Linux environment and the QCode
 host. It is carried as **OSC (Operating System Command) escape sequences** in the terminal's own
 output stream, which means it works through pipes, over `su`, inside scripts, and from any language
 that can `printf` — no socket, no port, no extra file descriptor.
@@ -55,7 +55,7 @@ ESC ] <code> ; <payload> BEL
 
 Standard xterm semantics, with one deliberate restriction:
 
-> A payload of `?` is a clipboard **read** query. JCode **never answers it** — the guest must not
+> A payload of `?` is a clipboard **read** query. QCode **never answers it** — the guest must not
 > see the user's clipboard uninvited.
 
 Writes are `c;<base64>`; the host base64-decodes as UTF-8 and sets the Android clipboard. This is
@@ -133,7 +133,7 @@ the session is a single shell:
 <command>; printf '\033]7713;<token>;%s\007' "$?"; rm -f <guestScript>
 ```
 
-**Run configurations** (`JCodeShell`) — each run terminal appends the same marker with the token
+**Run configurations** (`QCodeShell`) — each run terminal appends the same marker with the token
 `run`, so the run is "done" once every terminal has reported.
 
 The token disambiguates a stale marker from an abandoned run.
@@ -182,7 +182,7 @@ catalog install/uninstall script (`CATALOG_SHELL_HELPERS`).
 ## 4. Catalog shell helpers
 
 These are injected unconditionally, so a script may call them on either execution path. Without a
-PTY, `JCODE_PROGRESS_TOKEN` is unset and the marker is simply not emitted.
+PTY, `QCODE_PROGRESS_TOKEN` is unset and the marker is simply not emitted.
 
 ### 4.1 `jcode_progress <percent> <label>`
 
@@ -191,8 +191,8 @@ jcode_progress() {
   __jc_p=$1
   case "$__jc_p" in ''|*[!0-9]*) return 0 ;; esac
   [ "$__jc_p" -gt 100 ] && __jc_p=100
-  if [ -n "${JCODE_PROGRESS_TOKEN:-}" ]; then
-    printf '\033]7716;%s;%s;%s\007' "$JCODE_PROGRESS_TOKEN" "$__jc_p" "$2"
+  if [ -n "${QCODE_PROGRESS_TOKEN:-}" ]; then
+    printf '\033]7716;%s;%s;%s\007' "$QCODE_PROGRESS_TOKEN" "$__jc_p" "$2"
   fi
   if [ "$__jc_p" != "$__jc_last_pct" ]; then
     __jc_last_pct=$__jc_p
@@ -230,12 +230,12 @@ progress call whose last comparison happened to be false. Any new helper must do
 
 | Variable | Set by | Meaning |
 |---|---|---|
-| `JCODE_PROGRESS_TOKEN` | `DistroService` when running a catalog script | Names the task an OSC 7716 marker belongs to. Exported explicitly on the `su - <user> -c …` path too, since a login shell would otherwise drop it |
-| `JCODE_NSH_TOP` | The host, on a tab's own top shell | Prevents that shell from relocating itself; cleared by the wrapper so its own sub-shells can still relocate |
-| `JCODE_NSH_INLINE` | The user | Per-invocation opt-out of nested-shell relocation |
+| `QCODE_PROGRESS_TOKEN` | `DistroService` when running a catalog script | Names the task an OSC 7716 marker belongs to. Exported explicitly on the `su - <user> -c …` path too, since a login shell would otherwise drop it |
+| `QCODE_NSH_TOP` | The host, on a tab's own top shell | Prevents that shell from relocating itself; cleared by the wrapper so its own sub-shells can still relocate |
+| `QCODE_NSH_INLINE` | The user | Per-invocation opt-out of nested-shell relocation |
 | `BROWSER` | `TerminalSessionManager` | Points at the OSC 7714 shim |
 | `ANDROID_HOME` | `TerminalSessionManager` (`androidSdkEnvVars`) | Present when the Android SDK is installed |
-| `ANDROID_SERIAL`, `JCODE_ADB_PORT` | `TerminalSessionManager` (`adbEnvVars`) | Present when the ADB bridge is up |
+| `ANDROID_SERIAL`, `QCODE_ADB_PORT` | `TerminalSessionManager` (`adbEnvVars`) | Present when the ADB bridge is up |
 
 ---
 

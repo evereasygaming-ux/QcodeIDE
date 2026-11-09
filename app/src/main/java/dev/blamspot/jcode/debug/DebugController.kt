@@ -93,7 +93,7 @@ class DebugController(
      * though the pid exists. That kills both of netcoredbg's routes. Attach reports
      * CORDBG_E_DEBUG_COMPONENT_MISSING because dbgshim cannot read the target at all, and launch, which
      * does spawn its own child, still exits without answering (its own --interpreter=cli segfaults the
-     * same way, with JCode out of the picture) on net8.0, net9.0 and net10.0 alike. Building and RUNNING
+     * same way, with QCode out of the picture) on net8.0, net9.0 and net10.0 alike. Building and RUNNING
      * .NET works fine, so point there instead of leaving a bare adapter error on screen.
      */
     /** Start debugging [hostPath] (its language picks the engine) with the current [bps] breakpoints. */
@@ -112,7 +112,7 @@ class DebugController(
         // the `initialize` request until it times out. Fail fast with an actionable message instead.
         if (!engine.dapAdapter) {
             pushOutput(
-                "Debugging ${hostPath.substringAfterLast('/')} isn't available yet: JCode has no " +
+                "Debugging ${hostPath.substringAfterLast('/')} isn't available yet: QCode has no " +
                     "built-in ${engine.name} adapter.\nRun the program with " +
                     "`-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005` in a terminal " +
                     "and attach an external debugger.\n",
@@ -139,7 +139,7 @@ class DebugController(
     private fun beginSession(engine: DebugEngineEntry, plan: LaunchPlan, hostPath: String) {
         val transportFactory: (String) -> DapTransport? = { command ->
             android.util.Log.d(
-                "JCodeDAP-adapter",
+                "QCodeDAP-adapter",
                 "spawn user=${plan.user ?: "<default>"} cwd=${plan.distroCwd} cmd=$command",
             )
             val proc = distroService.spawnStdioProcess(
@@ -180,7 +180,7 @@ class DebugController(
             if (_state.value == DebugState.STARTING) {
                 pushOutput(
                     "Couldn't reach the ${engine.name} debug adapter — it started but the connection " +
-                        "timed out. See the log (tag JCodeDAP-adapter) for details.\n",
+                        "timed out. See the log (tag QCodeDAP-adapter) for details.\n",
                 )
                 _state.value = DebugState.ERROR
             }
@@ -521,7 +521,7 @@ class DebugController(
     private fun baseConfig(type: String, cwd: String, request: String = "launch"): JSONObject = JSONObject().apply {
         put("type", type)
         put("request", request)
-        put("name", "JCode Debug")
+        put("name", "QCode Debug")
         put("cwd", cwd)
         put("console", "internalConsole")
         put("stopOnEntry", false)
@@ -763,7 +763,7 @@ private class ProcessTransport(private val process: Process) : DapTransport {
         Thread {
             runCatching {
                 process.errorStream.bufferedReader().forEachLine { line ->
-                    android.util.Log.d("JCodeDAP-adapter", "[err] $line")
+                    android.util.Log.d("QCodeDAP-adapter", "[err] $line")
                 }
             }
         }.apply { isDaemon = true }.start()
@@ -776,7 +776,7 @@ private class ProcessTransport(private val process: Process) : DapTransport {
         try {
             output.write(bytes); output.flush()
         } catch (e: Exception) {
-            android.util.Log.w("JCodeDAP-adapter", "DAP write failed", e)
+            android.util.Log.w("QCodeDAP-adapter", "DAP write failed", e)
         }
     }
     override fun close() {
@@ -816,7 +816,7 @@ private class TcpTransport private constructor(
         try {
             output.write(bytes); output.flush()
         } catch (e: Exception) {
-            android.util.Log.w("JCodeDAP-adapter", "DAP write failed", e)
+            android.util.Log.w("QCodeDAP-adapter", "DAP write failed", e)
         }
     }
     override fun close() {
@@ -830,14 +830,14 @@ private class TcpTransport private constructor(
          * A TCP adapter (js-debug) talks DAP over the socket, but still prints startup logs/errors to
          * its stdout/stderr pipes. Drain BOTH from the moment it spawns — otherwise a full pipe blocks
          * node before it binds the port (a silent "connect timeout"). The drained lines go to logcat
-         * (tag JCodeDAP-adapter) and a bounded tail so a died/never-bound adapter reports WHY.
+         * (tag QCodeDAP-adapter) and a bounded tail so a died/never-bound adapter reports WHY.
          */
         fun connect(host: String, port: Int, process: Process, timeoutMs: Long): TcpTransport? {
             val tail = java.util.concurrent.ConcurrentLinkedQueue<String>()
             fun drain(stream: java.io.InputStream, tag: String) = Thread {
                 runCatching {
                     stream.bufferedReader().forEachLine { line ->
-                        android.util.Log.d("JCodeDAP-adapter", "[$tag] $line")
+                        android.util.Log.d("QCodeDAP-adapter", "[$tag] $line")
                         tail.add("[$tag] $line"); while (tail.size > 60) tail.poll()
                     }
                 }
@@ -850,7 +850,7 @@ private class TcpTransport private constructor(
                 if (!process.isAlive) {
                     val code = runCatching { process.exitValue() }.getOrNull()
                     android.util.Log.e(
-                        "JCodeDAP-adapter",
+                        "QCodeDAP-adapter",
                         "adapter exited early (code=$code) before $host:$port was reachable; output:\n" +
                             tail.joinToString("\n"),
                     )
@@ -865,7 +865,7 @@ private class TcpTransport private constructor(
             }
             val reason = lastConnectError?.let { "${it::class.java.simpleName}: ${it.message}" } ?: "none"
             android.util.Log.e(
-                "JCodeDAP-adapter",
+                "QCodeDAP-adapter",
                 "adapter never became reachable on $host:$port within ${timeoutMs}ms " +
                     "(last connect error: $reason); output:\n" +
                     tail.joinToString("\n"),
@@ -873,7 +873,7 @@ private class TcpTransport private constructor(
             // Best-effort teardown of the still-running adapter. NOTE: a TCP adapter that we never
             // connected to (js-debug) can't be told to `disconnect`, and destroy() doesn't reliably
             // trip proot's --kill-on-exit here, so the node/proot tree may linger until the app is
-            // restarted. This only happens on the js-debug transport failure (see JCodeDAP-adapter log).
+            // restarted. This only happens on the js-debug transport failure (see QCodeDAP-adapter log).
             runCatching { process.destroy() }
             return null
         }
@@ -897,7 +897,7 @@ private class SocketTransport private constructor(private val socket: java.net.S
         try {
             output.write(bytes); output.flush()
         } catch (e: Exception) {
-            android.util.Log.w("JCodeDAP-adapter", "DAP write failed", e)
+            android.util.Log.w("QCodeDAP-adapter", "DAP write failed", e)
         }
     }
     override fun close() {

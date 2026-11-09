@@ -13,7 +13,7 @@
 
 Two related things: how text gets coloured, and how completions are produced and inserted.
 
-> **Read this first.** JCode contains a complete tree-sitter binding, 14 compiled grammars, and a
+> **Read this first.** QCode contains a complete tree-sitter binding, 14 compiled grammars, and a
 > parse service — and **none of it colours any text**. The colours you see come from a hand-written
 > tokenizer in C++ with a Kotlin twin. This document specifies the live path first and the unwired
 > path second, because assuming tree-sitter is in play leads to wrong conclusions about performance,
@@ -171,7 +171,7 @@ data class CompletionContext(val items: List<CompletionItem>, val triggerOffset:
 | Dev Pack keywords/snippets | `app/src/main/java/dev/blamspot/jcode/editor/LanguagePackCompletions.kt` → `languagePackCompletionItems(lang, prefix)` | Live |
 | Language server | `LspController.completions(...)` → `MainViewModel.lspCompletions(...)` → `app/src/main/java/dev/blamspot/jcode/editor/LspCompletions.kt` | Live |
 
-Both are merged in `JCodeShell`'s `CompletionSource`: server items first (they know what is actually
+Both are merged in `QCodeShell`'s `CompletionSource`: server items first (they know what is actually
 in scope), then pack keywords, deduplicated by label. Server results are filtered to the typed prefix
 and capped at `MAX_LSP_COMPLETIONS` (200) — a member list on a bare `.` runs to thousands.
 

@@ -1,4 +1,4 @@
-// Package plugins manages custom AntiGem plugins (browser extensions with MCP tools and/or skills) on disk:
+// Package plugins manages custom QCODE plugins (browser extensions with MCP tools and/or skills) on disk:
 // listing, installing from ZIPs or GitHub repositories, updating, removing and exporting them. The app's
 // Node extension host loads them; the app tells it to load or unload after each change made here.
 package plugins
@@ -18,9 +18,9 @@ import (
 )
 
 const (
-	sourceFile  = ".antigem-source.json"
-	backupDir   = ".antigem-backup"
-	stagingDir  = ".antigem-staging"
+	sourceFile  = ".qcode-source.json"
+	backupDir   = ".qcode-backup"
+	stagingDir  = ".qcode-staging"
 	disabledCfg = "extensions.json"
 )
 
@@ -48,7 +48,7 @@ type Plugin struct {
 	Skills      []Skill  `json:"skills"`
 }
 
-// Source is written as .antigem-source.json into repository installs so updates can be found later.
+// Source is written as .qcode-source.json into repository installs so updates can be found later.
 type Source struct {
 	Repo string `json:"repo"`
 	Ref  string `json:"ref"`
@@ -76,13 +76,13 @@ func NewManager(home string) *Manager {
 	files := filepath.Dir(home)
 	return &Manager{
 		home:     home,
-		stateDir: filepath.Join(files, "browser-extensions", ".antigem-state"),
+		stateDir: filepath.Join(files, "browser-extensions", ".qcode-state"),
 		roots: []root{
 			{filepath.Join(home, "extensions"), "installed"},
-			{filepath.Join(home, "projects", "antiGem", "extensions"), "user_folder"},
+			{filepath.Join(home, "projects", "QCODE", "extensions"), "user_folder"},
 			{filepath.Join(files, "extensions"), "installed"},
 			{filepath.Join(files, "browser-extensions"), "bundled"},
-			{"/sdcard/antiGem/extensions", "user_folder"},
+			{"/sdcard/QCODE/extensions", "user_folder"},
 		},
 		client: &http.Client{Timeout: 2 * time.Minute},
 	}

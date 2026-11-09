@@ -4,7 +4,7 @@ import androidx.compose.runtime.compositionLocalOf
 
 /**
  * ADB bridge status + the entry point to its pairing page, shared (via [LocalAndroidDevice]) with the
- * settings screen and the Run panel without threading params through JCodeShell (ART register limit).
+ * settings screen and the Run panel without threading params through QCodeShell (ART register limit).
  * [ready] is true only once a device is connected through the relay; [status] is a short label for
  * every other state ("Not set up", "Connecting…", a failure reason).
  */

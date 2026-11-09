@@ -2,7 +2,7 @@ package dev.blamspot.jcode.feature.explorer
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.compositionLocalOf
-import dev.blamspot.jcode.design.JCodeIcon
+import dev.blamspot.jcode.design.QCodeIcon
 import dev.blamspot.jcode.fs.FsNode
 
 /** An extension-contributed entry for the explorer's file/folder context menu. */
@@ -11,7 +11,7 @@ data class ExplorerContextAction(
     /** Dispatch key, "extensionId:actionId". */
     val key: String,
     val label: String,
-    val icon: JCodeIcon,
+    val icon: QCodeIcon,
     /** Show only on files with a matching extension (lowercase, no dot); empty = every file. */
     val fileExtensions: List<String> = emptyList(),
     /** Show only on these row kinds ("file"/"directory"); empty = both. */
@@ -20,7 +20,7 @@ data class ExplorerContextAction(
 
 /**
  * VCS state and extension hooks the shell pushes into the explorer (as a CompositionLocal so the
- * deep JCodeShell call chain doesn't grow more parameters). [status]/[submodules] are keyed by
+ * deep QCodeShell call chain doesn't grow more parameters). [status]/[submodules] are keyed by
  * [dev.blamspot.jcode.fs.FsPath.stableId] (absolute host path).
  */
 @Immutable

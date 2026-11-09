@@ -182,7 +182,7 @@ data class ExtensionContributions(
      * Android SDK is the case this exists for: `sdkmanager` knows about platforms, build-tools, NDKs
      * and system images, each with a revision and a partially-installed state, and a single
      * "Android SDK · Installed" row can say none of it. The pack that owns that knowledge draws the
-     * page; JCode only offers the row.
+     * page; QCode only offers the row.
      */
     val toolchainActions: List<ContributedAction> = emptyList(),
     val explorerDecorations: Boolean = false,
@@ -191,7 +191,7 @@ data class ExtensionContributions(
      * Debug adapters this extension brings with it, offered by the Debug Engine manager while the
      * extension is installed.
      *
-     * A language's adapter belongs to that language's Dev Pack, not to JCode: the IDE is generic and
+     * A language's adapter belongs to that language's Dev Pack, not to QCode: the IDE is generic and
      * should not ship a JVM debugger to someone who only writes Python. Commands may use
      * `{{extensionDir}}` for the extension's own install directory, which the host substitutes — an
      * adapter the pack bundles installs by copying rather than downloading.
@@ -344,12 +344,12 @@ data class MarketplaceEntry(
     val jext: String?,
     /** Expected package fingerprint (sha256) from the index; verified against the downloaded .jext. */
     val fingerprint: String? = null,
-    /** Lowest JCode app version that can run this extension. */
-    val minJCodeVersion: String? = null,
-    /** JCode version this extension was built/tested against. */
-    val targetJCodeVersion: String? = null,
-    /** Highest JCode app version that can run this extension. Null means no ceiling. */
-    val maxJCodeVersion: String? = null,
+    /** Lowest QCode app version that can run this extension. */
+    val minQCodeVersion: String? = null,
+    /** QCode version this extension was built/tested against. */
+    val targetQCodeVersion: String? = null,
+    /** Highest QCode app version that can run this extension. Null means no ceiling. */
+    val maxQCodeVersion: String? = null,
     /** Absolute URL of the marketplace-published icon, shown before install. Null if none. */
     val iconUrl: String? = null,
     /** One-line summary shown in the compact row. */
@@ -383,23 +383,23 @@ fun compareVersions(a: String, b: String): Int {
 
 /**
  * Why [appVersion] cannot run an extension declaring this floor and ceiling, or null when it can.
- * Both bounds include the version they name: `minJCodeVersion: 1.7.0` runs on 1.7.0, and
- * `maxJCodeVersion: 1.8.4` runs on 1.8.4 but not on 1.9. A blank bound is no bound.
+ * Both bounds include the version they name: `minQCodeVersion: 1.7.0` runs on 1.7.0, and
+ * `maxQCodeVersion: 1.8.4` runs on 1.8.4 but not on 1.9. A blank bound is no bound.
  *
  * The installer refuses on this and the Extensions list explains it before anything is downloaded,
  * so both say the same thing for the same reason.
  */
 fun jcodeVersionMismatch(
-    minJCodeVersion: String?,
-    maxJCodeVersion: String?,
+    minQCodeVersion: String?,
+    maxQCodeVersion: String?,
     appVersion: String,
     name: String,
 ): String? {
-    if (!minJCodeVersion.isNullOrBlank() && compareVersions(appVersion, minJCodeVersion) < 0) {
-        return "$name requires JCode $minJCodeVersion or newer (you have $appVersion)"
+    if (!minQCodeVersion.isNullOrBlank() && compareVersions(appVersion, minQCodeVersion) < 0) {
+        return "$name requires QCode $minQCodeVersion or newer (you have $appVersion)"
     }
-    if (!maxJCodeVersion.isNullOrBlank() && compareVersions(appVersion, maxJCodeVersion) > 0) {
-        return "$name supports JCode up to $maxJCodeVersion (you have $appVersion)"
+    if (!maxQCodeVersion.isNullOrBlank() && compareVersions(appVersion, maxQCodeVersion) > 0) {
+        return "$name supports QCode up to $maxQCodeVersion (you have $appVersion)"
     }
     return null
 }
@@ -471,7 +471,7 @@ enum class SettingType {
      * A button, not a value.
      *
      * For the things an extension's settings screen needs to *offer* rather than remember --
-     * reattaching a device that has come loose, say. It names a command JCode already has; see
+     * reattaching a device that has come loose, say. It names a command QCode already has; see
      * [ExtensionSetting.command].
      */
     Action,
@@ -506,14 +506,14 @@ data class ExtensionSetting(
      * Run in the Linux runtime when the field appears. `{{key}}` is replaced with the current value of
      * another setting of the same extension, and `{{extensionDir}}` with the extension's own
      * directory, so a manifest can point at a script it ships rather than spell the lookup out here —
-     * which is the point: what a tool's models are called is the extension's business, not JCode's.
+     * which is the point: what a tool's models are called is the extension's business, not QCode's.
      */
     val suggestCommand: String? = null,
     /**
-     * For [SettingType.Action]: the id of a JCode command the button runs.
+     * For [SettingType.Action]: the id of a QCode command the button runs.
      *
      * A name, not behaviour. The extension says where the control belongs -- on its own settings
-     * screen, beside the thing it acts on -- and JCode says what it does, so a manifest cannot
+     * screen, beside the thing it acts on -- and QCode says what it does, so a manifest cannot
      * ask for anything the app does not already offer somewhere else.
      */
     val command: String? = null,
@@ -551,7 +551,7 @@ data class InstalledExtension(
     /** Relative path (from [dir]) to the extension's web-frontend HTML entry, e.g. "www/index.html". */
     val webUiEntry: String? = null,
     /**
-     * The **native** payloads this extension ships, each loaded into JCode's own process on demand.
+     * The **native** payloads this extension ships, each loaded into QCode's own process on demand.
      * Empty for the ordinary WebView-frontend kind.
      *
      * A list rather than one entry because a pack is not one screen. The Android pack ships a layout
@@ -560,7 +560,7 @@ data class InstalledExtension(
      * process megabytes of UI it never calls. See [NativeModule].
      */
     val nativeModules: List<NativeModule> = emptyList(),
-    /** Lowest JCode extension-API version this extension needs (0 = legacy exec-only bridge). */
+    /** Lowest QCode extension-API version this extension needs (0 = legacy exec-only bridge). */
     val apiMinVersion: Int = 0,
     /** Capability families this extension declares it uses (e.g. "exec", "fs", "workbench"). */
     val apiCapabilities: List<String> = emptyList(),
@@ -659,18 +659,18 @@ data class NativeModule(
      * resources, `.dex` where it builds its UI in code and owns none.
      */
     val payload: String,
-    /** Fully-qualified class in [payload] implementing `JCodeNativeExtension`. */
+    /** Fully-qualified class in [payload] implementing `QCodeNativeExtension`. */
     val entryClass: String,
     /**
-     * Fully-qualified class implementing `JCodeVirtualDeviceGuest`, for the module that provides
-     * JCode's virtual device.
+     * Fully-qualified class implementing `QCodeVirtualDeviceGuest`, for the module that provides
+     * QCode's virtual device.
      *
      * Loaded into a different process — `:guest`, where the container installs framework hooks the
      * IDE could not survive — by the manifest stub that owns that process rather than by the page
-     * loader. Declaring it is also how JCode knows an installed pack *has* a device to offer.
+     * loader. Declaring it is also how QCode knows an installed pack *has* a device to offer.
      */
     val guestClass: String? = null,
-    /** Extension-API version [payload] was built against; must equal JCode's `JCODE_EXT_ABI`. */
+    /** Extension-API version [payload] was built against; must equal QCode's `QCODE_EXT_ABI`. */
     val abi: Int = 0,
     /** Routes this module answers, matched against a page's `view` param. */
     val views: Set<String> = emptySet(),

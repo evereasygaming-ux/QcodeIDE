@@ -55,7 +55,7 @@ object ProjectRunner {
     /**
      * Detect how to build & run [project], or null if no recipe matches. Detection prefers the
      * project's scaffold [Project.templateId] (authoritative, cheap), then falls back to a filesystem
-     * probe for projects opened without a JCode template. Recipes self-heal, so detection does NOT
+     * probe for projects opened without a QCode template. Recipes self-heal, so detection does NOT
      * require a complete on-disk layout.
      */
     fun detectRunPlan(project: Project): RunPlan? {
@@ -582,7 +582,7 @@ object ProjectRunner {
         val apkDir = androidApkDir(modulePath)
         appendLine("clear"); appendLine("set -e")
         appendLine("cd \"$guestDir\"")
-        appendLine("echo '== JCode: building =='")
+        appendLine("echo '== QCode: building =='")
         appendLine("$gradle --console=plain $task")
         appendLine("APK=\$(find \"$apkDir\" -name '*.apk' -type f 2>/dev/null | xargs -r ls -t | head -1)")
         appendLine("[ -n \"\$APK\" ] || { echo \"No APK under $apkDir\"; exit 1; }")
@@ -590,13 +590,13 @@ object ProjectRunner {
         appendLine("PKG=\$(printf '%s\\n' \"\$BADGE\" | sed -n \"s/^package: name='\\([^']*\\)'.*/\\1/p\")")
         appendLine("ACT=\$(printf '%s\\n' \"\$BADGE\" | sed -n \"s/^launchable-activity: name='\\([^']*\\)'.*/\\1/p\")")
         appendLine("[ -n \"\$PKG\" ] || { echo \"Could not read a package name from \$APK\"; exit 1; }")
-        appendLine("echo \"== JCode: installing \$PKG ==\"")
+        appendLine("echo \"== QCode: installing \$PKG ==\"")
         appendLine("adb install -r -t \"\$APK\"")
         appendLine("if [ -n \"\$ACT\" ]; then adb shell am start -n \"\$PKG/\$ACT\"; else adb shell monkey -p \"\$PKG\" -c android.intent.category.LAUNCHER 1; fi")
         appendLine("echo \"Launched \$PKG\"")
     }
 
-    /** Build the debug APK and stop there: the app is started by the container, in JCode's own
+    /** Build the debug APK and stop there: the app is started by the container, in QCode's own
      *  process, once the workbench sees the run finish. Nothing is installed and adb is never used, so
      *  this recipe works on a device that was never paired. The APK directory is stamped into the
      *  script as [VDEVICE_MARKER] — that, not the terminal output, is how the workbench finds the
@@ -605,7 +605,7 @@ object ProjectRunner {
         appendLine("clear"); appendLine("set -e")
         appendLine("# $VDEVICE_MARKER ${androidApkDir(modulePath)}")
         appendLine("cd \"$guestDir\"")
-        appendLine("echo '== JCode: building for the virtual device =='")
+        appendLine("echo '== QCode: building for the virtual device =='")
         appendLine("$gradle --console=plain ${androidAssembleTask(modulePath)}")
         appendLine("echo 'Build finished.'")
     }
@@ -643,7 +643,7 @@ object ProjectRunner {
         appendLine("clear"); appendLine("set -e")
         appendLine("CSPROJ=\"$csprojGuest\"")
         appendLine("OUT=\"\$HOME/.jcode-build/$stageName\"")
-        appendLine("echo '== JCode: dotnet publish (Release) =='")
+        appendLine("echo '== QCode: dotnet publish (Release) =='")
         appendLine("rm -rf \"\$OUT\"")
         appendLine("dotnet publish \"\$CSPROJ\" -c Release -o \"\$OUT\" --nologo")
         appendLine("echo \"Published to \$OUT\"")
@@ -653,7 +653,7 @@ object ProjectRunner {
         appendLine("clear"); appendLine("set -e")
         appendLine("SRC=\"$dirGuest\"")
         appendLine("STAGE=\"\$HOME/.jcode-build/$stageName\"")
-        appendLine("echo '== JCode: npm run build =='")
+        appendLine("echo '== QCode: npm run build =='")
         appendLine("export npm_config_fund=false npm_config_audit=false")
         appendLine("rm -rf \"\$STAGE\" && mkdir -p \"\$STAGE\" && cp -a \"\$SRC/.\" \"\$STAGE/\"")
         appendLine("cd \"\$STAGE\"")
@@ -783,7 +783,7 @@ object ProjectRunner {
             appendLine("set -e")
             appendLine("PROJ=\"$projectDir\"")
             appendLine("SRV=\"\$HOME/.jcode-run/$stageName-server\"")
-            appendLine("echo '== JCode: Server (ASP.NET Core - Development) =='")
+            appendLine("echo '== QCode: Server (ASP.NET Core - Development) =='")
             appendLine(SELECT_TFM)
             appendLine("echo \"[setup] Target framework: \$TFM\"")
             appendLine("if ! ls \"\$PROJ/Server\"/*.csproj >/dev/null 2>&1; then")
@@ -821,7 +821,7 @@ object ProjectRunner {
             appendLine("SRV=\"\$HOME/.jcode-run/$serverStage\"")
             appendLine("STAGE=\"\$HOME/.jcode-run/$clientStage\"")
             appendLine("WWWROOT=\"\$(dirname \"\$CSPROJ\")/wwwroot\"")
-            appendLine("echo '== JCode: ASP.NET Core (single endpoint — client built into wwwroot) =='")
+            appendLine("echo '== QCode: ASP.NET Core (single endpoint — client built into wwwroot) =='")
             appendLine("echo '[1/3] Building client (npm run build) on ext4...'")
             appendLine("export npm_config_fund=false npm_config_audit=false")
             appendLine("rm -rf \"\$STAGE\" && mkdir -p \"\$STAGE\" && cp -a \"\$CLIENT/.\" \"\$STAGE/\"")
@@ -845,7 +845,7 @@ object ProjectRunner {
             appendLine("PROJ=\"$projectDir\"")
             appendLine("CLIENT=\"$clientDir\"")
             appendLine("STAGE=\"\$HOME/.jcode-run/$stageName-client\"")
-            appendLine("echo '== JCode: Client (Vite dev server) =='")
+            appendLine("echo '== QCode: Client (Vite dev server) =='")
             appendLine("export npm_config_fund=false npm_config_audit=false")
             // Self-heal: scaffold a Vite React app if the client has no package.json yet.
             appendLine("if [ ! -f \"\$CLIENT/package.json\" ]; then")
@@ -873,7 +873,7 @@ object ProjectRunner {
             appendLine("set -e")
             appendLine("CSPROJ=\"$csprojGuest\"")
             appendLine("OUT=\"\$HOME/.jcode-run/$stageName\"")
-            appendLine("echo '== JCode: .NET (dotnet build + run) =='")
+            appendLine("echo '== QCode: .NET (dotnet build + run) =='")
             appendLine("echo '[1/2] Building (dotnet build, $config)...'")
             appendLine("rm -rf \"\$OUT\"")
             appendLine("dotnet build \"\$CSPROJ\" -c $config -o \"\$OUT\" --nologo")
@@ -895,7 +895,7 @@ object ProjectRunner {
             appendLine("set -e")
             appendLine("SRC=\"$dirGuest\"")
             appendLine("STAGE=\"\$HOME/.jcode-run/$stageName\"")
-            appendLine("echo '== JCode: npm run $script =='")
+            appendLine("echo '== QCode: npm run $script =='")
             appendLine("export npm_config_fund=false npm_config_audit=false")
             appendLine("echo '[1/2] Staging + installing deps (npm install)...'")
             appendLine("rm -rf \"\$STAGE\" && mkdir -p \"\$STAGE\" && cp -a \"\$SRC/.\" \"\$STAGE/\"")

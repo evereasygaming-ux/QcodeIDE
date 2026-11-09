@@ -39,7 +39,7 @@ import dev.blamspot.jcode.design.CompactContextMenu
 import dev.blamspot.jcode.design.ContextAction
 import dev.blamspot.jcode.design.FileTypeIcon
 import dev.blamspot.jcode.design.IconSize
-import dev.blamspot.jcode.design.JCodeIcon
+import dev.blamspot.jcode.design.QCodeIcon
 import dev.blamspot.jcode.design.JcTooltip
 import dev.blamspot.jcode.design.Radius
 import dev.blamspot.jcode.design.Space
@@ -50,7 +50,7 @@ import dev.blamspot.jcode.fs.WorkspaceNodeType
 
 /**
  * Workspace-scoped panel pieces (empty state, project roster, welcome card) peeled out of
- * JCodeShell. Stateless / param-driven; the chrome buttons they use live in WorkbenchChrome.kt
+ * QCodeShell. Stateless / param-driven; the chrome buttons they use live in WorkbenchChrome.kt
  * (same package).
  */
 
@@ -82,14 +82,14 @@ internal fun WorkspaceEmptyState(workspace: Workspace?) {
             contentAlignment = Alignment.Center,
         ) {
             Icon(
-                painter = jcIcon(JCodeIcon.Files),
+                painter = jcIcon(QCodeIcon.Files),
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary,
             )
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
-                text = workspace?.name ?: "JCode",
+                text = workspace?.name ?: "QCODE IDE",
                 fontWeight = FontWeight.SemiBold,
             )
             Text(
@@ -165,7 +165,7 @@ internal fun ProjectRoster(
                                     size = IconSize.sm,
                                     // A workspace root and a project inside one are both folders, so
                                     // a pack that names neither still tells them apart by glyph.
-                                    fallback = if (isWorkspace) JCodeIcon.Files else JCodeIcon.Code,
+                                    fallback = if (isWorkspace) QCodeIcon.Files else QCodeIcon.Code,
                                     tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                             }
@@ -182,7 +182,7 @@ internal fun ProjectRoster(
                             JcTooltip("Project actions") {
                                 IconButton(onClick = { openMenuId = project.id }, modifier = Modifier.size(32.dp)) {
                                     Icon(
-                                        painter = jcIcon(JCodeIcon.MoreVert),
+                                        painter = jcIcon(QCodeIcon.MoreVert),
                                         contentDescription = "Project actions",
                                         modifier = Modifier.size(IconSize.md),
                                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -193,13 +193,13 @@ internal fun ProjectRoster(
                                 expanded = openMenuId == project.id,
                                 onDismissRequest = { openMenuId = null },
                                 quickActions = listOf(
-                                    ContextAction(JCodeIcon.Rename, "Rename") { renameTarget = project },
-                                    ContextAction(JCodeIcon.Delete, "Remove", destructive = true) { onRemoveProject(project.id) },
+                                    ContextAction(QCodeIcon.Rename, "Rename") { renameTarget = project },
+                                    ContextAction(QCodeIcon.Delete, "Remove", destructive = true) { onRemoveProject(project.id) },
                                 ),
                                 listActions = listOf(
-                                    ContextAction(JCodeIcon.Open, if (isWorkspace) "Open workspace" else "Open") { onOpenProject(project) },
-                                    ContextAction(JCodeIcon.Settings, "Project settings") { onOpenProjectSettings(project.id) },
-                                    ContextAction(JCodeIcon.Save, "Export to storage") { onExportProject(project) },
+                                    ContextAction(QCodeIcon.Open, if (isWorkspace) "Open workspace" else "Open") { onOpenProject(project) },
+                                    ContextAction(QCodeIcon.Settings, "Project settings") { onOpenProjectSettings(project.id) },
+                                    ContextAction(QCodeIcon.Save, "Export to storage") { onExportProject(project) },
                                 ),
                             )
                         }

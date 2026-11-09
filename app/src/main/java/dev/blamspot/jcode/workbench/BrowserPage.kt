@@ -79,7 +79,7 @@ import dev.blamspot.jcode.R
 import dev.blamspot.jcode.design.CompactContextMenu
 import dev.blamspot.jcode.design.ContextAction
 import dev.blamspot.jcode.design.IconSize
-import dev.blamspot.jcode.design.JCodeIcon
+import dev.blamspot.jcode.design.QCodeIcon
 import dev.blamspot.jcode.design.Radius
 import dev.blamspot.jcode.design.Space
 import dev.blamspot.jcode.design.jcIcon
@@ -149,7 +149,7 @@ private class DevToolsBridge {
 }
 
 /**
- * JCode's built-in browser, shown as a full-screen editor page: address bar + back/forward/reload,
+ * QCode's built-in browser, shown as a full-screen editor page: address bar + back/forward/reload,
  * and it feeds the DevTools drawer panel — console messages (via WebChromeClient) and network requests
  * (via an injected `fetch`/`XMLHttpRequest` shim). State lives in [BuiltinBrowser] so DevTools, which
  * sits in a different part of the tree, can observe it and drive JS eval / DOM snapshots.
@@ -194,7 +194,7 @@ fun BrowserPage(modifier: Modifier = Modifier) {
 
     val context = LocalContext.current
     val clipboard = LocalClipboardManager.current
-    // Asked of the palette that is actually painting this tab, not of the phone: JCode's own theme
+    // Asked of the palette that is actually painting this tab, not of the phone: QCode's own theme
     // setting can differ from the device's, and the browser should be the colour of the window it is
     // in rather than the colour of the machine that window happens to be on.
     val pageIsDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
@@ -280,7 +280,7 @@ fun BrowserPage(modifier: Modifier = Modifier) {
             Box {
                 IconButton(onClick = { menuOpen = true }, modifier = Modifier.size(30.dp)) {
                     Icon(
-                        jcIcon(JCodeIcon.MoreVert),
+                        jcIcon(QCodeIcon.MoreVert),
                         contentDescription = "More browser options",
                         modifier = Modifier.size(IconSize.md),
                     )
@@ -320,7 +320,7 @@ fun BrowserPage(modifier: Modifier = Modifier) {
                     // full-pane white rectangle.
                     wv.setBackgroundColor(pageBackground)
                     // Follows the workbench's theme rather than the phone's, which is the promise the
-                    // rest of this app makes: JCode's own theme setting can differ from the device's,
+                    // rest of this app makes: QCode's own theme setting can differ from the device's,
                     // and the browser inside it should be the colour of the window it is in. A site
                     // that handles `prefers-color-scheme` (via the themed context above) is told the
                     // truth and themes itself.
@@ -348,7 +348,7 @@ fun BrowserPage(modifier: Modifier = Modifier) {
                         wv.settings.userAgentString = desktopUserAgent(ctx)
                         wv.setInitialScale(desktopScalePercent(wv))
                     }
-                    wv.addJavascriptInterface(DevToolsBridge(), "JCodeDevTools")
+                    wv.addJavascriptInterface(DevToolsBridge(), "QCodeDevTools")
                     // Claim the gesture the moment a finger lands on the page, or the workbench's
                     // navigation drawer takes any drag that has some sideways in it and slides itself
                     // open over the site. A page is full of things that answer a sideways drag — a
@@ -458,25 +458,25 @@ fun BrowserPage(modifier: Modifier = Modifier) {
  * a phishing kit's first move — and the favicon is in the panel's heading instead, next to the host,
  * where identifying is all it is being asked to do.
  */
-private enum class SiteTrust(val icon: JCodeIcon, val summary: String, val detail: String) {
+private enum class SiteTrust(val icon: QCodeIcon, val summary: String, val detail: String) {
     Secure(
-        JCodeIcon.Lock,
+        QCodeIcon.Lock,
         "connection is secure",
         "Encrypted between this device and the site. What was sent cannot be read or changed on the way.",
     ),
     Insecure(
-        JCodeIcon.LockOpen,
+        QCodeIcon.LockOpen,
         "connection is not secure",
         "Sent in the clear over HTTP. Anything on the network between here and the server can read it " +
             "and change it — ordinary for a dev server on this machine, and worth noticing anywhere else.",
     ),
     Local(
-        JCodeIcon.Files,
+        QCodeIcon.Files,
         "local file",
         "Loaded from this device rather than fetched over a network.",
     ),
     Blank(
-        JCodeIcon.Browser,
+        QCodeIcon.Browser,
         "no page loaded",
         "Nothing has been loaded into this tab yet.",
     );
@@ -667,7 +667,7 @@ private fun BrowserMenu(
         onDismissRequest = onDismiss,
         listActions = listOf(
             ContextAction(
-                icon = JCodeIcon.Preview,
+                icon = QCodeIcon.Preview,
                 // The action, not the state: a row that reads "Desktop site" with no tick beside it
                 // is a question about which of the two it is telling you.
                 label = if (desktop) "Request mobile site" else "Request desktop site",
@@ -684,7 +684,7 @@ private fun BrowserMenu(
                 }
             },
             ContextAction(
-                icon = JCodeIcon.Refresh,
+                icon = QCodeIcon.Refresh,
                 label = "Reload without cache",
                 enabled = webView != null,
             ) {
@@ -694,7 +694,7 @@ private fun BrowserMenu(
                 webView?.reload()
             },
             ContextAction(
-                icon = JCodeIcon.Delete,
+                icon = QCodeIcon.Delete,
                 label = "Clear cookies and site data",
                 destructive = true,
                 enabled = webView != null,
@@ -707,11 +707,11 @@ private fun BrowserMenu(
                 // localStorage shows on a page that is still the one it was drawn from.
                 webView?.reload()
             },
-            ContextAction(icon = JCodeIcon.Copy, label = "Copy URL", onClick = onCopyUrl),
-            ContextAction(icon = JCodeIcon.Open, label = "Open in system browser") {
+            ContextAction(icon = QCodeIcon.Copy, label = "Copy URL", onClick = onCopyUrl),
+            ContextAction(icon = QCodeIcon.Open, label = "Open in system browser") {
                 ProjectRunner.openInBrowser(context, BuiltinBrowser.currentUrl.value)
             },
-            ContextAction(icon = JCodeIcon.DevTools, label = "DevTools") {
+            ContextAction(icon = QCodeIcon.DevTools, label = "DevTools") {
                 // The same signal a preview sends, which is what reveals the drawer panel; the
                 // browser tab it also focuses is the one already in front.
                 BuiltinBrowser.requestOpen()
@@ -986,7 +986,7 @@ private const val VIEWPORT_FIX_JS = """
  * The attribute that decides this is **`android:isLightTheme`**, read off the context's theme — not
  * the night bits of the configuration, which is the obvious guess and is wrong. Measured: with the
  * configuration forced to `UI_MODE_NIGHT_YES` and algorithmic darkening allowed, the page still
- * answered `false` to `prefers-color-scheme: dark`, because JCode's runtime theme has a Light parent
+ * answered `false` to `prefers-color-scheme: dark`, because QCode's runtime theme has a Light parent
  * and that is what the WebView was asking.
  *
  * The configuration is set as well, for anything else in there that reads the night bits, but the
@@ -1000,7 +1000,7 @@ private fun webThemed(context: Context, dark: Boolean): Context {
     val based = runCatching { context.createConfigurationContext(configuration) }.getOrDefault(context)
     return ContextThemeWrapper(
         based,
-        if (dark) R.style.Theme_JCode_Web_Dark else R.style.Theme_JCode_Web_Light,
+        if (dark) R.style.Theme_QCode_Web_Dark else R.style.Theme_QCode_Web_Light,
     )
 }
 
@@ -1029,7 +1029,7 @@ private const val NET_SHIM_JS = """
   if (window.__jcodeNetT0 !== undefined) return;
   var t0 = performance.now(); window.__jcodeNetT0 = t0;
   var CAP = 16384, BIG = 2097152;
-  function post(o){ try{ JCodeDevTools.net(JSON.stringify(o)); }catch(e){} }
+  function post(o){ try{ QCodeDevTools.net(JSON.stringify(o)); }catch(e){} }
   function textual(ct){ ct=String(ct||'').toLowerCase();
     return !ct || /json|text|xml|javascript|urlencoded|html|csv|graphql/.test(ct); }
   function cap(s){ s=(s==null)?'':String(s); return s.length>CAP ? [s.slice(0,CAP),true] : [s,false]; }

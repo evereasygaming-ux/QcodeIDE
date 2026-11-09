@@ -11,7 +11,7 @@ enum class ExplorerExcludeEffect { GreyOut, Hide }
 
 /**
  * Explorer "exclude files at the project root" preference, shared with the settings screen and the
- * Explorer (via [LocalExplorerHiddenSetting]) without threading params through JCodeShell (ART
+ * Explorer (via [LocalExplorerHiddenSetting]) without threading params through QCodeShell (ART
  * register limit). [specifiedRaw] is the user's newline-separated pattern list; [hiddenPatternsFor]
  * resolves the effective exclude list for a project id per [mode], merging the by-line list with the
  * injected list the SCM extension pushes from each project's .gitignore. [effect] chooses whether a

@@ -40,7 +40,7 @@ import dev.blamspot.jcode.ProviderReleaseFetcher
 import dev.blamspot.jcode.design.CompactFilledButton
 import dev.blamspot.jcode.design.CompactOutlinedButton
 import dev.blamspot.jcode.design.IconSize
-import dev.blamspot.jcode.design.JCodeIcon
+import dev.blamspot.jcode.design.QCodeIcon
 import dev.blamspot.jcode.design.ManagerGroupHeader
 import dev.blamspot.jcode.design.ManagerItemStatus
 import dev.blamspot.jcode.design.ManagerStatusChip
@@ -56,8 +56,8 @@ import dev.blamspot.jcode.workbench.ExtensionSourcesState
 
 /**
  * The **Extension Sources** editor page: manage custom repos whose releases publish `.vsix` files.
- * Each source is a GitHub repo (e.g. OpenChamber); JCode resolves its newest `.vsix` release and can
- * install or update the extension from it, so a VSIX extension stays current inside JCode without
+ * Each source is a GitHub repo (e.g. OpenChamber); QCode resolves its newest `.vsix` release and can
+ * install or update the extension from it, so a VSIX extension stays current inside QCode without
  * relying on its own updater (which an embedded host doesn't run). Update badges for extensions
  * installed from a source also appear in the main Extensions list.
  *
@@ -110,7 +110,7 @@ internal fun ExtensionSourcesPage(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
-                painter = jcIcon(JCodeIcon.Lock),
+                painter = jcIcon(QCodeIcon.Lock),
                 contentDescription = null,
                 modifier = Modifier.size(13.dp),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -132,7 +132,7 @@ internal fun ExtensionSourcesPage(
                 } else {
                     IconButton(onClick = onRefresh, modifier = Modifier.size(32.dp)) {
                         Icon(
-                            painter = jcIcon(JCodeIcon.Refresh),
+                            painter = jcIcon(QCodeIcon.Refresh),
                             contentDescription = "Refresh sources",
                             modifier = Modifier.size(IconSize.md),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -223,7 +223,7 @@ private fun SourceCard(
                     ) {
                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                             Icon(
-                                painter = jcIcon(JCodeIcon.Sources),
+                                painter = jcIcon(QCodeIcon.Sources),
                                 contentDescription = null,
                                 modifier = Modifier.size(IconSize.lg),
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant,

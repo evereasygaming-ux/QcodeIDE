@@ -69,7 +69,7 @@ interface BrowserController {
 }
 
 /**
- * Shared state for JCode's single built-in browser, observed by both [BrowserPage] (the editor-area
+ * Shared state for QCode's single built-in browser, observed by both [BrowserPage] (the editor-area
  * browser) and the DevTools right-drawer panel, which live in different parts of the composition. A
  * process singleton because there is at most one built-in browser tab at a time.
  */
@@ -122,7 +122,7 @@ object BuiltinBrowser {
      * The text of whichever source the Sources pane is showing, and whether it is still coming.
      *
      * Here rather than in the pane because an external file cannot be read synchronously: the page
-     * fetches it and hands it back through the `JCodeDevTools` bridge, which is a different thread
+     * fetches it and hands it back through the `QCodeDevTools` bridge, which is a different thread
      * and a later moment than the `evaluateJavascript` that asked for it.
      */
     val sourceText = mutableStateOf<String?>(null)

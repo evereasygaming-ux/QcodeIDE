@@ -96,7 +96,7 @@ Wraps `libjcode_vt.so`. Unlike the other native wrappers it does **not** catch
 | Member | Purpose |
 |---|---|
 | `feed(data, length)` | Process bytes. The array is not retained, so a reused read buffer can be passed without copying |
-| `drainOsc(): List<Pair<Int, String>>` | JCode shell-integration OSC events — see [Shell integration protocol](02-shell-integration-protocol.md) |
+| `drainOsc(): List<Pair<Int, String>>` | QCode shell-integration OSC events — see [Shell integration protocol](02-shell-integration-protocol.md) |
 | `takeResponses(): ByteArray?` | Answerback bytes the parser queued (DA/DSR/CPR/DECRQM/OSC-colour). The reader writes these back to the PTY |
 | `inputModes(): Int` | Packed DEC private-mode snapshot |
 | `resize(rows, cols)` | Rows reflow bottom-anchored through scrollback; columns rewrap (§4.5). The cursor and the DECSC save slot follow their own character |
@@ -283,7 +283,7 @@ installed. Before spawning it performs several guest-side repairs:
 | Install nested-shell wrappers | Only when `nestedShellTabs` is on |
 
 It also injects environment: `androidSdkEnvVars` supplies `ANDROID_HOME` when the SDK is installed,
-and `adbEnvVars` supplies `ANDROID_SERIAL` and `JCODE_ADB_PORT` when the ADB bridge is up.
+and `adbEnvVars` supplies `ANDROID_SERIAL` and `QCODE_ADB_PORT` when the ADB bridge is up.
 
 ### 5.4 Idle reaping
 
@@ -306,7 +306,7 @@ protected set, and `now - lastActivityAt >= idleMillis`. Controlled by the
 ### 5.5 Nested sub-shell relocation
 
 When `nestedShellTabs` is enabled, typing `bash` (or `dash`, `ash`, `zsh`, `ksh`, `mksh`, `sh`) at a
-JCode prompt moves that interactive shell into its **own tab**. The mechanism:
+QCode prompt moves that interactive shell into its **own tab**. The mechanism:
 
 ```mermaid
 sequenceDiagram
@@ -327,9 +327,9 @@ sequenceDiagram
 
 Safety rails in the wrapper:
 
-- `JCODE_NSH_TOP` marks a tab's own top shell so it never relocates itself; the variable is cleared
+- `QCODE_NSH_TOP` marks a tab's own top shell so it never relocates itself; the variable is cleared
   so that shell's *own* sub-shells can still relocate.
-- Inline `exec` (no relocation) when: either end is not a tty, `JCODE_NSH_INLINE` is set, `-c` or
+- Inline `exec` (no relocation) when: either end is not a tty, `QCODE_NSH_INLINE` is set, `-c` or
   `--command` is present, a script operand or an operand after `--` appears, or the shell is not
   present in the distro.
 - A **3-second watchdog** writes an abort marker and `T\n` to the FIFO if no ACK arrives — a PTY the
@@ -342,7 +342,7 @@ Safety rails in the wrapper:
   reports.
 
 Wrappers are marked with `#!/bin/sh\n# jcode-nsh-wrapper` so toggling the feature off removes only
-JCode's own files and leaves a distro's real shell in `/usr/local/bin` alone.
+QCode's own files and leaves a distro's real shell in `/usr/local/bin` alone.
 
 User environment variables are validated against `[A-Za-z_][A-Za-z0-9_]*` before export, because they
 are emitted unquoted as `export NAME=...`.

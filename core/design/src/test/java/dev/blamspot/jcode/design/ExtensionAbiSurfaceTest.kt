@@ -9,7 +9,7 @@ import org.junit.Test
 /**
  * The part of `:core:design` that is extension ABI, pinned.
  *
- * A native extension is loaded into JCode's own process against JCode's own classes, so anything it
+ * A native extension is loaded into QCode's own process against QCode's own classes, so anything it
  * links to is a binary contract even though nothing in this repo says so. A Kotlin top-level
  * declaration compiles into a class named after its **file**, which makes renaming a file a silent
  * ABI break: `IconBundle.kt` became `UiIconSet.kt` and four published extensions — Source Control,
@@ -19,7 +19,7 @@ import org.junit.Test
  *
  * The names below are not a wish list: they were read out of the dex of every published native
  * extension. Breaking one of them means either restoring it (see IconBundle.kt for how) or bumping
- * `JCODE_EXT_ABI` so the loader refuses the old package with a message instead of crashing in its
+ * `QCODE_EXT_ABI` so the loader refuses the old package with a message instead of crashing in its
  * first composition.
  */
 class ExtensionAbiSurfaceTest {
@@ -36,7 +36,7 @@ class ExtensionAbiSurfaceTest {
         "CompactButtonsKt",
         "ContextMenuKt",
         "IconBundleKt",
-        "JCodeDialogKt",
+        "QCodeDialogKt",
         "ManagerFilterChipKt",
         "ManagerNoticeCardKt",
         "ManagerSectionCardKt",
@@ -48,9 +48,9 @@ class ExtensionAbiSurfaceTest {
         "ContextAction",
         "ControlSize",
         "IconSize",
-        "JCodeIcon",
-        "JCodeSemanticColors",
-        "JCodeTheme",
+        "QCodeIcon",
+        "QCodeSemanticColors",
+        "QCodeTheme",
         "Radius",
         "Space",
         "StrokeWidth",
@@ -66,7 +66,7 @@ class ExtensionAbiSurfaceTest {
         assertEquals(
             "Renaming a file moves its top-level declarations to a new JVM class and breaks every " +
                 "installed native extension that calls them. Restore the name (see IconBundle.kt) " +
-                "or bump JCODE_EXT_ABI so the loader refuses old packages cleanly.",
+                "or bump QCODE_EXT_ABI so the loader refuses old packages cleanly.",
             emptyList<String>(),
             missing,
         )
@@ -74,14 +74,14 @@ class ExtensionAbiSurfaceTest {
 
     @Test
     fun `the legacy jcIcon still returns an ImageVector`() {
-        // What extensions built against JCode <= 1.7.1 call. The parameter list is (slot, Composer,
+        // What extensions built against QCode <= 1.7.1 call. The parameter list is (slot, Composer,
         // changed) because it is @Composable; only the return type distinguishes it from the new one.
         val method = Class.forName("dev.blamspot.jcode.design.IconBundleKt", false, javaClass.classLoader)
             .declaredMethods
             .singleOrNull { it.name == "jcIcon" }
         assertNotNull("IconBundleKt.jcIcon is gone — installed extensions will not resolve it", method)
         assertEquals(ImageVector::class.java, method!!.returnType)
-        assertEquals(JCodeIcon::class.java, method.parameterTypes.first())
+        assertEquals(QCodeIcon::class.java, method.parameterTypes.first())
     }
 
     @Test
@@ -93,7 +93,7 @@ class ExtensionAbiSurfaceTest {
             .singleOrNull { it.name == "jcIcon" }
         assertNotNull("UiIconSetKt.jcIcon is missing", method)
         assertEquals(Painter::class.java, method!!.returnType)
-        assertEquals(JCodeIcon::class.java, method.parameterTypes.first())
+        assertEquals(QCodeIcon::class.java, method.parameterTypes.first())
     }
 
     @Test

@@ -7,8 +7,8 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
-    <!-- Held for the virtual device's guests, not for JCode itself.
-         A guest runs under JCode's uid, so it holds JCode's permissions and no others — an app
+    <!-- Held for the virtual device's guests, not for QCode itself.
+         A guest runs under QCode's uid, so it holds QCode's permissions and no others — an app
          that merely asks whether it is online died on
          "ConnectivityService: Neither user 10211 nor current process has ACCESS_NETWORK_STATE"
          before drawing a frame. Measured on Ookla Speedtest.
@@ -45,10 +45,10 @@
     <!-- The one dangerous permission held for the virtual device, and the only hardware a guest can
          be given for real: the microphone. Never granted by holding it — it is requested from the
          user at the moment an app on the device is switched to a real microphone in Manage
-         permissions, and until that happens JCode does not have it and neither does any guest.
+         permissions, and until that happens QCode does not have it and neither does any guest.
          Every other guest is offered a simulated microphone, which records silence. -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
-    <!-- "All files access": raw file-path access to /storage/emulated/0/JCode (workspace root and
+    <!-- "All files access": raw file-path access to /storage/emulated/0/QCode (workspace root and
          proot bind mounts). Legacy storage permissions stopped working at targetSdk 30+; granted
          via the system settings toggle, checked with Environment.isExternalStorageManager(). -->
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
@@ -80,7 +80,7 @@
         android:roundIcon="${appIconRound}"
         android:label="${appLabel}"
         android:supportsRtl="true"
-        android:theme="@style/Theme.JCode.Starting">
+        android:theme="@style/Theme.QCode.Starting">
 
         <!-- hardwareAccelerated=false so the user's Settings toggle governs it: MainActivity enables
              acceleration via FLAG_HARDWARE_ACCELERATED (window level can only ENABLE, never disable,
@@ -108,7 +108,7 @@
         </service>
 
         <!-- Exposes the app-private ext4 projects tree to the system Files app / SAF pickers as a
-             browsable "JCode Projects" root (files never leave ext4). Guarded by MANAGE_DOCUMENTS,
+             browsable "QCODE IDE Projects" root (files never leave ext4). Guarded by MANAGE_DOCUMENTS,
              which only DocumentsUI holds; authority is per-variant so debug/beta/release coexist. -->
         <provider
             android:name=".provider.ProjectsDocumentsProvider"

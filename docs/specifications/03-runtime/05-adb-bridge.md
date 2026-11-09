@@ -11,11 +11,11 @@
 
 ## 1. Purpose and scope
 
-JCode speaks ADB in **both directions**:
+QCode speaks ADB in **both directions**:
 
 - **As a client** — so a project built inside the distro can `adb install` and `adb shell` against
-  the very device JCode is running on, and so the Java debugger can forward JDWP.
-- **As a daemon** — so the guest's `adb` can connect to JCode's own *virtual device* (the app
+  the very device QCode is running on, and so the Java debugger can forward JDWP.
+- **As a daemon** — so the guest's `adb` can connect to QCode's own *virtual device* (the app
   sandbox) as if it were a phone.
 
 All of it is loopback-only and unprivileged. There is no root and no `WRITE_SECURE_SETTINGS`.
@@ -83,7 +83,7 @@ The standard adb handshake: the device sends a random `AUTH TOKEN`; the client a
 `AUTH SIGNATURE` with the token signed by one of its private keys, or — once out of keys —
 `AUTH RSAPUBLICKEY`, which on a real phone raises the "Allow USB debugging?" dialog.
 
-**JCode's daemon has no such dialog and no notion of a trusted user gesture, so only a *signature* by
+**QCode's daemon has no such dialog and no notion of a trusted user gesture, so only a *signature* by
 an enrolled key is ever accepted.** `AUTH RSAPUBLICKEY` is refused.
 
 ### 4.1 The verification subtlety
@@ -94,7 +94,7 @@ the token a second time. `AdbAuth.verify` does the raw public-key operation foll
 EMSA-PKCS1-v1_5 check against `DigestInfo(SHA-1, token)`.
 
 Enrolled keys come from the distro's own `~/.android/adbkey.pub`
-(`AdbAuthorizedKeys(File(filesDir, "distros"))`), so the guest's adb authenticates to JCode's
+(`AdbAuthorizedKeys(File(filesDir, "distros"))`), so the guest's adb authenticates to QCode's
 virtual device without any user interaction.
 
 ---
@@ -168,7 +168,7 @@ sealed interface AdbBridgeState {
 offline — states where the relay exists but nothing useful is behind it.
 
 When the bridge is `Ready`, `TerminalSessionManager.adbEnvVars` injects `ANDROID_SERIAL` and
-`JCODE_ADB_PORT` into every new terminal session, so plain `adb` commands in the guest target the
+`QCODE_ADB_PORT` into every new terminal session, so plain `adb` commands in the guest target the
 right device with no arguments.
 
 ---
@@ -195,17 +195,17 @@ the UI reports exactly what adb reported.
 
 ## 10. `VirtualDeviceAdbDaemon` — serving the virtual device
 
-A device-side adb daemon so the guest's `adb` can drive JCode's app sandbox.
+A device-side adb daemon so the guest's `adb` can drive QCode's app sandbox.
 
 - A **Unix socket**, not a port: `<rootfs>/run/<serial>`, which the distro sees as `/run/<serial>`.
   Clients reach it with `adb connect localfilesystem:<path>`.
 - Authenticated by `AdbAuth` against the distro's enrolled key.
 
-> **Why not a port.** This daemon exposes `exec:cmd package install` — "run this APK inside JCode" —
-> which is arbitrary code execution with JCode's uid and permissions. On Android every app shares one
+> **Why not a port.** This daemon exposes `exec:cmd package install` — "run this APK inside QCode" —
+> which is arbitrary code execution with QCode's uid and permissions. On Android every app shares one
 > loopback interface, so `127.0.0.1:<port>` is reachable by *every other app on the phone*, and adb's
-> AUTH exchange was the only thing between them and that service. A socket bound in JCode's own
-> storage (`srwx------`, JCode's uid) cannot be opened by another uid at all, so the proot distro
+> AUTH exchange was the only thing between them and that service. A socket bound in QCode's own
+> storage (`srwx------`, QCode's uid) cannot be opened by another uid at all, so the proot distro
 > reaches it and nothing else does. Authentication is unchanged; it is now the second line rather
 > than the only one.
 >
@@ -213,12 +213,12 @@ A device-side adb daemon so the guest's `adb` can drive JCode's app sandbox.
 > transport's serial to be whatever it was connected with — so there is no port to scan for and none
 > to type. And the device is **unreachable from a computer**: a Unix socket cannot be `adb
 > forward`ed, so driving the virtual device from a desktop is no longer possible. That is the point
-> rather than a regression, but it does mean the device is a JCode-terminal-only target.
+> rather than a regression, but it does mean the device is a QCode-terminal-only target.
 
 ### 10a. The serial
 
 Because the serial *is* the spec, `adb devices` printed `localfilesystem:/run/jcode-vdevice-adb.sock`
-where every other device prints a serial — JCode's own plumbing, in the user's terminal, repeated by
+where every other device prints a serial — QCode's own plumbing, in the user's terminal, repeated by
 `$ANDROID_SERIAL` and by every tool downstream. Two halves fix that, and neither works alone:
 
 - **The pack names the socket after the device's serial** (`VirtualDeviceSerial`): eight lowercase
@@ -226,7 +226,7 @@ where every other device prints a serial — JCode's own plumbing, in the user's
   and `Build.SERIAL`, so the device agrees with itself about what it is called. It is stored in
   `filesDir` rather than in the device's own tree, which is cache and is emptied on every start —
   identity is what a device keeps through a wipe.
-- **JCode writes `/usr/local/bin/adb`**, a shim that rewrites the spec to that serial in the output of
+- **QCode writes `/usr/local/bin/adb`**, a shim that rewrites the spec to that serial in the output of
   the two commands that report one (`devices`, `get-serialno`) and accepts the serial back in `-s`
   and `$ANDROID_SERIAL`. Everything else is `exec`'d untouched, so no binary stream (`adb exec-out
   screencap -p`, `adb pull`) passes through it. The real adb is baked in at write time, not looked up
@@ -245,7 +245,7 @@ against what the adb server reports — which is the spec — so a friendlier va
 **The daemon and everything it serves ship in the Android Dev Pack**, not in `:app` — see
 [App sandbox §1a](../08-virtual-device/01-app-sandbox-architecture.md#1a-where-this-lives-and-why-it-is-split).
 `VirtualDeviceAdbDaemon` and `VirtualDeviceAdbService` are both the pack's, because the device is:
-the banner is the device's identity, the services are the device's, and a JCode with no pack
+the banner is the device's identity, the services are the device's, and a QCode with no pack
 installed has no device to answer for. It used to live here on the argument that binding a socket
 is not Android-specific; the argument was true and the conclusion was wrong, because what was
 being bound was the device's.
@@ -256,7 +256,7 @@ format is enough for both — and `AdbStream`/`AdbServiceHandler` are the contra
 the device interface. `AdbWire` is public rather than module-internal for exactly this reason.
 
 The host still decides **whether** and **where**: it owns the setting (declared by the pack, read
-by JCode) and the Linux runtime whose rootfs the socket must sit inside to be reachable from it,
+by QCode) and the Linux runtime whose rootfs the socket must sit inside to be reachable from it,
 and it attaches the runtime's adb *client* afterwards, because that client is the runtime's.
 `VirtualDeviceBridge.startAdb(rootfs)` is the join, and it answers null with no pack installed —
 so `adb connect` fails outright rather than opening a connection that refuses every service.
@@ -298,7 +298,7 @@ icons (`content-desc` is the package, which is what `am start` and `pm uninstall
 `text` and `keyevent` still need a guest and say so in one line — the home screen has nothing else to
 act on.
 
-> The device is emptied on every JCode start (see
+> The device is emptied on every QCode start (see
 > [App sandbox architecture §7a](../08-virtual-device/01-app-sandbox-architecture.md#7a-the-device-with-nothing-on-it)),
 > so a session always begins with `pm list packages` empty.
 
@@ -323,7 +323,7 @@ gets `:guest`'s entries, with no permission at all.
 | Anything the guest **printed** | `System.out`/`System.err` tee'd in `:guest` — catches `println` and `printStackTrace()` |
 | Why the guest process **died** | `ActivityManager.getHistoricalProcessExitReasons` — public API for one's own package |
 
-Filtered by **pid**, not uid: JCode's own process shares the uid, and the device's log is the
+Filtered by **pid**, not uid: QCode's own process shares the uid, and the device's log is the
 device's business.
 
 > This used to be missing, on the belief that an app can read nothing back from `logcat` at all, and
@@ -333,7 +333,7 @@ device's business.
 > container's `outgoing startActivity: null`, which names the bug outright.
 
 A file, deliberately: `:guest` and the IDE both write it, and the two processes share a uid and a
-data directory. `resetOnStart` wipes it with everything else, so the log covers exactly one JCode
+data directory. `resetOnStart` wipes it with everything else, so the log covers exactly one QCode
 session. There is no follow mode — the reader that fills the file is already running and there is no
 second one to hold open — so `-d` is implied.
 
@@ -357,7 +357,7 @@ arrived and tidy up after it, and no more.
 
 **Every path is resolved through `VirtualStorage.resolve`**, which compares *canonical* paths against
 the device's root — so neither `../` nor a symlink a guest planted can walk out of the device's
-storage into JCode's own data directory. A path outside it is refused by name rather than clamped.
+storage into QCode's own data directory. A path outside it is refused by name rather than clamped.
 
 ---
 

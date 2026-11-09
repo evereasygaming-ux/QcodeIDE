@@ -113,7 +113,7 @@ subprojects {
                 defaultConfig {
                     minSdk = 33
 
-                    // JCode is an arm64-only app, and the embedded Linux runtime is why: proot, its
+                    // QCode is an arm64-only app, and the embedded Linux runtime is why: proot, its
                     // ELF loaders and its support libs are prebuilt for arm64-v8a alone (see
                     // native/proot/src/main/{jniLibs,assets}), and without them no environment,
                     // toolchain or terminal starts. A second ABI would package a shell of an app
@@ -127,8 +127,8 @@ subprojects {
                             arguments.addAll(
                                 listOf(
                                     "-DANDROID_STL=c++_static",
-                                    "-DJCODE_NATIVE_MODULE=$nativeModuleId",
-                                    "-DJCODE_JNI_OUTPUT_DIR=$jniOutputRoot",
+                                    "-DQCODE_NATIVE_MODULE=$nativeModuleId",
+                                    "-DQCODE_JNI_OUTPUT_DIR=$jniOutputRoot",
                                     // CMake 4 removed compatibility with the < 3.5 minimums some
                                     // FetchContent'd deps still declare (yaml-cpp); this raises
                                     // their floor instead of failing configure. 3.x ignores it.
@@ -158,8 +158,8 @@ subprojects {
                     getByName("debug") {
                         externalNativeBuild {
                             cmake {
-                                arguments.add("-DJCODE_VARIANT_DIR=debug")
-                                if (cargoWillBuild) arguments.add("-DJCODE_REAL_LIB_PRESENT=ON")
+                                arguments.add("-DQCODE_VARIANT_DIR=debug")
+                                if (cargoWillBuild) arguments.add("-DQCODE_REAL_LIB_PRESENT=ON")
                             }
                         }
                     }
@@ -167,8 +167,8 @@ subprojects {
                     getByName("release") {
                         externalNativeBuild {
                             cmake {
-                                arguments.add("-DJCODE_VARIANT_DIR=release")
-                                if (cargoWillBuild) arguments.add("-DJCODE_REAL_LIB_PRESENT=ON")
+                                arguments.add("-DQCODE_VARIANT_DIR=release")
+                                if (cargoWillBuild) arguments.add("-DQCODE_REAL_LIB_PRESENT=ON")
                             }
                         }
                     }

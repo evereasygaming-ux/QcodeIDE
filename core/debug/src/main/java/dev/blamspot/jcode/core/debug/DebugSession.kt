@@ -100,7 +100,7 @@ class DebugSession(
 
             capabilities = sendRequest("initialize", JSONObject().apply {
                 put("clientID", "jcode")
-                put("clientName", "JCode")
+                put("clientName", "QCODE IDE")
                 put("adapterID", debugType)
                 put("locale", "en")
                 put("linesStartAt1", true)

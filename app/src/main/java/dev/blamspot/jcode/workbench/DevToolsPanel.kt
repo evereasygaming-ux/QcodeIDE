@@ -53,10 +53,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import dev.blamspot.jcode.design.CompactContextMenu
 import dev.blamspot.jcode.design.ContextAction
-import dev.blamspot.jcode.design.JCodeIcon
+import dev.blamspot.jcode.design.QCodeIcon
 import dev.blamspot.jcode.design.LocalTerminalFontSizeSetting
 import dev.blamspot.jcode.design.LocalSyntaxPalette
-import dev.blamspot.jcode.design.JCodeTheme
+import dev.blamspot.jcode.design.QCodeTheme
 import dev.blamspot.jcode.design.ManagerFilterChip
 import dev.blamspot.jcode.design.jcIcon
 import org.json.JSONTokener
@@ -208,7 +208,7 @@ private fun PaneMenuButton(pane: DevToolsPane) {
     val clipboard = LocalClipboardManager.current
     Box {
         Icon(
-            painter = jcIcon(JCodeIcon.MoreVert),
+            painter = jcIcon(QCodeIcon.MoreVert),
             contentDescription = "${pane.label} options",
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier
@@ -218,11 +218,11 @@ private fun PaneMenuButton(pane: DevToolsPane) {
         )
         val actions = when (pane) {
             DevToolsPane.Application -> listOf(
-                ContextAction(icon = JCodeIcon.Refresh, label = "Refresh") {
+                ContextAction(icon = QCodeIcon.Refresh, label = "Refresh") {
                     BuiltinBrowser.requestAppRefresh()
                 },
                 ContextAction(
-                    icon = JCodeIcon.Delete,
+                    icon = QCodeIcon.Delete,
                     label = "Clear site data",
                     destructive = true,
                 ) { clearSiteData() },
@@ -231,12 +231,12 @@ private fun PaneMenuButton(pane: DevToolsPane) {
                 val network = pane == DevToolsPane.Network
                 listOf(
                     ContextAction(
-                        icon = JCodeIcon.Pin,
+                        icon = QCodeIcon.Pin,
                         label = "Preserve log",
                         checked = BuiltinBrowser.preserveLog.value,
                     ) { BuiltinBrowser.preserveLog.value = !BuiltinBrowser.preserveLog.value },
                     ContextAction(
-                        icon = JCodeIcon.Copy,
+                        icon = QCodeIcon.Copy,
                         label = if (network) "Copy all requests" else "Copy all messages",
                         enabled = if (network) {
                             BuiltinBrowser.network.isNotEmpty()
@@ -254,7 +254,7 @@ private fun PaneMenuButton(pane: DevToolsPane) {
                         clipboard.setText(AnnotatedString(text))
                     },
                     ContextAction(
-                        icon = JCodeIcon.Clear,
+                        icon = QCodeIcon.Clear,
                         label = if (network) "Clear network" else "Clear console",
                         destructive = true,
                     ) { if (network) BuiltinBrowser.clearNetwork() else BuiltinBrowser.clearConsole() },
@@ -435,7 +435,7 @@ private fun ConsoleRowView(
     val entry = row.entry
     val accent = when (entry.level) {
         "error" -> MaterialTheme.colorScheme.error
-        "warning", "warn" -> JCodeTheme.semanticColors.warning
+        "warning", "warn" -> QCodeTheme.semanticColors.warning
         "input" -> MaterialTheme.colorScheme.primary
         "eval" -> MaterialTheme.colorScheme.tertiary
         else -> MaterialTheme.colorScheme.onSurfaceVariant
@@ -449,7 +449,7 @@ private fun ConsoleRowView(
     }
     val tint = when (entry.level) {
         "error" -> MaterialTheme.colorScheme.error.copy(alpha = 0.07f)
-        "warning", "warn" -> JCodeTheme.semanticColors.warning.copy(alpha = 0.07f)
+        "warning", "warn" -> QCodeTheme.semanticColors.warning.copy(alpha = 0.07f)
         "input" -> MaterialTheme.colorScheme.primary.copy(alpha = 0.06f)
         else -> Color.Transparent
     }
@@ -607,7 +607,7 @@ private fun SourcesPane(
                 ctl.eval(DOCUMENT_TEXT_JS) { BuiltinBrowser.sourceText.value = decodeJsResult(it) }
             source.inline ->
                 ctl.eval(inlineScriptJs(source.index)) { BuiltinBrowser.sourceText.value = decodeJsResult(it) }
-            // Asynchronous: the answer comes back through the JCodeDevTools bridge, not this callback.
+            // Asynchronous: the answer comes back through the QCodeDevTools bridge, not this callback.
             else -> ctl.eval(fetchSourceJs(source.url)) {}
         }
     }
@@ -936,7 +936,7 @@ private fun StoredSection(
                         if (row.httpOnly) {
                             Text(
                                 text = "HttpOnly",
-                                color = JCodeTheme.semanticColors.warning,
+                                color = QCodeTheme.semanticColors.warning,
                                 fontSize = 9.sp,
                                 lineHeight = 14.sp,
                             )
@@ -993,7 +993,7 @@ private fun StoredValueDetail(
             horizontalArrangement = Arrangement.spacedBy(Space.s),
         ) {
             Icon(
-                painter = jcIcon(JCodeIcon.ArrowBack),
+                painter = jcIcon(QCodeIcon.ArrowBack),
                 contentDescription = "Back to storage",
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(IconSize.sm),
@@ -1117,9 +1117,9 @@ private fun WorkerSection(workers: List<WorkerInfo>) {
                     Text(
                         text = w.state,
                         color = if (w.state == "activated") {
-                            JCodeTheme.semanticColors.success
+                            QCodeTheme.semanticColors.success
                         } else {
-                            JCodeTheme.semanticColors.warning
+                            QCodeTheme.semanticColors.warning
                         },
                         fontFamily = FontFamily.Monospace,
                         fontSize = 11.sp,
@@ -1319,8 +1319,8 @@ private fun inlineScriptJs(index: Int): String =
 
 private fun fetchSourceJs(url: String): String =
     "(function(){fetch(${JSONObject.quote(url)}).then(function(r){return r.text()})" +
-        ".then(function(t){JCodeDevTools.source(t)})" +
-        ".catch(function(e){JCodeDevTools.source('\\u0000unreadable')});return 1})()"
+        ".then(function(t){QCodeDevTools.source(t)})" +
+        ".catch(function(e){QCodeDevTools.source('\\u0000unreadable')});return 1})()"
 
 /**
  * Everything the Application pane asks the page about itself.
@@ -1364,7 +1364,7 @@ private val APP_DUMP_JS = buildString {
     append("try{var lk=document.querySelector('link[rel~=\"manifest\"]');")
     append("if(lk&&lk.href){out.manifestUrl=lk.href;")
     append("try{var mr=await fetch(lk.href);out.manifest=(await mr.text()).slice(0,16384)}catch(e){}}}catch(e){}")
-    append("try{JCodeDevTools.app(JSON.stringify(out))}catch(e){}})();return 1})()")
+    append("try{QCodeDevTools.app(JSON.stringify(out))}catch(e){}})();return 1})()")
 }
 
 private fun clearStoreJs(store: String): String =
@@ -1514,7 +1514,7 @@ private fun NetworkDetail(e: BrowserNetworkEntry, onBack: () -> Unit, modifier: 
             horizontalArrangement = Arrangement.spacedBy(Space.s),
         ) {
             Icon(
-                painter = jcIcon(JCodeIcon.ArrowBack),
+                painter = jcIcon(QCodeIcon.ArrowBack),
                 contentDescription = "Back to requests",
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(IconSize.sm),
@@ -1616,7 +1616,7 @@ private fun DetailSection(
             horizontalArrangement = Arrangement.spacedBy(Space.s),
         ) {
             Icon(
-                painter = jcIcon(if (expanded) JCodeIcon.ChevronDown else JCodeIcon.ChevronRight),
+                painter = jcIcon(if (expanded) QCodeIcon.ChevronDown else QCodeIcon.ChevronRight),
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(IconSize.xs),
@@ -1735,8 +1735,8 @@ private fun statusLabel(e: BrowserNetworkEntry): String = when {
 @Composable
 private fun statusColor(e: BrowserNetworkEntry) = when {
     e.failed || e.status >= 400 -> MaterialTheme.colorScheme.error
-    e.status >= 300 -> JCodeTheme.semanticColors.warning
-    e.status > 0 -> JCodeTheme.semanticColors.success
+    e.status >= 300 -> QCodeTheme.semanticColors.warning
+    e.status > 0 -> QCodeTheme.semanticColors.success
     // Not an error, just unknown — resource-timing rows have no status to report, and painting
     // those red would put a page's whole image list in the colour of something being wrong.
     else -> MaterialTheme.colorScheme.onSurfaceVariant

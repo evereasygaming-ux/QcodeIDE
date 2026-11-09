@@ -132,7 +132,7 @@ Entries with a `versionsScript` (version picker): `nodejs`, `jdk`, `go`, `rust`,
   **versioned** packages (`clang-18`, `python3.12`) because the unversioned metapackages almost
   never rev within a release.
 - With a `versionsScript`, the chosen version replaces `{{version}}` in the install and uninstall
-  scripts and is exported as `JCODE_VERSION`. The literal string `latest` is passed through so the
+  scripts and is exported as `QCODE_VERSION`. The literal string `latest` is passed through so the
   script can resolve it itself.
 - A `versionsScript` may emit a **tab-separated second column** as a presentational tag
   (`CatalogVersion(version, tag)`), which is how "LTS" badges appear in the picker.
@@ -197,7 +197,7 @@ With the fetched tools there is **no compileSdk ceiling**: the platform probe de
 android-36 links. Under the Debian fallback aapt2 2.19 still cannot read resource tables newer than
 API 34, so the ceiling logic (§ install script) stays for that path.
 
-**Measured on an Odin2** (Android 13, aarch64), building this repo inside JCode's own distro:
+**Measured on an Odin2** (Android 13, aarch64), building this repo inside QCode's own distro:
 
 | Path | Result |
 |---|---|
@@ -205,12 +205,12 @@ API 34, so the ceiling logic (§ install script) stays for that path.
 | Gradle 8.14.3 + AGP 8.13 + Kotlin 2.2 + Compose, library module | **Works** — `:core:design:assembleDebug`, 329 KB AAR |
 | `.aidl` at `compileSdk` 36 | **Works** — modern static `aidl`, and the sanitize wrapper proves the same for the fallback |
 | `externalNativeBuild` (CMake + NDK 27.2) | **Works** — distro clang through the NDK wrappers, both `arm64-v8a` and `x86_64` ABIs |
-| `:app:assembleDebug` — JCode building JCode | See the note in the commit that landed this section |
+| `:app:assembleDebug` — QCode building QCode | See the note in the commit that landed this section |
 
 Two boundaries this does not move: the Rust FFI modules fall back to their CMake stubs unless a
 `cargo` with Android targets is installed (the app builds and runs; ripgrep/wasm degrade), and the
 resulting APK is signed with whatever keystore the on-device build has, so it cannot be installed
-over a differently-signed JCode without an uninstall.
+over a differently-signed QCode without an uninstall.
 
 ---
 

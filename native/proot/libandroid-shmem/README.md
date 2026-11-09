@@ -1,4 +1,4 @@
-# libandroid-shmem (JCode build)
+# libandroid-shmem (QCode build)
 
 Source for the bundled asset `../src/main/assets/bin/libandroid-shmem-arm64-v8a.so` —
 the SysV shared-memory shim that proot's `--sysvipc` extension uses to emulate
@@ -7,7 +7,7 @@ the SysV shared-memory shim that proot's `--sysvipc` extension uses to emulate
 Upstream: https://github.com/termux/libandroid-shmem @ `7f0bd7e25dbdd146265aff7c6a890029e374622d`
 (BSD license, see LICENSE).
 
-JCode modifications (both marked `JCode modification` in shmem.c):
+QCode modifications (both marked `QCode modification` in shmem.c):
 
 1. **memfd backend.** Regions are created with `memfd_create` + `ftruncate` and sized with
    `fstat`, replacing ashmem/`ASharedMemory`. Opening `/dev/ashmem` is SELinux-denied for apps

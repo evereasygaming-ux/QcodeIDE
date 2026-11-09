@@ -106,7 +106,7 @@ object UpdateChecker {
             readTimeout = 15_000
             setRequestProperty("Accept", "application/vnd.github+json")
             // GitHub rejects requests without a User-Agent.
-            setRequestProperty("User-Agent", "JCode-Android")
+            setRequestProperty("User-Agent", "QCode-Android")
         }
         return try {
             if (conn.responseCode != HttpURLConnection.HTTP_OK) null

@@ -13,7 +13,7 @@ import org.json.JSONObject
  * Linux rootfs, the projects moved to app-private ext4, the imported extensions and the settings all
  * sit under `/data/data/<old package>/`, which no other app can read.
  *
- * So the old install writes them out itself, to the shared JCode folder both packages can reach, and
+ * So the old install writes them out itself, to the shared QCode folder both packages can reach, and
  * the new one picks them up. The parts are the app's existing backup formats — the rootfs tarball
  * [dev.blamspot.jcode.core.distro.RootfsArchiver] already produces, and the settings document
  * [SettingsBackup] already writes — so a bundle is also just a full backup, and restoring one is the
@@ -23,7 +23,7 @@ import org.json.JSONObject
 object MigrationBundle {
 
     /** Where a bundle is written. Shared storage, so it survives the old app being uninstalled. */
-    fun directory(): File = File("/storage/emulated/0/JCode/migration")
+    fun directory(): File = File("/storage/emulated/0/QCode/migration")
 
     const val MANIFEST = "manifest.json"
     const val SETTINGS = "settings.json"

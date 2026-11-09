@@ -1,6 +1,6 @@
 package dev.blamspot.jcode
 import dev.blamspot.jcode.design.IconSize
-import dev.blamspot.jcode.design.JCodeIcon
+import dev.blamspot.jcode.design.QCodeIcon
 import dev.blamspot.jcode.design.JcTooltip
 import dev.blamspot.jcode.design.ManagerFilterChip
 import dev.blamspot.jcode.design.Radius
@@ -60,7 +60,7 @@ import dev.blamspot.jcode.core.config.BuildConfig
 import dev.blamspot.jcode.core.config.RunConfig
 import dev.blamspot.jcode.design.AndroidRunTarget
 import dev.blamspot.jcode.design.CompactOutlinedButton
-import dev.blamspot.jcode.design.JCodeDialogDefaults
+import dev.blamspot.jcode.design.QCodeDialogDefaults
 import dev.blamspot.jcode.design.LocalAndroidDevice
 import dev.blamspot.jcode.design.LocalAndroidRunTargets
 import dev.blamspot.jcode.fs.Project
@@ -223,7 +223,7 @@ private fun ProjectRunBuildDetail(
     when (segment) {
         Segment.Run -> {
             // Two different ways to get an app onto a device, so a row each, and a project can have
-            // both: the container recipe only builds and is handed to JCode's own sandbox afterwards,
+            // both: the container recipe only builds and is handed to QCode's own sandbox afterwards,
             // while every other Android recipe shells out to adb and takes its device from the target
             // row. Each row appears only when a config of its kind is present.
             // ...and only when a pack that provides the device is actually installed: the recipe is
@@ -369,7 +369,7 @@ private fun AddConfigDialog(
     val listMaxHeight = (LocalConfiguration.current.screenHeightDp * 0.5f).coerceIn(160f, 360f).dp
     Dialog(onDismissRequest = onDismiss) {
         Surface(
-            modifier = Modifier.width(JCodeDialogDefaults.width()),
+            modifier = Modifier.width(QCodeDialogDefaults.width()),
             shape = RoundedCornerShape(Radius.xxxl),
             color = MaterialTheme.colorScheme.surface,
             tonalElevation = 6.dp,
@@ -523,14 +523,14 @@ private fun RunConfigRow(
                     IconAction(rememberVectorPainter(Icons.AutoMirrored.Rounded.OpenInNew), "Open in browser", MaterialTheme.colorScheme.onSurfaceVariant, onOpenInBrowser)
                 }
                 if (running) {
-                    IconAction(jcIcon(JCodeIcon.Stop), "Stop", MaterialTheme.colorScheme.error, onStop)
+                    IconAction(jcIcon(QCodeIcon.Stop), "Stop", MaterialTheme.colorScheme.error, onStop)
                 } else {
-                    IconAction(jcIcon(JCodeIcon.Run), "Run", MaterialTheme.colorScheme.primary, onRun, enabled = config.terminals.any { it.command.isNotBlank() })
+                    IconAction(jcIcon(QCodeIcon.Run), "Run", MaterialTheme.colorScheme.primary, onRun, enabled = config.terminals.any { it.command.isNotBlank() })
                     // Launch under the debugger (VS-style): set gutter breakpoints, tap Debug, pause on hit.
                     // The entry is auto-derived from the command / active file — no manual field to fill in.
-                    IconAction(jcIcon(JCodeIcon.Debug), "Debug", MaterialTheme.colorScheme.tertiary, onDebug)
+                    IconAction(jcIcon(QCodeIcon.Debug), "Debug", MaterialTheme.colorScheme.tertiary, onDebug)
                 }
-                IconAction(jcIcon(JCodeIcon.Settings), "Configure", MaterialTheme.colorScheme.onSurfaceVariant, onConfigure, size = 17)
+                IconAction(jcIcon(QCodeIcon.Settings), "Configure", MaterialTheme.colorScheme.onSurfaceVariant, onConfigure, size = 17)
                 if (!running && deletable) IconAction(rememberVectorPainter(Icons.Rounded.DeleteOutline), "Delete", MaterialTheme.colorScheme.onSurfaceVariant, onDelete, size = 17)
             }
             // Row 2: thin status + port line.
@@ -555,8 +555,8 @@ private fun BuildConfigRow(config: BuildConfig, deletable: Boolean, onBuild: () 
             horizontalArrangement = Arrangement.spacedBy(Space.hairline),
         ) {
             Text(config.name, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-            IconAction(jcIcon(JCodeIcon.Run), "Build", MaterialTheme.colorScheme.primary, onBuild, enabled = config.command.isNotBlank())
-            IconAction(jcIcon(JCodeIcon.Settings), "Configure", MaterialTheme.colorScheme.onSurfaceVariant, onConfigure, size = 17)
+            IconAction(jcIcon(QCodeIcon.Run), "Build", MaterialTheme.colorScheme.primary, onBuild, enabled = config.command.isNotBlank())
+            IconAction(jcIcon(QCodeIcon.Settings), "Configure", MaterialTheme.colorScheme.onSurfaceVariant, onConfigure, size = 17)
             if (deletable) IconAction(rememberVectorPainter(Icons.Rounded.DeleteOutline), "Delete", MaterialTheme.colorScheme.onSurfaceVariant, onDelete, size = 17)
         }
     }
@@ -565,7 +565,7 @@ private fun BuildConfigRow(config: BuildConfig, deletable: Boolean, onBuild: () 
 /**
  * Which device this project's adb-driven runs launch on, and the picker that changes it.
  *
- * The runtime's adb server is the only source of devices: JCode's own virtual device and this phone
+ * The runtime's adb server is the only source of devices: QCode's own virtual device and this phone
  * both reach a run by being connected to it, so anything adb does not list cannot be launched on. With
  * nothing listed the row becomes the way into the pairing page instead.
  */
@@ -637,7 +637,7 @@ private fun AndroidTargetDialog(
     val listMaxHeight = (LocalConfiguration.current.screenHeightDp * 0.5f).coerceIn(160f, 360f).dp
     Dialog(onDismissRequest = onDismiss) {
         Surface(
-            modifier = Modifier.width(JCodeDialogDefaults.width()),
+            modifier = Modifier.width(QCodeDialogDefaults.width()),
             shape = RoundedCornerShape(Radius.xxxl),
             color = MaterialTheme.colorScheme.surface,
             tonalElevation = 6.dp,

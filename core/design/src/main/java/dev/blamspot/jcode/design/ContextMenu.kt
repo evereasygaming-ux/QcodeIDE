@@ -22,7 +22,7 @@ import androidx.compose.ui.unit.dp
 
 /** One action in a [CompactContextMenu]. */
 data class ContextAction(
-    val icon: JCodeIcon,
+    val icon: QCodeIcon,
     val label: String,
     val destructive: Boolean = false,
     val enabled: Boolean = true,

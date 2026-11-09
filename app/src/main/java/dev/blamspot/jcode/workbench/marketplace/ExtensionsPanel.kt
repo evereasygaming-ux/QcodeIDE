@@ -54,7 +54,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.blamspot.jcode.design.IconSize
-import dev.blamspot.jcode.design.JCodeIcon
+import dev.blamspot.jcode.design.QCodeIcon
 import dev.blamspot.jcode.design.Radius
 import dev.blamspot.jcode.design.PanelHeader
 import dev.blamspot.jcode.design.Space
@@ -137,7 +137,7 @@ internal fun ExtensionsPanel(
             onImport = onImportExtension,
             importContentDescription = "Import an extension (.jext or .vsix)",
             onExtras = onOpenSources,
-            extrasIcon = JCodeIcon.Sources,
+            extrasIcon = QCodeIcon.Sources,
             extrasContentDescription = "Extension sources",
         )
         Column(
@@ -211,9 +211,9 @@ internal fun ExtensionsPanel(
                             leading = {
                                 ExtensionIcon(type = row.type, name = row.name, iconFile = row.iconFile, iconUrl = row.iconUrl)
                             },
-                            // A VS Code import sits beside JCode's own extensions and behaves
+                            // A VS Code import sits beside QCode's own extensions and behaves
                             // differently — unverified, and only partly supported — so it says so.
-                            // An extension this JCode cannot run says so in the list, rather than
+                            // An extension this QCode cannot run says so in the list, rather than
                             // letting the detail page be the first place anyone finds out.
                             trailing = when {
                                 row.incompatible != null -> {
@@ -365,7 +365,7 @@ internal fun DbManagerPanel(
                         // The plugin asks the workbench for the project itself; a host File here
                         // would be the wrong path for anything it runs in the runtime.
                         projectDir = null,
-                        view = dev.blamspot.jcode.ext.api.JCodeNativeExtension.Params.SURFACE_PANEL,
+                        view = dev.blamspot.jcode.ext.api.QCodeNativeExtension.Params.SURFACE_PANEL,
                         dark = MaterialTheme.colorScheme.background.luminance() < 0.5f,
                         onSnackbar = onSnackbar,
                         onShowSource = {},
@@ -421,7 +421,7 @@ internal fun ScmPanel(
                 // The plugin asks the workbench for the project itself (host.projectInfo), which is
                 // the guest path it needs for exec; a host File here would be the wrong one.
                 projectDir = null,
-                view = dev.blamspot.jcode.ext.api.JCodeNativeExtension.Params.SURFACE_PANEL,
+                view = dev.blamspot.jcode.ext.api.QCodeNativeExtension.Params.SURFACE_PANEL,
                 dark = MaterialTheme.colorScheme.background.luminance() < 0.5f,
                 onSnackbar = onSnackbar,
                 onShowSource = {},
@@ -437,7 +437,7 @@ internal fun ScmPanel(
     val ext = installed.firstOrNull { it.type == ExtensionType.Scm && it.hasWebUi }
     if (ext == null) {
         PanelEmptyState(
-            icon = jcIcon(JCodeIcon.Scm),
+            icon = jcIcon(QCodeIcon.Scm),
             title = "Source Control",
             message = "Install a Source Control extension to manage Git here.",
             modifier = modifier,
@@ -563,7 +563,7 @@ internal fun VmPanel(
                 // The plugin asks the workbench for the project itself; a host File here would be
                 // the wrong path for anything it runs in the runtime.
                 projectDir = null,
-                view = dev.blamspot.jcode.ext.api.JCodeNativeExtension.Params.SURFACE_PANEL,
+                view = dev.blamspot.jcode.ext.api.QCodeNativeExtension.Params.SURFACE_PANEL,
                 dark = MaterialTheme.colorScheme.background.luminance() < 0.5f,
                 onSnackbar = onSnackbar,
                 onShowSource = {},
@@ -631,7 +631,7 @@ internal fun ExtensionDetailPage(
     // Checked here as well as in the installer: the install would fail anyway, and failing after a
     // download with a toast is a worse way to learn it than a disabled button and a reason.
     val incompatible = entry?.let {
-        jcodeVersionMismatch(it.minJCodeVersion, it.maxJCodeVersion, BuildConfig.VERSION_NAME, it.name)
+        jcodeVersionMismatch(it.minQCodeVersion, it.maxQCodeVersion, BuildConfig.VERSION_NAME, it.name)
     }
 
     ManagerDetailScreen(
@@ -661,7 +661,7 @@ internal fun ExtensionDetailPage(
         extra = {
             incompatible?.let { reason ->
                 ManagerNoticeCard(
-                    title = "Not supported on this JCode",
+                    title = "Not supported on QCODE IDE",
                     message = "$reason. An installed copy keeps working; this only stops it being installed here.",
                 )
             }
@@ -841,7 +841,7 @@ private fun ExtensionSettingsCard(
                 }
                 if (ext.type.choosesActivation) ActivationPill(mode)
                 Icon(
-                    painter = jcIcon(if (expanded) JCodeIcon.ChevronUp else JCodeIcon.ChevronDown),
+                    painter = jcIcon(if (expanded) QCodeIcon.ChevronUp else QCodeIcon.ChevronDown),
                     contentDescription = if (expanded) "Collapse ${ext.name}" else "Expand ${ext.name}",
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(IconSize.md),
@@ -1182,7 +1182,7 @@ private fun RemovedNotice(text: String) {
     }
 }
 
-/** Marks a row this JCode cannot run — the reason itself is on the detail page. */
+/** Marks a row this QCode cannot run — the reason itself is on the detail page. */
 @Composable
 private fun IncompatibleBadge() {
     Text(
@@ -1199,7 +1199,7 @@ private fun IncompatibleBadge() {
     )
 }
 
-/** Marks a row as a VS Code import: unverified, and only as supported as JCode's API slice allows. */
+/** Marks a row as a VS Code import: unverified, and only as supported as QCode's API slice allows. */
 @Composable
 private fun VsixBadge() {
     Text(
@@ -1228,9 +1228,9 @@ private data class ExtensionRow(
     val installed: Boolean,
     val iconFile: File?,
     val iconUrl: String?,
-    /** Imported from a VS Code `.vsix` rather than published as a JCode extension. */
+    /** Imported from a VS Code `.vsix` rather than published as a QCode extension. */
     val vsix: Boolean = false,
-    /** Why this JCode cannot run it, or null. Set from the marketplace entry's declared range. */
+    /** Why this QCode cannot run it, or null. Set from the marketplace entry's declared range. */
     val incompatible: String? = null,
 )
 
@@ -1261,7 +1261,7 @@ private fun buildExtensionRows(
             vsix = inst?.isVsix ?: (e.vsixAssetUrl != null),
             // Only what is offered can be incompatible: an installed-only row has nothing to
             // install, and its own manifest is what the host already loaded.
-            incompatible = jcodeVersionMismatch(e.minJCodeVersion, e.maxJCodeVersion, appVersion, e.name),
+            incompatible = jcodeVersionMismatch(e.minQCodeVersion, e.maxQCodeVersion, appVersion, e.name),
         )
     }
     val installedOnly = installed.filter { it.id !in availableIds }.map { ext ->

@@ -19,7 +19,7 @@ stronger ones.
 
 ## 2. The central invariant: no host root
 
-> JCode is a sandboxed Android app whose Linux runtime is proot — a ptrace-based **userspace**
+> QCode is a sandboxed Android app whose Linux runtime is proot — a ptrace-based **userspace**
 > sandbox running within the app's own uid. It must **never** escalate to real host root.
 
 | Not present | Present instead |
@@ -33,7 +33,7 @@ Mechanically enforced by `scripts/check-no-host-root.sh` in CI, in the pre-commi
 release pre-flight — see
 [CI, quality and invariants §2](03-ci-quality-and-invariants.md#2-the-no-host-root-guard).
 
-A practical consequence: JCode **cannot** enable wireless debugging for the user, because that needs
+A practical consequence: QCode **cannot** enable wireless debugging for the user, because that needs
 `WRITE_SECURE_SETTINGS`. The user does it through the system UI.
 
 ---
@@ -45,8 +45,8 @@ A practical consequence: JCode **cannot** enable wireless debugging for the user
 | App ↔ other apps | **Yes** | Standard Android app sandbox |
 | App ↔ guest Linux processes | **Partly** | proot is a ptrace-based *convenience* sandbox, not a security boundary. Guest processes run as the app's uid and can reach anything the app can |
 | App ↔ `:guest` (virtual device) | **No** | Separate process, **same uid, same permissions, same data access**. A memory and lifecycle boundary, not a security one |
-| Guest APK ↔ JCode's data | **Partly** | `GuestContext` redirects the guest's `dataDir` to `filesDir/vdevice/<package>/`, which "keeps a guest from ever seeing (or writing into) JCode's own data directory" — but the guest runs arbitrary code as JCode's uid and can bypass the wrapper |
-| Guest APK ↔ the phone's hardware | **Partly** | Two settings, both required: what the device has, and what the app may do with it — see [App sandbox architecture §7e](../08-virtual-device/01-app-sandbox-architecture.md#7e-two-settings-not-one--virtualdevicepolicy). The outer lock is real and is the platform's: JCode holds no camera or location permission, so those cannot be reached whatever the container says. The motion sensors have no outer lock — Android does not gate them — so for those the policy **is** the boundary, and a guest that bypasses `GuestContext` reaches the phone's |
+| Guest APK ↔ QCode's data | **Partly** | `GuestContext` redirects the guest's `dataDir` to `filesDir/vdevice/<package>/`, which "keeps a guest from ever seeing (or writing into) QCode's own data directory" — but the guest runs arbitrary code as QCode's uid and can bypass the wrapper |
+| Guest APK ↔ the phone's hardware | **Partly** | Two settings, both required: what the device has, and what the app may do with it — see [App sandbox architecture §7e](../08-virtual-device/01-app-sandbox-architecture.md#7e-two-settings-not-one--virtualdevicepolicy). The outer lock is real and is the platform's: QCode holds no camera or location permission, so those cannot be reached whatever the container says. The motion sensors have no outer lock — Android does not gate them — so for those the policy **is** the boundary, and a guest that bypasses `GuestContext` reaches the phone's |
 
 **Do not run untrusted APKs in the app sandbox, and do not treat proot as a jail.** Both exist for
 developer convenience.
@@ -55,7 +55,7 @@ developer convenience.
 
 ## 4. Permissions
 
-Every permission JCode requests and why:
+Every permission QCode requests and why:
 
 | Permission | Purpose | Gate |
 |---|---|---|
@@ -63,13 +63,13 @@ Every permission JCode requests and why:
 | `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_SPECIAL_USE` | Keep terminals, builds, LSP and DAP sessions alive | Subtype `interactive_terminal_and_build_runner` |
 | `POST_NOTIFICATIONS` | The foreground-service notification | Runtime prompt |
 | `WAKE_LOCK` | Long builds and installs | — |
-| `MANAGE_EXTERNAL_STORAGE` | Raw file-path access to the legacy `/storage/emulated/0/JCode` root | System settings toggle; checked with `Environment.isExternalStorageManager()` |
+| `MANAGE_EXTERNAL_STORAGE` | Raw file-path access to the legacy `/storage/emulated/0/QCode` root | System settings toggle; checked with `Environment.isExternalStorageManager()` |
 | `REQUEST_INSTALL_PACKAGES` | The in-app updater | `canRequestPackageInstalls()` at runtime |
-| `RECORD_AUDIO` | **Held for the virtual device, never for JCode itself** — the only hardware a guest can be given for real | Requested at the moment an app on the device is switched to a real microphone in Manage permissions. Until then it is declared and not granted, and neither JCode nor any guest can record |
+| `RECORD_AUDIO` | **Held for the virtual device, never for QCode itself** — the only hardware a guest can be given for real | Requested at the moment an app on the device is switched to a real microphone in Manage permissions. Until then it is declared and not granted, and neither QCode nor any guest can record |
 
 The virtual device also holds a set of protection-level-*normal* permissions on its guests' behalf
-(`ACCESS_NETWORK_STATE`, `ACCESS_WIFI_STATE`, `VIBRATE`, …): a guest runs under JCode's uid and holds
-JCode's permissions, so an app that merely asks whether it is online died before drawing a frame
+(`ACCESS_NETWORK_STATE`, `ACCESS_WIFI_STATE`, `VIBRATE`, …): a guest runs under QCode's uid and holds
+QCode's permissions, so an app that merely asks whether it is online died before drawing a frame
 without them. Camera, location and contacts remain deliberately absent — the device offers a
 simulated camera and a simulated GPS in their place, and there is no mode in which either reaches
 the phone's.
@@ -168,8 +168,8 @@ present for the framework's requirements.
   gets nothing — "the guest must not see the user's clipboard uninvited". Writes are honoured.
 - Update checks and marketplace fetches are the only routine outbound traffic beyond what the user's
   own tooling makes.
-- `VirtualIdentity` reports a synthetic device identity to a guest APK (`JCode vDevice`,
-  `JCODEVD00000000`) while leaving hardware-derived values truthful.
+- `VirtualIdentity` reports a synthetic device identity to a guest APK (`QCode vDevice`,
+  `QCODEVD00000000`) while leaving hardware-derived values truthful.
 - **The built-in location trails are deliberately not survey data.** Each of the three is hand-drawn,
   simplified, displaced a few hundred metres from the real place, and reported through a compass
   skewed a few degrees off the true bearing — see
@@ -226,11 +226,11 @@ Settings → Diagnostics opt-in starts it, via the single `MainViewModel` collec
 app's **own** logcat (`logcat --pid=<self>`, which the log daemon scopes to this app with no
 permission), and uncaught exceptions (the previous handler still runs).
 
-Every line is **path-redacted** before it is written — the app data dir, the shared `JCode` root and
+Every line is **path-redacted** before it is written — the app data dir, the shared `QCode` root and
 the external-storage root become `<app-data>` / `<jcode>` / `<storage>`. This is not a user-facing
 toggle: a log exists to be shared, so redaction is unconditional.
 
-Files rotate at 2 MB × 2 in `JCode/logs/` (shared storage, so a report can be attached from a file
+Files rotate at 2 MB × 2 in `QCode/logs/` (shared storage, so a report can be attached from a file
 manager or pulled over adb), falling back to the app's external files dir and then internal storage.
 The user can view the tail in-app before sharing, export a copy through SAF, or clear it.
 

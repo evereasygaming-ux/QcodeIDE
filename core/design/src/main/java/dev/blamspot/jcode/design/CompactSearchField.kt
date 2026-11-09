@@ -30,7 +30,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 
 /**
- * JCode's shared compact search field: a bordered rounded surface with a leading search glyph, a
+ * QCode's shared compact search field: a bordered rounded surface with a leading search glyph, a
  * dense [BasicTextField] (bodySmall), and a trailing clear affordance. The manager panels and the
  * command palette both use it so search inputs read identically across the app.
  */
@@ -63,7 +63,7 @@ fun CompactSearchField(
             horizontalArrangement = Arrangement.spacedBy(Space.s),
         ) {
             Icon(
-                jcIcon(JCodeIcon.Search),
+                jcIcon(QCodeIcon.Search),
                 contentDescription = null,
                 modifier = Modifier.size(IconSize.sm),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -91,7 +91,7 @@ fun CompactSearchField(
                 CircularProgressIndicator(modifier = Modifier.size(14.dp), strokeWidth = 2.dp)
             } else if (query.isNotEmpty()) {
                 Icon(
-                    jcIcon(JCodeIcon.Close),
+                    jcIcon(QCodeIcon.Close),
                     contentDescription = "Clear search",
                     modifier = Modifier
                         .size(18.dp)

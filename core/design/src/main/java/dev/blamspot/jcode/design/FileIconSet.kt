@@ -44,7 +44,7 @@ data class FileIconDef(
 /**
  * Which icon a file or folder gets, by name.
  *
- * There are no built-in file icon sets: JCode draws files and folders with two [JCodeIcon] slots
+ * There are no built-in file icon sets: QCode draws files and folders with two [QCodeIcon] slots
  * from the active [UiIconSet], and a set here replaces them wholesale. Sets come from icon-pack
  * extensions — see the loader in `IconPackLoader`.
  */
@@ -53,7 +53,7 @@ class FileIconSet(
     val id: String,
     val name: String,
     val description: String,
-    val author: String = "JCode",
+    val author: String = "QCODE IDE",
     /** Id of the extension this set came from. */
     val providerId: String? = null,
     private val definitions: Map<String, FileIconDef>,
@@ -156,7 +156,7 @@ class IconRuleTable<V>(
 val LocalFileIconSet = staticCompositionLocalOf<FileIconSet?> { null }
 
 object FileIconSetRegistry {
-    /** The stored id meaning "no file icon set" — JCode's own folder/file glyphs. */
+    /** The stored id meaning "no file icon set" — QCode's own folder/file glyphs. */
     const val NONE_ID: String = ""
 
     fun byId(id: String?, installed: List<FileIconSet>): FileIconSet? =
@@ -192,7 +192,7 @@ private fun rememberFileIcon(name: String, isDirectory: Boolean, isExpanded: Boo
  * The icon for a file or folder row: the active [FileIconSet]'s art where it has some, and the
  * active [UiIconSet]'s [fallback] glyph everywhere else.
  *
- * Every place JCode lists a file goes through here, so turning a pack on changes all of them at once
+ * Every place QCode lists a file goes through here, so turning a pack on changes all of them at once
  * and turning it off puts every one of them back.
  */
 @Composable
@@ -202,7 +202,7 @@ fun FileTypeIcon(
     size: Dp,
     modifier: Modifier = Modifier,
     isExpanded: Boolean = false,
-    fallback: JCodeIcon = if (isDirectory) JCodeIcon.Folder else JCodeIcon.Output,
+    fallback: QCodeIcon = if (isDirectory) QCodeIcon.Folder else QCodeIcon.Output,
     tint: Color = LocalContentColor.current,
     contentDescription: String? = null,
 ) {

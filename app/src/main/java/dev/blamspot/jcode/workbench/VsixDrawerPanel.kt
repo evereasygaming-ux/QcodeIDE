@@ -19,7 +19,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 
 /**
- * Runtime access for extension-backed right-drawer tabs, provided as a CompositionLocal (JCodeShell
+ * Runtime access for extension-backed right-drawer tabs, provided as a CompositionLocal (QCodeShell
  * ART-limit convention).
  */
 class ExtensionDrawerActions(

@@ -7,7 +7,7 @@ import androidx.compose.ui.graphics.toArgb
 
 /**
  * Token colors for syntax highlighting, expressed as a theme value rather than a hardcoded pair of
- * dark/light objects. Every bundle carries one of each; the default pair keeps JCode's existing
+ * dark/light objects. Every bundle carries one of each; the default pair keeps QCode's existing
  * Catppuccin token colors for bundles that do not override them.
  */
 @Immutable

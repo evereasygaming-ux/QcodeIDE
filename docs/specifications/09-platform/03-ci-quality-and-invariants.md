@@ -126,7 +126,7 @@ Enforced by review and by `AGENTS.md`, not by tooling:
 - **Type safety.** Avoid nullable mismatches; prefer explicit checks (`if (obj.has("key"))`) over
   passing `null` to a non-nullable parameter.
 - **C/C++.** Warnings from third-party natives (libgit2's llhttp, for example) are acceptable;
-  warnings from JCode's own code are not.
+  warnings from QCode's own code are not.
 - **Module rule.** `:core:*` never depends on `:feature:*` — restated in `CONTRIBUTING.md`.
 - **No dead scaffolding.** Remove placeholder code, unused dependencies and unreachable imports as
   you go.

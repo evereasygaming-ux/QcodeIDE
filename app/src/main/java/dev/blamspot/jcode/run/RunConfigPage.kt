@@ -30,7 +30,7 @@ import dev.blamspot.jcode.design.Space
  * page. Edits a [RunConfig]: a display name, the port to open in the browser, and a list of
  * terminals (label + bash command). [onSave] persists the form to `run.yaml`. Preset/trigger
  * selection happens up front via the "Add run config" dialog, not here. Fields use the app's compact
- * [SettingsTextFieldRow] so the page matches the rest of JCode.
+ * [SettingsTextFieldRow] so the page matches the rest of QCode.
  */
 @Composable
 fun RunConfigPage(

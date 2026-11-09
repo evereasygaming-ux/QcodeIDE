@@ -1,6 +1,6 @@
 package dev.blamspot.jcode.feature.explorer
 import dev.blamspot.jcode.design.FileTypeIcon
-import dev.blamspot.jcode.design.JCodeIcon
+import dev.blamspot.jcode.design.QCodeIcon
 import dev.blamspot.jcode.design.Space
 import dev.blamspot.jcode.design.jcIcon
 
@@ -60,7 +60,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.blamspot.jcode.design.CompactContextMenu
 import dev.blamspot.jcode.design.ContextAction
-import dev.blamspot.jcode.design.JCodeTheme
+import dev.blamspot.jcode.design.QCodeTheme
 import dev.blamspot.jcode.design.JcTooltip
 import dev.blamspot.jcode.design.LocalTrashSettings
 import dev.blamspot.jcode.design.trashRetentionLabel
@@ -591,7 +591,7 @@ private fun RowOverflowMenu(
                 modifier = Modifier.size(28.dp),
             ) {
                 Icon(
-                    painter = jcIcon(JCodeIcon.MoreVert),
+                    painter = jcIcon(QCodeIcon.MoreVert),
                     contentDescription = "More actions",
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(IconSize.md),
@@ -602,21 +602,21 @@ private fun RowOverflowMenu(
             expanded = expanded,
             onDismissRequest = { onExpandedChange(false) },
             quickActions = buildList {
-                add(ContextAction(JCodeIcon.Copy, "Copy") { onAction(row, RowAction.Copy) })
-                if (!isProjectRoot) add(ContextAction(JCodeIcon.Cut, "Cut") { onAction(row, RowAction.Cut) })
-                add(ContextAction(JCodeIcon.Rename, "Rename") { onAction(row, RowAction.Rename) })
+                add(ContextAction(QCodeIcon.Copy, "Copy") { onAction(row, RowAction.Copy) })
+                if (!isProjectRoot) add(ContextAction(QCodeIcon.Cut, "Cut") { onAction(row, RowAction.Cut) })
+                add(ContextAction(QCodeIcon.Rename, "Rename") { onAction(row, RowAction.Rename) })
                 if (!isProjectRoot) {
-                    add(ContextAction(JCodeIcon.Delete, "Delete", destructive = true) { onAction(row, RowAction.Delete) })
+                    add(ContextAction(QCodeIcon.Delete, "Delete", destructive = true) { onAction(row, RowAction.Delete) })
                 }
             },
             listActions = buildList {
-                if (!isDir) add(ContextAction(JCodeIcon.Open, "Open") { onAction(row, RowAction.Open) })
+                if (!isDir) add(ContextAction(QCodeIcon.Open, "Open") { onAction(row, RowAction.Open) })
                 if (isDir) {
-                    add(ContextAction(JCodeIcon.NewFile, "New file") { onAction(row, RowAction.NewFile) })
-                    add(ContextAction(JCodeIcon.NewFolder, "New folder") { onAction(row, RowAction.NewFolder) })
-                    add(ContextAction(JCodeIcon.Add, "Import files…") { onAction(row, RowAction.ImportHere) })
+                    add(ContextAction(QCodeIcon.NewFile, "New file") { onAction(row, RowAction.NewFile) })
+                    add(ContextAction(QCodeIcon.NewFolder, "New folder") { onAction(row, RowAction.NewFolder) })
+                    add(ContextAction(QCodeIcon.Add, "Import files…") { onAction(row, RowAction.ImportHere) })
                 }
-                add(ContextAction(JCodeIcon.Save, "Export…") { onAction(row, RowAction.Export) })
+                add(ContextAction(QCodeIcon.Save, "Export…") { onAction(row, RowAction.Export) })
                 // Extension-contributed actions (e.g. "Add to .gitignore") target a path inside the
                 // repo — the project root isn't a valid target, so omit them there.
                 if (!isProjectRoot) {
@@ -651,7 +651,7 @@ private fun ExplorerBreadcrumb(
             JcTooltip("Up one level") {
                 IconButton(onClick = onNavigateUp, modifier = Modifier.size(28.dp)) {
                     Icon(
-                        painter = jcIcon(JCodeIcon.ArrowUp),
+                        painter = jcIcon(QCodeIcon.ArrowUp),
                         contentDescription = "Up one level",
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(IconSize.md),
@@ -803,7 +803,7 @@ private fun TreeRowItem(
                         contentAlignment = Alignment.Center,
                     ) {
                         Icon(
-                            painter = if (row.isExpanded) jcIcon(JCodeIcon.ChevronDown) else jcIcon(JCodeIcon.ChevronRight),
+                            painter = if (row.isExpanded) jcIcon(QCodeIcon.ChevronDown) else jcIcon(QCodeIcon.ChevronRight),
                             contentDescription = if (row.isExpanded) "Collapse" else "Expand",
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(iconSize),
@@ -978,19 +978,19 @@ private fun ExplorerToolbar(
             .padding(horizontal = Space.xs, vertical = Space.xxs),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        ToolbarIcon(jcIcon(JCodeIcon.NewFile), "New File", onCreateFile)
-        ToolbarIcon(jcIcon(JCodeIcon.NewFolder), "New Folder", onCreateFolder)
-        ToolbarIcon(jcIcon(JCodeIcon.Add), "Import files", onImport)
-        ToolbarIcon(jcIcon(JCodeIcon.Paste), "Paste", onPaste, enabled = canPaste)
-        ToolbarIcon(jcIcon(JCodeIcon.Refresh), "Refresh", onRefresh)
+        ToolbarIcon(jcIcon(QCodeIcon.NewFile), "New File", onCreateFile)
+        ToolbarIcon(jcIcon(QCodeIcon.NewFolder), "New Folder", onCreateFolder)
+        ToolbarIcon(jcIcon(QCodeIcon.Add), "Import files", onImport)
+        ToolbarIcon(jcIcon(QCodeIcon.Paste), "Paste", onPaste, enabled = canPaste)
+        ToolbarIcon(jcIcon(QCodeIcon.Refresh), "Refresh", onRefresh)
         if (viewMode == ExplorerViewMode.Tree) {
-            ToolbarIcon(jcIcon(JCodeIcon.Collapse), "Collapse all", onCollapseAll)
+            ToolbarIcon(jcIcon(QCodeIcon.Collapse), "Collapse all", onCollapseAll)
         }
         // Away from the make-and-refresh cluster, at the end of the row: the bin is where deletes
         // are undone, not another thing to do to the tree.
         if (showTrash) {
             Spacer(modifier = Modifier.weight(1f))
-            ToolbarIcon(jcIcon(JCodeIcon.Trash), "Trash", onOpenTrash)
+            ToolbarIcon(jcIcon(QCodeIcon.Trash), "Trash", onOpenTrash)
         }
     }
 }
@@ -1088,8 +1088,8 @@ private fun RowVcsBadges(row: TreeRow) {
  *  green, deleted/conflicted red, renamed primary. */
 @Composable
 private fun vcsStatusColor(status: String): Color = when (status.firstOrNull()) {
-    'M', DIR_CONTAINS_CHANGES.first() -> JCodeTheme.semanticColors.warning
-    'A', '?' -> JCodeTheme.semanticColors.success
+    'M', DIR_CONTAINS_CHANGES.first() -> QCodeTheme.semanticColors.warning
+    'A', '?' -> QCodeTheme.semanticColors.success
     'D', 'U' -> MaterialTheme.colorScheme.error
     'R', 'C' -> MaterialTheme.colorScheme.primary
     else -> MaterialTheme.colorScheme.onSurfaceVariant

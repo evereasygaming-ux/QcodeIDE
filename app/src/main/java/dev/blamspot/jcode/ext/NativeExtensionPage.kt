@@ -15,7 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import dev.blamspot.jcode.WorkbenchNotices
 import dev.blamspot.jcode.design.Space
-import dev.blamspot.jcode.ext.api.JCodeNativeExtension
+import dev.blamspot.jcode.ext.api.QCodeNativeExtension
 import dev.blamspot.jcode.feature.marketplace.InstalledExtension
 import dev.blamspot.jcode.feature.marketplace.nativeModuleForView
 import java.io.File
@@ -24,7 +24,7 @@ import java.io.File
  * Hosts one native extension's page inside an editor tab.
  *
  * The plugin's composition is spliced straight into this one — that is the point of the native
- * contract, and the reason [NativeExtensionLoader] resolves it parent-first against JCode's own
+ * contract, and the reason [NativeExtensionLoader] resolves it parent-first against QCode's own
  * Compose.
  *
  * A plugin that will not load is reported to the **Issues pane** rather than left as an empty tab.
@@ -38,7 +38,7 @@ internal fun NativeExtensionPage(
     file: File?,
     projectDir: File?,
     /**
-     * Which of the plugin's surfaces to draw — [JCodeNativeExtension.Params.SURFACE_PANEL] for the
+     * Which of the plugin's surfaces to draw — [QCodeNativeExtension.Params.SURFACE_PANEL] for the
      * drawer, a plugin-defined route for one of its pages, null for the file-claim page.
      */
     view: String? = null,
@@ -104,7 +104,7 @@ internal fun NativeExtensionPage(
         return
     }
 
-    val (plugin: JCodeNativeExtension, _) = loaded
+    val (plugin: QCodeNativeExtension, _) = loaded
     val scope = rememberCoroutineScope()
     val host = remember(file?.path, view, scope) {
         NativeHostBridge(
@@ -124,10 +124,10 @@ internal fun NativeExtensionPage(
 
     val params = remember(file?.path, projectDir?.path, dark, view) {
         buildMap {
-            file?.let { put(JCodeNativeExtension.Params.FILE, it.absolutePath) }
-            projectDir?.let { put(JCodeNativeExtension.Params.PROJECT_DIR, it.absolutePath) }
-            put(JCodeNativeExtension.Params.THEME, if (dark) "dark" else "light")
-            view?.let { put(JCodeNativeExtension.Params.VIEW, it) }
+            file?.let { put(QCodeNativeExtension.Params.FILE, it.absolutePath) }
+            projectDir?.let { put(QCodeNativeExtension.Params.PROJECT_DIR, it.absolutePath) }
+            put(QCodeNativeExtension.Params.THEME, if (dark) "dark" else "light")
+            view?.let { put(QCodeNativeExtension.Params.VIEW, it) }
         }
     }
 

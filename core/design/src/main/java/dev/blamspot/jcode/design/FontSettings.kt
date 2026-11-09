@@ -9,7 +9,7 @@ data class FontOption(val id: String, val name: String)
 
 /**
  * Editor + terminal font-family selection, shared (via [LocalFontSettings]) with the settings screen
- * so the dropdowns need no JCodeShell param (ART register limit). Ids are opaque; [options] maps them
+ * so the dropdowns need no QCodeShell param (ART register limit). Ids are opaque; [options] maps them
  * to display names. The resolved [Typeface]s reach the views via [LocalEditorTypeface] /
  * [LocalTerminalTypeface].
  */

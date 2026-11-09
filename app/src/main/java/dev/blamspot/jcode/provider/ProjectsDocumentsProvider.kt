@@ -12,7 +12,7 @@ import java.io.File
 
 /**
  * Exposes the app-private ext4 projects tree (`filesDir/workspace/projects`) to the system Files app
- * and any SAF picker as a browsable, read/write root titled "JCode Projects".
+ * and any SAF picker as a browsable, read/write root titled "QCODE IDE Projects".
  *
  * Projects deliberately live on app-private internal storage (ext4: symlinks + exec, needed by npm and
  * git; see core:distro WorkspaceHostPaths) rather than shared /storage, which makes them invisible to
@@ -44,7 +44,7 @@ class ProjectsDocumentsProvider : DocumentsProvider() {
         cursor.newRow().apply {
             add(Root.COLUMN_ROOT_ID, ROOT_ID)
             add(Root.COLUMN_DOCUMENT_ID, docIdFor(root))
-            add(Root.COLUMN_TITLE, "JCode Projects")
+            add(Root.COLUMN_TITLE, "QCODE IDE Projects")
             add(Root.COLUMN_FLAGS, Root.FLAG_SUPPORTS_CREATE or Root.FLAG_SUPPORTS_IS_CHILD or Root.FLAG_LOCAL_ONLY)
             add(Root.COLUMN_ICON, requireContext().applicationInfo.icon)
             add(Root.COLUMN_MIME_TYPES, Document.MIME_TYPE_DIR)
@@ -154,7 +154,7 @@ class ProjectsDocumentsProvider : DocumentsProvider() {
 
     companion object {
         private const val ROOT_ID = "jcode-projects"
-        private const val LEGACY_SHARED_PROJECTS_ROOT = "/storage/emulated/0/JCode/projects"
+        private const val LEGACY_SHARED_PROJECTS_ROOT = "/storage/emulated/0/QCode/projects"
 
         private val DEFAULT_ROOT_PROJECTION = arrayOf(
             Root.COLUMN_ROOT_ID,

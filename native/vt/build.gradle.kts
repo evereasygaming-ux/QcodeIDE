@@ -15,9 +15,9 @@ android {
         externalNativeBuild {
             cmake {
                 arguments(
-                    "-DJCODE_NATIVE_MODULE=vt",
-                    "-DJCODE_JNI_OUTPUT_DIR=${project.buildDir}/intermediates/merged_native_libs",
-                    "-DJCODE_VARIANT_DIR=debug",
+                    "-DQCODE_NATIVE_MODULE=vt",
+                    "-DQCODE_JNI_OUTPUT_DIR=${project.buildDir}/intermediates/merged_native_libs",
+                    "-DQCODE_VARIANT_DIR=debug",
                 )
                 cFlags += listOf("-std=c11", "-fvisibility=hidden")
             }
@@ -35,9 +35,9 @@ android {
             externalNativeBuild {
                 cmake {
                     arguments(
-                        "-DJCODE_NATIVE_MODULE=vt",
-                        "-DJCODE_JNI_OUTPUT_DIR=${project.buildDir}/intermediates/merged_native_libs",
-                        "-DJCODE_VARIANT_DIR=release",
+                        "-DQCODE_NATIVE_MODULE=vt",
+                        "-DQCODE_JNI_OUTPUT_DIR=${project.buildDir}/intermediates/merged_native_libs",
+                        "-DQCODE_VARIANT_DIR=release",
                     )
                 }
             }

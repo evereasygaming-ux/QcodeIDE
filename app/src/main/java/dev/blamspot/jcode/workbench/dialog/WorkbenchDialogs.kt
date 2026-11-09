@@ -95,7 +95,7 @@ internal fun OpenFolderTypeDialog(
 
 /**
  * Collects [progress] and renders [ImportProgressDialog] in its own small scope, so the per-file
- * progress ticks recompose only this host — not the large JCodeApp body that would otherwise read
+ * progress ticks recompose only this host — not the large QCodeApp body that would otherwise read
  * the flow.
  */
 @Composable

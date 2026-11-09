@@ -20,7 +20,7 @@ import org.snakeyaml.engine.v2.api.LoadSettings
  *
  * Both indexes share a shape — identity, `defaults`, a `base` for where the art lives, `icons`
  * definitions and `aliases` — and differ only in what they map onto: a UI index keys its icons by
- * [JCodeIcon] slot, a file index keys them by an id its own `files`/`folders` rules point at.
+ * [QCodeIcon] slot, a file index keys them by an id its own `files`/`folders` rules point at.
  *
  * Nothing here throws: a malformed index yields null and a malformed entry is dropped, because an
  * icon pack is third-party content and a typo in one glyph should cost that glyph, not the app.
@@ -86,7 +86,7 @@ object IconPackLoader {
     /**
      * Load the UI icon set at [index], decoding every slot it fills.
      *
-     * A UI set is decoded eagerly: it fills at most one slot per [JCodeIcon] and every one of them is
+     * A UI set is decoded eagerly: it fills at most one slot per [QCodeIcon] and every one of them is
      * on screen the moment the set is chosen, so paying for it once at selection beats the chrome
      * popping in glyph by glyph.
      */
@@ -101,8 +101,8 @@ object IconPackLoader {
             val base = baseDir(index, root)
             val defaults = IconDefaults.from(root["defaults"], designSize = 24.dp, tinted = true)
 
-            val slots = JCodeIcon.entries.associateBy { it.name.lowercase() }
-            val entries = LinkedHashMap<JCodeIcon, IconEntry>()
+            val slots = QCodeIcon.entries.associateBy { it.name.lowercase() }
+            val entries = LinkedHashMap<QCodeIcon, IconEntry>()
             for ((key, raw) in (root["icons"] as? Map<*, *>)?.stringKeyed().orEmpty()) {
                 val slot = slots[key.lowercase()] ?: continue
                 entries[slot] = IconEntry.from(raw, base, defaults) ?: continue
@@ -116,7 +116,7 @@ object IconPackLoader {
             }
             if (entries.isEmpty()) return@withContext null
 
-            val art = LinkedHashMap<JCodeIcon, IconArt>()
+            val art = LinkedHashMap<QCodeIcon, IconArt>()
             for ((slot, entry) in entries) {
                 val decoded = IconArtLoader.load(entry.file, entry.designSize, entry.autoMirror) ?: continue
                 art[slot] = decoded
@@ -127,7 +127,7 @@ object IconPackLoader {
                 id = qualify(providerId, root.str("id"), localId),
                 name = root.str("name") ?: displayName(providerName, localId),
                 description = root.str("description").orEmpty(),
-                author = root.str("author") ?: "JCode",
+                author = root.str("author") ?: "QCODE IDE",
                 providerId = providerId,
                 overrides = art,
                 // An icon pack fills what it wants to restyle; the rest stays Material rather than
@@ -181,7 +181,7 @@ object IconPackLoader {
                 id = qualify(providerId, root.str("id"), localId),
                 name = root.str("name") ?: displayName(providerName, localId),
                 description = root.str("description").orEmpty(),
-                author = root.str("author") ?: "JCode",
+                author = root.str("author") ?: "QCODE IDE",
                 providerId = providerId,
                 definitions = definitions,
                 fileRules = fileRules,

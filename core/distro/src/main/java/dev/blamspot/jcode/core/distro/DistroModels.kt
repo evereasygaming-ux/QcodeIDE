@@ -168,7 +168,7 @@ data class DistroProfile(
     }
 }
 
-internal const val DEFAULT_PROJECTS_HOST_PATH: String = "/storage/emulated/0/JCode/projects"
+internal const val DEFAULT_PROJECTS_HOST_PATH: String = "/storage/emulated/0/QCode/projects"
 internal const val DEFAULT_DISTRO_WORKDIR: String = "/workspace"
 internal const val DEFAULT_DISTRO_USER: String = "jcode"
 
@@ -242,7 +242,7 @@ object WorkspaceHostPaths {
     fun sourcesRoot(filesDir: java.io.File): java.io.File = java.io.File(filesDir, "sources")
 
     /** Host dir bound to guest [TRANSFER_GUEST] for the extension file.import/file.export bridges.
-     *  App-private ext4 (the app no longer writes to the shared /storage JCode folder). */
+     *  App-private ext4 (the app no longer writes to the shared /storage QCode folder). */
     fun transferRoot(filesDir: java.io.File): java.io.File = java.io.File(filesDir, "jcode-transfer")
 }
 

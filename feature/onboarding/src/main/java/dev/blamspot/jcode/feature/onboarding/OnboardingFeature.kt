@@ -56,7 +56,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import dev.blamspot.jcode.design.JCodeTheme
+import dev.blamspot.jcode.design.QCodeTheme
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -147,7 +147,7 @@ object OnboardingFeature {
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
-                    text = "JCode",
+                    text = "QCODE IDE",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.SemiBold,
                 )
@@ -238,7 +238,7 @@ private fun StepperScreen(
 
     // [autoSetupProgress] tracks a setup run in THIS session, not whether an environment exists — on
     // an ordinary launch it is Idle. Keying the wizard off it left the first-run steps on screen
-    // forever, so a configured device showed "Choose the Linux distro JCode should prepare" and
+    // forever, so a configured device showed "Choose the Linux distro QCODE IDE should prepare" and
     // "Waiting for you to choose a distro" directly under a card reporting one already active: two
     // pickers for one setting, disagreeing. Ask the environment itself instead, and once it is ready
     // leave [InstalledEnvironmentsCard] as the only control — the wizard returns on request, for
@@ -252,7 +252,7 @@ private fun StepperScreen(
     }
 
     val context = LocalContext.current
-    // Storage grant gates distro selection: nothing can install into /JCode until it's granted.
+    // Storage grant gates distro selection: nothing can install into /QCODE IDE until it's granted.
     // When the storage step isn't shown (existing installs), there is nothing to gate on.
     var storageGranted by remember { mutableStateOf(hasStorageAccess()) }
     // The grant can also happen OUTSIDE the in-app dialog — the user flips File access in Android
@@ -443,7 +443,7 @@ private fun MigrationImportCard(
             text = when {
                 completed -> "Your previous environment is set up."
                 enabled -> "Your previous install left its Linux environment, projects, extensions " +
-                    "and settings behind. Importing them puts JCode back where it was."
+                    "and settings behind. Importing them puts QCODE IDE back where it was."
                 else -> "Allow storage access above to continue."
             },
             style = MaterialTheme.typography.bodySmall,
@@ -494,7 +494,7 @@ private fun DistroSelectionCard(
         Text(
             text = when {
                 completed -> "Environment ready — ${environmentState.runtime.selectedDistro.label} is set up."
-                enabled -> "Choose the Linux distro JCode should prepare for your embedded environment."
+                enabled -> "Choose the Linux distro QCODE IDE should prepare for your embedded environment."
                 else -> "Allow storage access above to continue."
             },
             style = MaterialTheme.typography.bodySmall,
@@ -584,7 +584,7 @@ private fun ConfigureStepCard(
                     modifier = Modifier.size(18.dp),
                     strokeWidth = 2.dp,
                 )
-                completed -> Text("✓", color = JCodeTheme.semanticColors.success, fontWeight = FontWeight.Bold)
+                completed -> Text("✓", color = QCodeTheme.semanticColors.success, fontWeight = FontWeight.Bold)
                 autoSetupProgress is DistroWizardProgress.Failed -> Text("✕", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
                 else -> Text(number.toString(), color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
             }
@@ -642,9 +642,9 @@ private fun ConfigureStepCard(
 }
 
 /**
- * A hint, not a step: shown only when the device's WebView — the Chromium engine behind JCode's
+ * A hint, not a step: shown only when the device's WebView — the Chromium engine behind QCODE IDE's
  * browser and web previews — is old enough to break modern sites. Nothing here blocks setup, and
- * JCode works either way by falling back to the ROM's engine; the card exists because onboarding
+ * QCODE IDE works either way by falling back to the ROM's engine; the card exists because onboarding
  * is the one moment the user is already granting things, and a provider switch made now saves a
  * blank-page mystery later. Threshold and actions mirror the Settings → Web engine card.
  */
@@ -670,10 +670,10 @@ private fun WebEngineHintCard() {
             Text("Browser engine is outdated", fontWeight = FontWeight.SemiBold)
             Text(
                 text = "This device's WebView is Chromium $engineVersion, which modern sites can " +
-                    "render blank or broken. JCode's built-in browser and web previews use it. " +
+                    "render blank or broken. QCODE IDE's built-in browser and web previews use it. " +
                     "Recommended: install the latest Android System WebView, then pick it under " +
                     "Developer options → WebView implementation. If your device doesn't allow the " +
-                    "switch, JCode keeps working on the ROM's engine.",
+                    "switch, QCODE IDE keeps working on the ROM's engine.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -841,7 +841,7 @@ private fun EnvironmentRow(
                     },
                     style = MaterialTheme.typography.bodySmall,
                     color = if (env.isActive) {
-                        JCodeTheme.semanticColors.success
+                        QCodeTheme.semanticColors.success
                     } else {
                         MaterialTheme.colorScheme.onSurfaceVariant
                     },
@@ -869,7 +869,7 @@ private fun Header() {
         ) {
             Text("Environment setup", fontWeight = FontWeight.SemiBold)
             Text(
-                text = "Pick a Linux distro and JCode configures the rest automatically.",
+                text = "Pick a Linux distro and QCODE IDE configures the rest automatically.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -877,7 +877,7 @@ private fun Header() {
     }
 }
 
-// /JCode lives on shared storage; at targetSdk 33 the only grant that gives raw file-path access
+// /QCODE IDE lives on shared storage; at targetSdk 33 the only grant that gives raw file-path access
 // to it is "All files access" (MANAGE_EXTERNAL_STORAGE) — a system-settings toggle, not a runtime
 // permission dialog.
 private fun hasStorageAccess(): Boolean = android.os.Environment.isExternalStorageManager()
@@ -904,8 +904,8 @@ private fun StorageAccessCard(
         active = !granted,
     ) {
         Text(
-            text = "Lets JCode migrate projects created by older versions from the shared /JCode " +
-                "folder. Projects now live in app storage — browse them via the \"JCode Projects\" " +
+            text = "Lets QCODE IDE migrate projects created by older versions from the shared /QCODE IDE " +
+                "folder. Projects now live in app storage — browse them via the \"QCODE IDE Projects\" " +
                 "entry in your Files app, or export them from the workspace menu.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -915,7 +915,7 @@ private fun StorageAccessCard(
                 horizontalArrangement = Arrangement.spacedBy(Space.ms),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text("✓", color = JCodeTheme.semanticColors.success, fontWeight = FontWeight.Bold)
+                Text("✓", color = QCodeTheme.semanticColors.success, fontWeight = FontWeight.Bold)
                 Text("Storage access granted", style = MaterialTheme.typography.bodyMedium)
             }
         } else {
@@ -938,7 +938,7 @@ private fun StorageAccessCard(
                 Text(
                     text = "Without it, projects fall back to app-private storage and are removed " +
                         "when the app is uninstalled. In the settings screen that opens, turn on " +
-                        "\"Allow access to manage all files\" for JCode, then return here.",
+                        "\"Allow access to manage all files\" for QCODE IDE, then return here.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -1071,7 +1071,7 @@ private fun LogLine(text: String) {
         style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
         color = when {
             text.contains("failed", ignoreCase = true) || text.contains("error", ignoreCase = true) -> MaterialTheme.colorScheme.error
-            text.contains("done", ignoreCase = true) || text.contains("ok", ignoreCase = true) || text.contains("success", ignoreCase = true) -> JCodeTheme.semanticColors.success
+            text.contains("done", ignoreCase = true) || text.contains("ok", ignoreCase = true) || text.contains("success", ignoreCase = true) -> QCodeTheme.semanticColors.success
             else -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.88f)
         },
         maxLines = 4,

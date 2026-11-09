@@ -16,43 +16,43 @@ import androidx.compose.ui.unit.dp
  *
  * Icons are drawn on a 24x24 grid. Colors are black; the consuming `Icon` applies the real tint.
  */
-// --- "JCode Line": a minimal, uniform-stroke line set --------------------------------------
+// --- "QCode Line": a minimal, uniform-stroke line set --------------------------------------
 // Declared before [jcodeLineIconSet] / [customUiIconSets] below so top-level init order
 // (top-to-bottom) populates the map before the bundle reads it.
 
-private val lineIcons: Map<JCodeIcon, ImageVector> = mapOf(
-    JCodeIcon.Add to icon("Add") {
+private val lineIcons: Map<QCodeIcon, ImageVector> = mapOf(
+    QCodeIcon.Add to icon("Add") {
         strokePath { hLine(4f, 20f, 12f); vLine(4f, 20f, 12f) }
     },
-    JCodeIcon.Close to icon("Close") {
+    QCodeIcon.Close to icon("Close") {
         strokePath { moveTo(6f, 6f); lineTo(18f, 18f); moveTo(18f, 6f); lineTo(6f, 18f) }
     },
-    JCodeIcon.Run to icon("Run") {
+    QCodeIcon.Run to icon("Run") {
         fillPath { moveTo(7f, 5f); lineTo(7f, 19f); lineTo(19f, 12f); close() }
     },
-    JCodeIcon.Stop to icon("Stop") {
+    QCodeIcon.Stop to icon("Stop") {
         fillPath { moveTo(7f, 7f); lineTo(17f, 7f); lineTo(17f, 17f); lineTo(7f, 17f); close() }
     },
-    JCodeIcon.Terminal to icon("Terminal") {
+    QCodeIcon.Terminal to icon("Terminal") {
         strokePath {
             moveTo(3f, 5f); lineTo(21f, 5f); lineTo(21f, 19f); lineTo(3f, 19f); close()
             moveTo(7f, 10f); lineTo(10f, 12.5f); lineTo(7f, 15f)
             moveTo(12f, 15f); lineTo(16f, 15f)
         }
     },
-    JCodeIcon.Search to icon("Search") {
+    QCodeIcon.Search to icon("Search") {
         strokePath {
             circle(11f, 11f, 5.5f)
             moveTo(15.5f, 15.5f); lineTo(20f, 20f)
         }
     },
-    JCodeIcon.Settings to icon("Settings") {
+    QCodeIcon.Settings to icon("Settings") {
         strokePath {
             hLine(4f, 20f, 7f); hLine(4f, 20f, 12f); hLine(4f, 20f, 17f)
         }
         fillPath { circle(9f, 7f, 2f); circle(15f, 12f, 2f); circle(8f, 17f, 2f) }
     },
-    JCodeIcon.Extensions to icon("Extensions") {
+    QCodeIcon.Extensions to icon("Extensions") {
         strokePath {
             box(4f, 4f, 10f, 10f)
             box(14f, 4f, 20f, 10f)
@@ -60,7 +60,7 @@ private val lineIcons: Map<JCodeIcon, ImageVector> = mapOf(
             box(14f, 14f, 20f, 20f)
         }
     },
-    JCodeIcon.Sdk to icon("Sdk") {
+    QCodeIcon.Sdk to icon("Sdk") {
         strokePath {
             moveTo(12f, 3f); lineTo(20f, 7f); lineTo(20f, 17f); lineTo(12f, 21f)
             lineTo(4f, 17f); lineTo(4f, 7f); close()
@@ -68,57 +68,57 @@ private val lineIcons: Map<JCodeIcon, ImageVector> = mapOf(
             moveTo(12f, 11f); lineTo(12f, 21f)
         }
     },
-    JCodeIcon.Scm to icon("Scm") {
+    QCodeIcon.Scm to icon("Scm") {
         strokePath { vLine(8f, 16f, 6f); moveTo(6f, 11f); lineTo(14f, 11f) }
         fillPath { circle(6f, 6f, 2f); circle(6f, 18f, 2f); circle(16f, 11f, 2f) }
     },
-    JCodeIcon.Files to icon("Files") { strokePath { folder() } },
-    JCodeIcon.Folder to icon("Folder") { strokePath { folder() } },
-    JCodeIcon.NewFile to icon("NewFile") {
+    QCodeIcon.Files to icon("Files") { strokePath { folder() } },
+    QCodeIcon.Folder to icon("Folder") { strokePath { folder() } },
+    QCodeIcon.NewFile to icon("NewFile") {
         strokePath {
             moveTo(6f, 3f); lineTo(14f, 3f); lineTo(18f, 7f); lineTo(18f, 21f); lineTo(6f, 21f); close()
             moveTo(14f, 3f); lineTo(14f, 7f); lineTo(18f, 7f)
             hLine(9f, 15f, 14f); vLine(11f, 17f, 12f)
         }
     },
-    JCodeIcon.NewFolder to icon("NewFolder") {
+    QCodeIcon.NewFolder to icon("NewFolder") {
         strokePath {
             folder()
             hLine(9.5f, 14.5f, 14f); vLine(11.5f, 16.5f, 12f)
         }
     },
-    JCodeIcon.Code to icon("Code") {
+    QCodeIcon.Code to icon("Code") {
         strokePath {
             moveTo(9f, 8f); lineTo(5f, 12f); lineTo(9f, 16f)
             moveTo(15f, 8f); lineTo(19f, 12f); lineTo(15f, 16f)
         }
     },
-    JCodeIcon.ChevronDown to icon("ChevronDown") {
+    QCodeIcon.ChevronDown to icon("ChevronDown") {
         strokePath { moveTo(6f, 10f); lineTo(12f, 16f); lineTo(18f, 10f) }
     },
-    JCodeIcon.DropDown to icon("DropDown") {
+    QCodeIcon.DropDown to icon("DropDown") {
         strokePath { moveTo(7f, 10f); lineTo(12f, 15f); lineTo(17f, 10f) }
     },
-    JCodeIcon.ChevronRight to icon("ChevronRight") {
+    QCodeIcon.ChevronRight to icon("ChevronRight") {
         strokePath { moveTo(10f, 6f); lineTo(16f, 12f); lineTo(10f, 18f) }
     },
-    JCodeIcon.ArrowUp to icon("ArrowUp") {
+    QCodeIcon.ArrowUp to icon("ArrowUp") {
         strokePath { vLine(5f, 20f, 12f); moveTo(6f, 11f); lineTo(12f, 5f); lineTo(18f, 11f) }
     },
-    JCodeIcon.MoreVert to icon("MoreVert") {
+    QCodeIcon.MoreVert to icon("MoreVert") {
         fillPath { circle(12f, 5f, 1.7f); circle(12f, 12f, 1.7f); circle(12f, 19f, 1.7f) }
     },
-    JCodeIcon.MenuToggle to icon("MenuToggle") {
+    QCodeIcon.MenuToggle to icon("MenuToggle") {
         strokePath { hLine(4f, 20f, 7f); hLine(4f, 14f, 12f); hLine(4f, 20f, 17f) }
     },
-    JCodeIcon.Output to icon("Output") {
+    QCodeIcon.Output to icon("Output") {
         strokePath {
             moveTo(6f, 3f); lineTo(14f, 3f); lineTo(18f, 7f); lineTo(18f, 21f); lineTo(6f, 21f); close()
             moveTo(14f, 3f); lineTo(14f, 7f); lineTo(18f, 7f)
             hLine(9f, 15f, 12f); hLine(9f, 15f, 16f)
         }
     },
-    JCodeIcon.Logs to icon("Logs") {
+    QCodeIcon.Logs to icon("Logs") {
         strokePath { hLine(9f, 20f, 7f); hLine(9f, 20f, 12f); hLine(9f, 16f, 17f) }
         fillPath { circle(5f, 7f, 1.3f); circle(5f, 12f, 1.3f); circle(5f, 17f, 1.3f) }
     },
@@ -126,7 +126,7 @@ private val lineIcons: Map<JCodeIcon, ImageVector> = mapOf(
 
 private val jcodeLineIconSet = UiIconSet.ofVectors(
     id = "jcode-line",
-    name = "JCode Line",
+    name = "QCode Line",
     description = "Custom minimal line icons.",
     overrides = lineIcons,
     fallback = defaultUiIconSet,

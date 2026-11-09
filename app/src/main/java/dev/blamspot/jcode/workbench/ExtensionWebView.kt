@@ -44,7 +44,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import dev.blamspot.jcode.design.JCodeTheme
+import dev.blamspot.jcode.design.QCodeTheme
 import dev.blamspot.jcode.design.LocalExtensionFontSizeSetting
 import dev.blamspot.jcode.design.SettingsDefaults
 import dev.blamspot.jcode.design.Space
@@ -66,9 +66,9 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 
 /**
- * Bridge object injected into an extension's WebView frontend as `window.JCodeNative`. The frontend
- * calls `JCodeNative.exec(reqId, command)` to run a command in the Linux runtime; the result is
- * delivered back by evaluating `window.JCode._onExec(reqId, jsonPayload)`. [onExec] runs on the
+ * Bridge object injected into an extension's WebView frontend as `window.QCodeNative`. The frontend
+ * calls `QCodeNative.exec(reqId, command)` to run a command in the Linux runtime; the result is
+ * delivered back by evaluating `window.QCode._onExec(reqId, jsonPayload)`. [onExec] runs on the
  * WebView's JS thread, so it must only hand work off (it does — to a coroutine).
  */
 /**
@@ -147,7 +147,7 @@ class ExtensionBridge(
     fun exec(reqId: String, command: String, timeoutMs: Int) = onExec(reqId, command, timeoutMs.toLong())
 
     /** Extension API v1: [envelopeJson] is `{"type":"family.verb","payload":{...}}`; the reply is
-     *  delivered by evaluating `window.JCode._onResult(reqId, jsonString)` where the JSON is
+     *  delivered by evaluating `window.QCode._onResult(reqId, jsonString)` where the JSON is
      *  `{"ok":true,"data":{...}}` or `{"ok":false,"error":"..."}`. Same JS-thread rule as [exec]. */
     @JavascriptInterface
     fun request(reqId: String, envelopeJson: String) = onRequest(reqId, envelopeJson)
@@ -157,7 +157,7 @@ class ExtensionBridge(
  * Hosts an installed extension's bundled web frontend (its [InstalledExtension.webUiFile]) in a WebView,
  * wired to the runtime via [onExec] (legacy shell bridge) and [onApiRequest] (Extension API v1 envelope).
  * Host events (e.g. the focused editor file) stream in via [events] and are handed to the page as
- * `window.JCode._onEvent(name, jsonString)`. Opened as a full-screen in-editor page.
+ * `window.QCode._onEvent(name, jsonString)`. Opened as a full-screen in-editor page.
  */
 // JavascriptInterface: the check wants to see @JavascriptInterface on the methods of whatever is
 // handed to addJavascriptInterface, and [ExtensionBridge] does carry it on both of its. Lint cannot
@@ -247,8 +247,8 @@ fun ExtensionWebViewPage(
             }.getOrElse { e ->
                 JSONObject().put("ok", false).put("error", e.message ?: "import failed").toString()
             }
-            val js = "window.JCode && window.JCode._onResult && " +
-                "window.JCode._onResult(${JSONObject.quote(reqId)}, ${JSONObject.quote(json)})"
+            val js = "window.QCode && window.QCode._onResult && " +
+                "window.QCode._onResult(${JSONObject.quote(reqId)}, ${JSONObject.quote(json)})"
             webView?.post { webView?.evaluateJavascript(js, null) }
         }
     }
@@ -282,8 +282,8 @@ fun ExtensionWebViewPage(
             }.getOrElse { e ->
                 JSONObject().put("ok", false).put("error", e.message ?: "export failed").toString()
             }
-            val js = "window.JCode && window.JCode._onResult && " +
-                "window.JCode._onResult(${JSONObject.quote(reqId)}, ${JSONObject.quote(json)})"
+            val js = "window.QCode && window.QCode._onResult && " +
+                "window.QCode._onResult(${JSONObject.quote(reqId)}, ${JSONObject.quote(json)})"
             webView?.post { webView?.evaluateJavascript(js, null) }
         }
     }
@@ -296,7 +296,7 @@ fun ExtensionWebViewPage(
                     val payload = runCatching { onExec(command, timeoutMs) }.getOrElse { e ->
                         JSONObject().put("error", e.message ?: "exec failed").toString()
                     }
-                    val js = "window.JCode && window.JCode._onExec(${JSONObject.quote(reqId)}, ${JSONObject.quote(payload)})"
+                    val js = "window.QCode && window.QCode._onExec(${JSONObject.quote(reqId)}, ${JSONObject.quote(payload)})"
                     webView?.post { webView?.evaluateJavascript(js, null) }
                 }
             },
@@ -318,8 +318,8 @@ fun ExtensionWebViewPage(
                     val payload = runCatching { onApiRequest(envelope) }.getOrElse { e ->
                         JSONObject().put("ok", false).put("error", e.message ?: "request failed").toString()
                     }
-                    val js = "window.JCode && window.JCode._onResult && " +
-                        "window.JCode._onResult(${JSONObject.quote(reqId)}, ${JSONObject.quote(payload)})"
+                    val js = "window.QCode && window.QCode._onResult && " +
+                        "window.QCode._onResult(${JSONObject.quote(reqId)}, ${JSONObject.quote(payload)})"
                     webView?.post { webView?.evaluateJavascript(js, null) }
                 }
             },
@@ -344,10 +344,10 @@ fun ExtensionWebViewPage(
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
-    // JCode's live theme as CSS variables (--jcode-*), so extension UIs match the app. Injected on
+    // QCode's live theme as CSS variables (--jcode-*), so extension UIs match the app. Injected on
     // page load and re-injected here whenever the theme (colors) change while the page is open.
     val colorScheme = MaterialTheme.colorScheme
-    val semantic = JCodeTheme.semanticColors
+    val semantic = QCodeTheme.semanticColors
     // Paint the WebView backdrop with the theme background from creation, so there is no flash of the
     // WebView's default white before the page's CSS loads and the --jcode-* vars are injected.
     val backgroundArgb = colorScheme.background.toArgb()
@@ -357,7 +357,7 @@ fun ExtensionWebViewPage(
         webView?.post { webView?.setBackgroundColor(backgroundArgb); webView?.evaluateJavascript(themeJs, null) }
     }
     // Relay host events to the page while this extension's WebView is alive. Pages that care must
-    // define window.JCode._onEvent; on (re)load they should pull current state (workbench.activeFile)
+    // define window.QCode._onEvent; on (re)load they should pull current state (workbench.activeFile)
     // since events published while the tab was backgrounded are not replayed.
     if (events != null) {
         LaunchedEffect(extension.id) {
@@ -387,8 +387,8 @@ fun ExtensionWebViewPage(
                 if (ExtensionDevLog.isDev(extension.id)) {
                     ExtensionDevLog.log(ExtensionDevLogEntry.Kind.Event, extension.id, "$name $json")
                 }
-                val js = "window.JCode && window.JCode._onEvent && " +
-                    "window.JCode._onEvent(${JSONObject.quote(name)}, ${JSONObject.quote(json)})"
+                val js = "window.QCode && window.QCode._onEvent && " +
+                    "window.QCode._onEvent(${JSONObject.quote(name)}, ${JSONObject.quote(json)})"
                 webView?.post { webView?.evaluateJavascript(js, null) }
             }
         }
@@ -466,7 +466,7 @@ fun ExtensionWebViewPage(
                     }
                     false
                 }
-                addJavascriptInterface(bridge, "JCodeNative")
+                addJavascriptInterface(bridge, "QCodeNative")
                 val file = extension.webUiFile
                 if (file != null) {
                     loadUrl("file://${file.absolutePath}" + if (route.isNotBlank()) "#$route" else "")
@@ -480,7 +480,7 @@ fun ExtensionWebViewPage(
 }
 
 /** Origin the extension's own files are served from, matching `webview.cspSource` in the host. */
-private const val VSIX_RESOURCE_ORIGIN = "https://jcode.webview"
+private const val VSIX_RESOURCE_ORIGIN = "https://qcode.webview"
 
 /**
  * A running `.vsix`: its extension host, a WebView per webview the extension has open, and the state
@@ -696,7 +696,7 @@ internal class VsixSession private constructor(
                 host.reply(params.optInt("__requestId"), null)
             }
 
-            // Credentials the extension asked JCode to keep — an API key, a refresh token. Stored in
+            // Credentials the extension asked QCode to keep — an API key, a refresh token. Stored in
             // app-private storage, per extension, which is the same protection the extension's own
             // files get; a `.vsix` already runs its own code in the runtime, so this grants it
             // nothing it could not do for itself, and losing them on every restart breaks sign-in.
@@ -710,7 +710,7 @@ internal class VsixSession private constructor(
                 host.reply(params.optInt("__requestId"), null)
             }
 
-            // The extension's own output channel, folded into JCode's Output pane under its name so
+            // The extension's own output channel, folded into QCode's Output pane under its name so
             // the extension's logs are somewhere the user can actually read them.
             "output/append" -> ExtensionDevLog.log(
                 ExtensionDevLogEntry.Kind.Console,
@@ -719,8 +719,8 @@ internal class VsixSession private constructor(
             )
             "output/replace", "output/clear", "output/show" -> Unit
 
-            // A command JCode has no built-in for. `setContext` is the common one and is genuinely
-            // nothing to do here — JCode has no when-clause context to set — so it is answered rather
+            // A command QCode has no built-in for. `setContext` is the common one and is genuinely
+            // nothing to do here — QCode has no when-clause context to set — so it is answered rather
             // than refused; an extension that treats a rejection as fatal would otherwise die on it.
             "commands/execute" -> host.reply(params.optInt("__requestId"), null)
             "commands/registered", "webview/providerRegistered" -> Unit
@@ -735,7 +735,7 @@ internal class VsixSession private constructor(
                 host.reply(params.optInt("__requestId"), null, error)
             }
 
-            // A terminal the extension opened. Real: JCode has terminals, and "run this in a
+            // A terminal the extension opened. Real: QCode has terminals, and "run this in a
             // terminal" is the whole point of the button an extension puts it behind.
             "terminal/create" -> scope.launch {
                 VsixTerminals.create(params.optString("id"), params.optString("name"), params.optString("cwd"))
@@ -751,7 +751,7 @@ internal class VsixSession private constructor(
                 // Anything else the extension asks for is not implemented yet, but it must still be
                 // answered — an unanswered request blocks the extension rather than degrading it.
                 if (params.has("__requestId")) {
-                    host.reply(params.optInt("__requestId"), null, "$method is not implemented by JCode")
+                    host.reply(params.optInt("__requestId"), null, "$method is not implemented by QCode")
                 }
             }
         }
@@ -830,7 +830,7 @@ internal class VsixSession private constructor(
      */
     private fun deliverToPage(handle: String, json: String) {
         // Created rather than looked up: an extension talks to a webview as soon as it has one, and
-        // `resolveWebviewView` posts before it has even returned the handle JCode renders into. The
+        // `resolveWebviewView` posts before it has even returned the handle QCode renders into. The
         // surface holds the message until there is a page for it.
         val surface = surfaceFor(handle)
         if (!surface.loaded) {
@@ -1094,7 +1094,7 @@ internal class VsixSession private constructor(
                     @JavascriptInterface
                     fun pageReady(generation: Int) = onPageReady(handle, generation)
                 },
-                "JCodeVsix",
+                "QCodeVsix",
             )
         }
     }
@@ -1192,7 +1192,7 @@ internal fun VsixExtensionView(
 ) {
     val context = LocalContext.current
     val colorScheme = MaterialTheme.colorScheme
-    val semantic = JCodeTheme.semanticColors
+    val semantic = QCodeTheme.semanticColors
     val backgroundArgb = colorScheme.background.toArgb()
     val isDarkTheme = colorScheme.background.luminance() < 0.5f
     val themeRampCss = remember(colorScheme, semantic) { vsixThemeRampCss(colorScheme, semantic) }
@@ -1298,7 +1298,7 @@ internal fun PersistentWebViewHost(webView: WebView, modifier: Modifier = Modifi
  * What every VS Code webview expects to find waiting for it: `acquireVsCodeApi()`, and a document
  * with a height.
  *
- * The height is not a given here. On the WebView builds JCode ships to, the document lays out
+ * The height is not a given here. On the WebView builds QCode ships to, the document lays out
  * against a zero-height viewport, so `html` computes to 0 and an extension whose root is
  * `height: 100%` — which is most of them — fills nothing and renders blank. The real size is only
  * available in JS, so it is applied from there as pixels and republished as a variable for anything
@@ -1328,7 +1328,7 @@ private fun vsixBootstrap(
   var config = Object.assign({ theme: 'dark', platform: 'linux' }, ours);
   // The extension writes this config itself once its own script runs, which would drop the workspace
   // we just resolved and send it back to whatever it last persisted. Keep everything it sets except
-  // the folders, which JCode is the authority on.
+  // the folders, which QCode is the authority on.
   Object.defineProperty(window, '__VSCODE_CONFIG__', {
     configurable: false,
     get: function () { return config; },
@@ -1366,7 +1366,7 @@ private fun vsixBootstrap(
  * degrade — the declaration is invalid, so the property inherits instead. That is not a small
  * effect: Codex colours its primary button's label with `--vscode-dropdown-background`, so the one
  * token nobody had defined made the label the same colour as the button under it. It referenced 259
- * others JCode did not supply.
+ * others QCode did not supply.
  */
 private var themeCssCache: String? = null
 
@@ -1401,7 +1401,7 @@ $themeCss
   var state = {};
   window.acquireVsCodeApi = function () {
     return {
-      postMessage: function (message) { window.JCodeVsix.postMessage(JSON.stringify(message)); },
+      postMessage: function (message) { window.QCodeVsix.postMessage(JSON.stringify(message)); },
       getState: function () { return state; },
       setState: function (next) { state = next; return next; },
     };
@@ -1441,7 +1441,7 @@ $themeCss
   };
   // Parsed far enough to receive: this script is the first thing in the document, and everything
   // the extension has already said is waiting on it.
-  try { window.JCodeVsix.pageReady($generation); } catch (e) {}
+  try { window.QCodeVsix.pageReady($generation); } catch (e) {}
 })();
 </script>
 """.trimIndent()
@@ -1638,10 +1638,10 @@ private const val NO_UI_HTML =
     "<html><body style=\"font-family:sans-serif;color:#9aa;padding:24px\">" +
         "This extension does not ship a UI.</body></html>"
 
-/** JCode's live theme as CSS variables (--jcode-*), injected into extension pages so they match the app. */
+/** QCode's live theme as CSS variables (--jcode-*), injected into extension pages so they match the app. */
 internal fun extensionThemeJs(
     colorScheme: androidx.compose.material3.ColorScheme,
-    semantic: dev.blamspot.jcode.design.JCodeSemanticColors,
+    semantic: dev.blamspot.jcode.design.QCodeSemanticColors,
 ): String {
     fun hex(c: Color): String = String.format("#%06X", 0xFFFFFF and c.toArgb())
     val vars = listOf(
@@ -1665,7 +1665,7 @@ internal fun extensionThemeJs(
 /**
  * The `--jc-*` ramp the `--vscode-*` palette resolves through, taken from the theme now on screen.
  *
- * A VS Code webview is handed its host editor's colours; JCode's are whichever bundle the user
+ * A VS Code webview is handed its host editor's colours; QCode's are whichever bundle the user
  * picked, so an imported extension is drawn in that rather than in one hard-coded palette. Only the
  * ramp is emitted — every VS Code token is expressed against it in `webview-theme.css`, so ~20
  * colours here decide all 286.
@@ -1677,7 +1677,7 @@ internal fun extensionThemeJs(
  */
 internal fun vsixThemeRampCss(
     colorScheme: androidx.compose.material3.ColorScheme,
-    semantic: dev.blamspot.jcode.design.JCodeSemanticColors,
+    semantic: dev.blamspot.jcode.design.QCodeSemanticColors,
 ): String {
     val bg = colorScheme.background
     val fg = colorScheme.onBackground

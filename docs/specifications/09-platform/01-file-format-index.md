@@ -11,7 +11,7 @@
 
 ## 1. Purpose and scope
 
-One table of every artifact JCode reads or writes, with the specification that defines it. Use this
+One table of every artifact QCode reads or writes, with the specification that defines it. Use this
 as the entry point when you have a file and need to know what owns it.
 
 ---
@@ -49,7 +49,7 @@ The per-folder YAML doubles as the **role marker** (`type: project | workspace`)
 ### 3.1 Icon-pack indexes
 
 Both indexes share a shape and differ only in what their `icons:` keys mean: a UI index keys them by
-`JCodeIcon` slot name, a file index by ids its own `files:` / `folders:` rules point at.
+`QCodeIcon` slot name, a file index by ids its own `files:` / `folders:` rules point at.
 
 ```yaml
 id: outlined                # defaults to the variant directory; registered as "<extId>/<id>"
@@ -114,7 +114,7 @@ The authoring guide is `j-code-make-tools/docs/ICON-PACKS.md`.
 | Environment backup `.tar.gz` | tar+gzip, via `RootfsArchiver` | [Embedded Linux runtime §5.5](../03-runtime/03-embedded-linux-runtime.md#55-backup) |
 | `filesDir/workspace/.migrated-ext4` | Marker file | [Storage and path model](../01-architecture/05-storage-and-path-model.md) |
 
-Guest-side files JCode writes into the rootfs: `/etc/profile.d/jcode-open.sh`,
+Guest-side files QCode writes into the rootfs: `/etc/profile.d/jcode-open.sh`,
 `/usr/local/bin/{xdg-open,open,sensible-browser}`, `/usr/local/bin/{bash,zsh,…}` wrappers,
 `~/.hushlogin`, `~/.htoprc`, `/etc/resolv.conf`, `/etc/hosts`, and the synthetic
 `/proc/{stat,loadavg,uptime,version}` bind sources under `filesDir/tmp/proot-fakeproc`. See
@@ -141,7 +141,7 @@ Not files, but formats all the same:
 
 | Protocol | Framing | Specification |
 |---|---|---|
-| JCode shell integration | `ESC ] <code> ; <payload> BEL`, codes 7711–7716 and 52 | [Shell integration protocol](../03-runtime/02-shell-integration-protocol.md) |
+| QCode shell integration | `ESC ] <code> ; <payload> BEL`, codes 7711–7716 and 52 | [Shell integration protocol](../03-runtime/02-shell-integration-protocol.md) |
 | LSP | JSON-RPC 2.0 with `Content-Length` headers | [LSP client](../04-language-services/01-lsp-client.md) |
 | DAP | `{seq, type, command\|event}` with `Content-Length` headers | [Debug Adapter Protocol](../04-language-services/02-debug-adapter-protocol.md) |
 | ADB transport | 24-byte header of six LE `uint32`s | [ADB bridge §3](../03-runtime/05-adb-bridge.md#3-adbwire--the-transport-protocol) |

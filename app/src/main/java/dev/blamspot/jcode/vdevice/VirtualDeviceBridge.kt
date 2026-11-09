@@ -6,7 +6,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import dev.blamspot.jcode.OutputKind
 import dev.blamspot.jcode.OutputLog
 import dev.blamspot.jcode.ext.NativeExtensionLoader
-import dev.blamspot.jcode.ext.api.JCodeVirtualDevice
+import dev.blamspot.jcode.ext.api.QCodeVirtualDevice
 import java.io.File
 import dev.blamspot.jcode.ext.api.VirtualDeviceHost
 import dev.blamspot.jcode.feature.marketplace.MarketplaceServiceLocator
@@ -19,9 +19,9 @@ internal const val TAG = "VDEVICE"
  * The app's entire view of the virtual device, and the only thing left in `:app` that knows one
  * exists.
  *
- * The device ships in the Android Dev Pack (see [JCodeVirtualDevice] for why four manifest stubs
+ * The device ships in the Android Dev Pack (see [QCodeVirtualDevice] for why four manifest stubs
  * stay behind). Every call here therefore has two answers: the pack's, or nothing. **Nothing is a
- * supported answer** — a JCode with no Android pack installed is not broken, it is a JCode that
+ * supported answer** — a QCode with no Android pack installed is not broken, it is a QCode that
  * cannot run APKs, exactly as one without the Kotlin pack cannot complete Kotlin. So no method here
  * throws for a missing pack and none of them reports one; the surfaces that offer the device are
  * hidden by [isAvailable] instead, which is a better answer than a button that explains itself only
@@ -96,11 +96,11 @@ internal object VirtualDeviceBridge : VirtualDeviceHost {
     /** True when a device could be opened. What the workbench hides its device surfaces on. */
     val isAvailable: Boolean get() = pack() != null
 
-    private fun device(): JCodeVirtualDevice? {
-        (resolved as? JCodeVirtualDevice)?.let { return it }
+    private fun device(): QCodeVirtualDevice? {
+        (resolved as? QCodeVirtualDevice)?.let { return it }
         if (resolved !== Unresolved) return null
         synchronized(this) {
-            (resolved as? JCodeVirtualDevice)?.let { return it }
+            (resolved as? QCodeVirtualDevice)?.let { return it }
             if (resolved !== Unresolved) return null
             val loaded = load()
             resolved = loaded
@@ -108,20 +108,20 @@ internal object VirtualDeviceBridge : VirtualDeviceHost {
         }
     }
 
-    private fun load(): JCodeVirtualDevice? {
+    private fun load(): QCodeVirtualDevice? {
         val context = appContext ?: return null
         val extension = pack() ?: return null
         val module = extension.nativeGuestModule() ?: return null
         val instance = runCatching { NativeExtensionLoader.resolve(context, extension, module).first }
             .onFailure { Log.w(TAG, "cannot load the virtual device from ${extension.id}", it) }
             .getOrNull()
-        val device = instance as? JCodeVirtualDevice
+        val device = instance as? QCodeVirtualDevice
         if (device == null) {
-            Log.w(TAG, "${extension.id} declares a guest entry but is not a JCodeVirtualDevice")
+            Log.w(TAG, "${extension.id} declares a guest entry but is not a QCodeVirtualDevice")
             return null
         }
-        // The pack's OWN context, not JCode's: the device's built-in apps are assets inside the
-        // pack's archive, and JCode's AssetManager cannot see them — it answers an empty list, so the
+        // The pack's OWN context, not QCode's: the device's built-in apps are assets inside the
+        // pack's archive, and QCode's AssetManager cannot see them — it answers an empty list, so the
         // device came up empty and said nothing about why.
         val deviceContext = runCatching { NativeExtensionLoader.assetContext(context, extension, module) }
             .onFailure { Log.w(TAG, "cannot reach the pack's own assets", it) }
@@ -131,10 +131,10 @@ internal object VirtualDeviceBridge : VirtualDeviceHost {
         return device
     }
 
-    /** Drop the loaded device — on the pack being updated or uninstalled under a running JCode. */
+    /** Drop the loaded device — on the pack being updated or uninstalled under a running QCode. */
     fun evict() {
         synchronized(this) {
-            (resolved as? JCodeVirtualDevice)?.let { runCatching { it.shutdown() } }
+            (resolved as? QCodeVirtualDevice)?.let { runCatching { it.shutdown() } }
             resolved = Unresolved
             packCache = Unresolved
         }
@@ -175,7 +175,7 @@ internal object VirtualDeviceBridge : VirtualDeviceHost {
         // consults the cached field then does nothing at all. [loadIfNeeded] is for a person who
         // asked it to stop; teardown keeps the old rule, since a device that was never loaded is
         // already off and not a reason to load a multi-megabyte archive.
-        val live = (resolved as? JCodeVirtualDevice) ?: if (loadIfNeeded) device() else null
+        val live = (resolved as? QCodeVirtualDevice) ?: if (loadIfNeeded) device() else null
         live?.let { runCatching { it.shutdown() } }
         // Forgotten as well as shut down: what is cached here should describe a device that
         // exists. The next ask reloads it, which is what `device()` is for.
@@ -194,7 +194,7 @@ internal object VirtualDeviceBridge : VirtualDeviceHost {
 
     /** Stop it. Does not load the pack to do it -- a device never loaded has no daemon running. */
     fun stopAdb() {
-        (resolved as? JCodeVirtualDevice)?.let { runCatching { it.stopAdb() } }
+        (resolved as? QCodeVirtualDevice)?.let { runCatching { it.stopAdb() } }
     }
 
     // --- VirtualDeviceHost ---------------------------------------------------------------------

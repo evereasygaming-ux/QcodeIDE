@@ -31,7 +31,7 @@ import dev.blamspot.jcode.design.ContextAction
 import dev.blamspot.jcode.core.debug.DebugState
 import dev.blamspot.jcode.design.HeaderActionButton
 import dev.blamspot.jcode.design.IconSize
-import dev.blamspot.jcode.design.JCodeIcon
+import dev.blamspot.jcode.design.QCodeIcon
 import dev.blamspot.jcode.design.LocalCommandPaletteLauncher
 import dev.blamspot.jcode.design.LocalEditorSaveActions
 import dev.blamspot.jcode.design.LocalHeaderActionSetting
@@ -43,15 +43,15 @@ import dev.blamspot.jcode.fs.Project
 import dev.blamspot.jcode.fs.Workspace
 
 /**
- * The workbench header bars peeled out of JCodeShell: the left-panel [WorkspaceHeader] (workspace
+ * The workbench header bars peeled out of QCodeShell: the left-panel [WorkspaceHeader] (workspace
  * title + tool row) and the editor-area [WorkbenchTopBar] (nav + title + Save/Run/Terminal quick
  * actions). Stateless / param-driven; the buttons they use live in WorkbenchChrome.kt.
  */
 
-private fun contributedActionIcon(id: String): JCodeIcon = when (id) {
-    "clone" -> JCodeIcon.Scm
-    "remoteRepo" -> JCodeIcon.Browser
-    else -> JCodeIcon.Code
+private fun contributedActionIcon(id: String): QCodeIcon = when (id) {
+    "clone" -> QCodeIcon.Scm
+    "remoteRepo" -> QCodeIcon.Browser
+    else -> QCodeIcon.Code
 }
 
 @Composable
@@ -87,7 +87,7 @@ internal fun WorkspaceHeader(
             // this panel, so surface a collapse control in the panel header itself.
             onCollapseSidebar?.let { collapse ->
                 WorkbenchIconActionButton(
-                    icon = jcIcon(JCodeIcon.MenuToggle),
+                    icon = jcIcon(QCodeIcon.MenuToggle),
                     contentDescription = "Hide left sidebar",
                     onClick = collapse,
                     active = true,
@@ -123,7 +123,7 @@ internal fun WorkspaceHeader(
                         )
                         if (hasCloseAction) {
                             Icon(
-                                painter = jcIcon(JCodeIcon.DropDown),
+                                painter = jcIcon(QCodeIcon.DropDown),
                                 contentDescription = null,
                                 modifier = Modifier.size(IconSize.sm),
                                 tint = MaterialTheme.colorScheme.primary,
@@ -143,7 +143,7 @@ internal fun WorkspaceHeader(
                     onDismissRequest = { menuExpanded = false },
                     listActions = listOf(
                         ContextAction(
-                            JCodeIcon.Close,
+                            QCodeIcon.Close,
                             if (inUserWorkspace) "Close workspace" else "Close project",
                         ) { if (inUserWorkspace) onCloseWorkspace() else onCloseProject() },
                     ),
@@ -151,14 +151,14 @@ internal fun WorkspaceHeader(
             }
 
             WorkbenchIconActionButton(
-                icon = jcIcon(JCodeIcon.Add),
+                icon = jcIcon(QCodeIcon.Add),
                 contentDescription = "Add project",
                 onClick = onCreateProject,
             )
             Box {
                 var openFolderMenu by remember { mutableStateOf(false) }
                 WorkbenchIconActionButton(
-                    icon = jcIcon(JCodeIcon.OpenFolder),
+                    icon = jcIcon(QCodeIcon.OpenFolder),
                     contentDescription = "Open folder",
                     onClick = { if (contributedDrawerActions.isEmpty()) onOpenExternalFolder() else openFolderMenu = true },
                 )
@@ -167,7 +167,7 @@ internal fun WorkspaceHeader(
                         expanded = openFolderMenu,
                         onDismissRequest = { openFolderMenu = false },
                         listActions = buildList {
-                            add(ContextAction(JCodeIcon.OpenFolder, "Open Folder") { onOpenExternalFolder() })
+                            add(ContextAction(QCodeIcon.OpenFolder, "Open Folder") { onOpenExternalFolder() })
                             contributedDrawerActions.forEach { a ->
                                 add(ContextAction(contributedActionIcon(a.id), a.label) { onDrawerAction(a) })
                             }
@@ -240,7 +240,7 @@ internal fun WorkbenchTopBar(
             horizontalArrangement = Arrangement.spacedBy(Space.s),
         ) {
             WorkbenchIconActionButton(
-                icon = jcIcon(JCodeIcon.MenuToggle),
+                icon = jcIcon(QCodeIcon.MenuToggle),
                 contentDescription = if (leftSidebarExpanded) "Hide left sidebar" else "Show left sidebar",
                 onClick = onToggleLeftSidebar,
                 active = leftSidebarExpanded,
@@ -250,7 +250,7 @@ internal fun WorkbenchTopBar(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(Space.hairline),
             ) {
-                val heading = activeTab?.title ?: selectedProject?.name ?: "JCode"
+                val heading = activeTab?.title ?: selectedProject?.name ?: "QCODE IDE"
                 Text(
                     text = heading,
                     maxLines = 1,
@@ -285,7 +285,7 @@ internal fun WorkbenchTopBar(
                 var saveMenuOpen by remember { mutableStateOf(false) }
                 Box {
                     WorkbenchIconActionButton(
-                        icon = jcIcon(JCodeIcon.Save),
+                        icon = jcIcon(QCodeIcon.Save),
                         contentDescription = if (activeTab.isDirty) "Save (unsaved changes)" else "Save",
                         onClick = onSave,
                         active = activeTab.isDirty,
@@ -295,10 +295,10 @@ internal fun WorkbenchTopBar(
                         expanded = saveMenuOpen,
                         onDismissRequest = { saveMenuOpen = false },
                         quickActions = listOf(
-                            ContextAction(JCodeIcon.Undo, "Undo") { saveActions.onUndo() },
-                            ContextAction(JCodeIcon.Redo, "Redo") { saveActions.onRedo() },
-                            ContextAction(JCodeIcon.Discard, "Discard", destructive = true) { saveActions.onDiscard() },
-                            ContextAction(JCodeIcon.Save, "Save all") { saveActions.onSaveAll() },
+                            ContextAction(QCodeIcon.Undo, "Undo") { saveActions.onUndo() },
+                            ContextAction(QCodeIcon.Redo, "Redo") { saveActions.onRedo() },
+                            ContextAction(QCodeIcon.Discard, "Discard", destructive = true) { saveActions.onDiscard() },
+                            ContextAction(QCodeIcon.Save, "Save all") { saveActions.onSaveAll() },
                         ),
                     )
                 }
@@ -322,9 +322,9 @@ internal fun WorkbenchTopBar(
                 Box {
                     WorkbenchIconActionButton(
                         icon = when {
-                            paused -> jcIcon(JCodeIcon.Continue)
-                            debugging || isRunning -> jcIcon(JCodeIcon.Stop)
-                            else -> jcIcon(JCodeIcon.Run)
+                            paused -> jcIcon(QCodeIcon.Continue)
+                            debugging || isRunning -> jcIcon(QCodeIcon.Stop)
+                            else -> jcIcon(QCodeIcon.Run)
                         },
                         contentDescription = when {
                             paused -> "Continue"
@@ -351,22 +351,22 @@ internal fun WorkbenchTopBar(
                             // The session controls, live only while it is paused — stepping a running
                             // debuggee is not a thing, and these were dead placeholders before the
                             // debugger existed.
-                            ContextAction(JCodeIcon.Continue, "Continue", enabled = paused) { debug.onContinue() },
-                            ContextAction(JCodeIcon.Pause, "Pause", enabled = debug.state == DebugState.RUNNING) {
+                            ContextAction(QCodeIcon.Continue, "Continue", enabled = paused) { debug.onContinue() },
+                            ContextAction(QCodeIcon.Pause, "Pause", enabled = debug.state == DebugState.RUNNING) {
                                 debug.onPause()
                             },
-                            ContextAction(JCodeIcon.StepOver, "Step Over", enabled = paused) { debug.onStepOver() },
-                            ContextAction(JCodeIcon.StepInto, "Step Into", enabled = paused) { debug.onStepInto() },
-                            ContextAction(JCodeIcon.StepOut, "Step Out", enabled = paused) { debug.onStepOut() },
+                            ContextAction(QCodeIcon.StepOver, "Step Over", enabled = paused) { debug.onStepOver() },
+                            ContextAction(QCodeIcon.StepInto, "Step Into", enabled = paused) { debug.onStepInto() },
+                            ContextAction(QCodeIcon.StepOut, "Step Out", enabled = paused) { debug.onStepOut() },
                             if (debugging) {
-                                ContextAction(JCodeIcon.Stop, "Stop debugging") { debug.onStop() }
+                                ContextAction(QCodeIcon.Stop, "Stop debugging") { debug.onStop() }
                             } else {
-                                ContextAction(JCodeIcon.Rerun, "Rerun") { onRerun() }
+                                ContextAction(QCodeIcon.Rerun, "Rerun") { onRerun() }
                             },
                         ),
                         // Each run config as its own row — tap to launch that one.
                         listActions = runConfigNames.mapIndexed { index, name ->
-                            ContextAction(JCodeIcon.Run, name) { onRunConfig(index) }
+                            ContextAction(QCodeIcon.Run, name) { onRunConfig(index) }
                         },
                     )
                 }
@@ -381,7 +381,7 @@ internal fun WorkbenchTopBar(
                     var terminalMenuOpen by remember { mutableStateOf(false) }
                     Box {
                         WorkbenchIconActionButton(
-                            icon = jcIcon(JCodeIcon.Terminal),
+                            icon = jcIcon(QCodeIcon.Terminal),
                             contentDescription = "Terminal",
                             onClick = onShowTerminal,
                             shimmer = terminalBusy,
@@ -392,7 +392,7 @@ internal fun WorkbenchTopBar(
                             expanded = terminalMenuOpen && terminalSessions.isNotEmpty(),
                             onDismissRequest = { terminalMenuOpen = false },
                             listActions = terminalSessions.map { session ->
-                                ContextAction(JCodeIcon.Terminal, session.label) { onOpenTerminalSession(session.id) }
+                                ContextAction(QCodeIcon.Terminal, session.label) { onOpenTerminalSession(session.id) }
                             },
                         )
                     }
@@ -401,7 +401,7 @@ internal fun WorkbenchTopBar(
                 HeaderActionButton.CommandPalette -> {
                     val launcher = LocalCommandPaletteLauncher.current
                     WorkbenchIconActionButton(
-                        icon = jcIcon(JCodeIcon.CommandPalette),
+                        icon = jcIcon(QCodeIcon.CommandPalette),
                         contentDescription = "Command Palette",
                         onClick = launcher.onOpen,
                     )
@@ -414,7 +414,7 @@ internal fun WorkbenchTopBar(
             // stays put when the panel overlays the workspace instead of splitting it.
             if (!(rightSidebarDocked && canShowRightSidebar && rightSidebarVisible)) {
                 WorkbenchIconActionButton(
-                    icon = jcIcon(JCodeIcon.Logs),
+                    icon = jcIcon(QCodeIcon.Logs),
                     contentDescription = "Toggle right sidebar",
                     onClick = onToggleRightSidebar,
                     active = canShowRightSidebar && rightSidebarVisible,

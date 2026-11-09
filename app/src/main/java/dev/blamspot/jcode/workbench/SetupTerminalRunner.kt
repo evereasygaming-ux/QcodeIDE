@@ -89,7 +89,7 @@ class SetupTerminalRunner(
         val token = "jc${tokenCounter.incrementAndGet()}"
         val input = buildTaskInput(label, script, workdir, asUser, token) ?: return@withLock null
         // The task is announced to the foreground notification as well as the caller: an install is
-        // the reason someone leaves JCode running and comes back to the shade, and "1 active session"
+        // the reason someone leaves QCode running and comes back to the shade, and "1 active session"
         // told them nothing about how far it had got. `jcode_progress` in the catalog scripts is what
         // supplies the percentage; a task that never calls it simply shows as running.
         SessionRegistry.setTask(label)
@@ -132,13 +132,13 @@ class SetupTerminalRunner(
             if (!script.endsWith("\n")) append('\n')
         }
         if (!distroService.stageGuestFile(guestScript, body)) return null
-        // JCODE_PROGRESS_TOKEN is what makes the injected `jcode_progress` helper emit its OSC 7716
+        // QCODE_PROGRESS_TOKEN is what makes the injected `jcode_progress` helper emit its OSC 7716
         // marker; it names the task the marker belongs to so a stale one from an abandoned run is
         // ignored. Exported for the `su` path too — the login shell would otherwise drop it.
         val runCommand = if (asUser == "root") {
-            "env HOME=/home/$runtimeUser USER=$runtimeUser JCODE_PROGRESS_TOKEN=$token /bin/sh $guestScript"
+            "env HOME=/home/$runtimeUser USER=$runtimeUser QCODE_PROGRESS_TOKEN=$token /bin/sh $guestScript"
         } else {
-            "su - $asUser -c 'JCODE_PROGRESS_TOKEN=$token /bin/sh $guestScript'"
+            "su - $asUser -c 'QCODE_PROGRESS_TOKEN=$token /bin/sh $guestScript'"
         }
         return buildString {
             append(runCommand)

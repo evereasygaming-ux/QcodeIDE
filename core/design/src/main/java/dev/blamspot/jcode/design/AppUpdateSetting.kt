@@ -4,7 +4,7 @@ import androidx.compose.runtime.compositionLocalOf
 
 /**
  * In-app update state, shared (via [LocalAppUpdate]) with the settings screen without threading
- * params through JCodeShell (ART register limit). Populated from a GitHub-release check on startup:
+ * params through QCodeShell (ART register limit). Populated from a GitHub-release check on startup:
  * [updateAvailable] flags a newer [latestVersion] than [currentVersion]; [onCheck] re-runs the check;
  * [onOpenRelease] opens the release page in a browser.
  */

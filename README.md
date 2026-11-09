@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="media/jcode-app-icon.svg" width="96" alt="JCode icon" />
+  <img src="media/qcode-app-icon.svg" width="96" alt="QCODE IDE icon" />
 </p>
 
-<h1 align="center">JCode</h1>
+<h1 align="center">QCODE IDE</h1>
 
 <p align="center">
   A native Android IDE with an embedded Linux runtime — build, run, and edit real
@@ -11,7 +11,7 @@
 
 ---
 
-JCode is an Android IDE written in **Kotlin + Jetpack Compose**, with **C++/NDK**
+QCODE IDE is an Android IDE written in **Kotlin + Jetpack Compose**, with **C++/NDK**
 for the performance-critical subsystems (editor buffer, VT terminal, parsers). It
 embeds a self-contained **Linux environment** via bundled `proot` — runtimes,
 SDKs, compilers, and language servers live in an app-managed Ubuntu 24.04 / 26.04
@@ -29,8 +29,8 @@ LTS rootfs in app-private storage. No Termux dependency, no root.
   editor; their lifecycle follows the open project and documents.
 - **Terminals** — real PTY sessions through `proot` that survive app backgrounding,
   with full xterm/VT support (mouse reporting, SGR, alt-screen), in-place progress
-  redraw, and a `code`/`jcode` command to open files in the editor.
-- **Build & Run** — per-project `.jcode/run.yaml`; multi-terminal dev setups (e.g.
+  redraw, and an editor-open command to open files in the editor.
+- **Build & Run** — per-project run configuration; multi-terminal dev setups (e.g.
   an ASP.NET Core API + a Vite dev server side by side); a read-only **Output** log
   teed from the run terminals; and ready-port polling into a web preview.
 - **Debugging** — a Debug Adapter Protocol (DAP) client with gutter breakpoints,
@@ -64,8 +64,8 @@ Requirements: **JDK 21**, the Android SDK (`compileSdk 36`), **NDK r27c**
 Gradle 8.14.3 wrapper.
 
 ```bash
-git clone https://github.com/blamspotdev/j-code-android.git
-cd j-code-android
+git clone https://github.com/evereasygaming-ux/QcodeIDE.git
+cd QcodeIDE
 ./gradlew :app:assembleDebug      # → app/build/outputs/apk/debug/app-debug.apk
 ```
 
@@ -81,7 +81,7 @@ dependencies. Release builds and signing are documented in the
 A multi-module Gradle project:
 
 ```
-:app            integration layer + the JCode shell
+:app            integration layer + the QCODE IDE shell
 :core:*         editor, buffer, term, distro, lsp, debug, search, config, diagnostics,
                 design, fs, treesitter, resource, and compatibility stubs
 :feature:*      explorer, editor-pane, terminal-pane, scm, debug, problems, search,
@@ -105,11 +105,8 @@ that subsystem, so the caveat sits beside the thing it qualifies.
 
 ## Extensions
 
-Dev Packs, templates, and (later) theme / icon sets install from the
-[**JCode marketplace**](https://github.com/blamspotdev/j-code-marketplace) as
-verified `.jext` packages. To build your own, see the marketplace's
-[`CREATING-EXTENSIONS.md`](https://github.com/blamspotdev/j-code-marketplace/blob/main/CREATING-EXTENSIONS.md)
-and the [`j-code-make-tools`](https://github.com/blamspotdev/j-code-make-tools) CLI.
+Dev Packs, templates, and theme / icon sets install from the built-in marketplace as
+verified `.jext` packages.
 
 ## License
 

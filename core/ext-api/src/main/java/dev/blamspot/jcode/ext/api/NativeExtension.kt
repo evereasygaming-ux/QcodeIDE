@@ -3,28 +3,28 @@ package dev.blamspot.jcode.ext.api
 import androidx.compose.runtime.Composable
 
 /**
- * The contract between JCode and an extension that contributes **native** UI.
+ * The contract between QCode and an extension that contributes **native** UI.
  *
- * Everything in this file runs inside JCode's own process, in JCode's own Compose composition. That
+ * Everything in this file runs inside QCode's own process, in QCode's own Compose composition. That
  * makes it a real ABI: an extension built against version N of this file keeps running only while
- * JCode still honours version N. Two consequences worth carrying around:
+ * QCode still honours version N. Two consequences worth carrying around:
  *
  * - **The surface stays small.** Every declaration here is a promise. A convenience added casually
  *   is a convenience that cannot be withdrawn without breaking installed extensions.
- * - **An extension must declare `entry.abi` and JCode must check it.** A mismatch has to be refused
+ * - **An extension must declare `entry.abi` and QCode must check it.** A mismatch has to be refused
  *   with something readable; the alternative is a `NoSuchMethodError` inside the IDE's own UI,
- *   which looks like JCode crashing rather than like an extension needing a rebuild.
+ *   which looks like QCode crashing rather than like an extension needing a rebuild.
  *
- * **Extensions must depend on this module — and on Compose — as `compileOnly`.** JCode provides both
+ * **Extensions must depend on this module — and on Compose — as `compileOnly`.** QCode provides both
  * at runtime. An extension that bundles its own copy of Compose ends up with two runtimes in one
  * process, and the composition it returns belongs to the wrong one.
  */
-interface JCodeNativeExtension {
+interface QCodeNativeExtension {
 
     /**
      * Draw one page.
      *
-     * Called from JCode's composition, so the usual Compose rules apply: this may recompose at any
+     * Called from QCode's composition, so the usual Compose rules apply: this may recompose at any
      * time, and anything expensive belongs behind `remember` / `LaunchedEffect`.
      *
      * [params] carries what the page was opened for — see [Params]. Keys absent rather than blank
@@ -63,9 +63,9 @@ interface JCodeNativeExtension {
 /**
  * What an extension may ask of the IDE.
  *
- * Narrow on purpose. A plugin has JCode's full permissions by construction — it is JCode's process —
+ * Narrow on purpose. A plugin has QCode's full permissions by construction — it is QCode's process —
  * so this interface is not a security boundary and does not pretend to be one. What it is is the
- * *supported* way to reach the workbench: a plugin that reaches around it into JCode's internals is
+ * *supported* way to reach the workbench: a plugin that reaches around it into QCode's internals is
  * a plugin that breaks on the next refactor, and this is the surface that will not.
  */
 interface NativeHost {
@@ -194,7 +194,7 @@ interface NativeHost {
     fun setHiddenInjected(paths: List<String>)
 
     /**
-     * Move files into JCode's Trash instead of destroying them, and report how many went.
+     * Move files into QCode's Trash instead of destroying them, and report how many went.
      *
      * For a plugin whose own action deletes the user's work — Source Control's "Discard" throws away
      * every uncommitted edit in a file, which git cannot give back. Call it *before* the destructive
@@ -204,7 +204,7 @@ interface NativeHost {
      * reported. The user's Trash setting is honoured by the workbench, so a return of 0 may simply
      * mean they turned it off — the caller's job is to offer the copy, not to decide it is kept.
      *
-     * Present since JCode 1.6.2; an extension that calls it must say so with `minJCodeVersion`.
+     * Present since QCode 1.6.2; an extension that calls it must say so with `minQCodeVersion`.
      */
     suspend fun trash(paths: List<String>): Int = 0
 
@@ -275,7 +275,7 @@ data class NativeContextAction(
 )
 
 /**
- * The version of this contract that JCode implements.
+ * The version of this contract that QCode implements.
  *
  * One number per RELEASE that changes the contract, not one per change:
  *
@@ -286,7 +286,7 @@ data class NativeContextAction(
  * Within a release cycle the contract moves as often as the work needs it to, and none of those
  * steps are numbers an extension author ever sees. This cycle reached 9 that way — the virtual-device
  * interfaces, `entry.native` becoming a list, and several smaller additions — and all of it ships as
- * 3, because 3 is what 1.7.0 hands to extensions. An author targets a JCode release; the counter
+ * 3, because 3 is what 1.7.0 hands to extensions. An author targets a QCode release; the counter
  * should say the same thing.
  *
  * Bump it when something here changes in a way an already-built extension would notice: a signature
@@ -300,4 +300,4 @@ data class NativeContextAction(
  * together or not at all. The 1.7.0 betas went out declaring 7, so the extensions built for them say
  * 7 and must be republished at 3 alongside the stable release.
  */
-const val JCODE_EXT_ABI: Int = 3
+const val QCODE_EXT_ABI: Int = 3

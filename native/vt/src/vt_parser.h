@@ -19,7 +19,7 @@ extern "C" {
 #define VT_OSC_BUFFER_CAP 4096
 #define VT_OSC_BUFFER_MAX (1 << 20)
 
-// Bounded queue of JCode shell-integration OSC events (7711 open-file, 7712 tab title, 7713 task
+// Bounded queue of QCode shell-integration OSC events (7711 open-file, 7712 tab title, 7713 task
 // complete) awaiting a host drain. The oldest event is dropped when the queue is full.
 #define VT_OSC_EVENT_CAP 32
 

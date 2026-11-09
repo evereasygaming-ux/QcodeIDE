@@ -9,7 +9,7 @@ import dev.blamspot.jcode.core.debug.DapVariable
 import dev.blamspot.jcode.core.debug.DebugState
 import dev.blamspot.jcode.core.distro.DebugEngineCatalogState
 import dev.blamspot.jcode.debug.VariableRow
-import dev.blamspot.jcode.design.JCodeIcon
+import dev.blamspot.jcode.design.QCodeIcon
 import dev.blamspot.jcode.feature.marketplace.InstalledExtension
 import dev.blamspot.jcode.feature.marketplace.MarketplaceEntry
 import dev.blamspot.jcode.fs.Project
@@ -30,7 +30,7 @@ internal data class TerminalTapConfig(
 internal val LocalTerminalTapConfig = compositionLocalOf { TerminalTapConfig() }
 
 /**
- * Debug-engine catalog state, provided to the giant [dev.blamspot.jcode.JCodeShell] composable via a
+ * Debug-engine catalog state, provided to the giant [dev.blamspot.jcode.QCodeShell] composable via a
  * CompositionLocal instead of one more param (the composable is at the ART verifier's register limit).
  */
 internal val LocalDebugCatalogState = compositionLocalOf { DebugEngineCatalogState() }
@@ -44,7 +44,7 @@ internal val LocalCatalogProgress = compositionLocalOf<dev.blamspot.jcode.core.d
 internal val LocalSdkInstallRequestedId = compositionLocalOf<String?> { null }
 
 /** Per-extension install phase labels ("Installing…", "Installing required tools…", "Verifying…"),
- *  keyed by extension id. A CompositionLocal so the giant [dev.blamspot.jcode.JCodeShell] composable stays
+ *  keyed by extension id. A CompositionLocal so the giant [dev.blamspot.jcode.QCodeShell] composable stays
  *  under the ART register limit. */
 internal val LocalExtensionInstallPhases = compositionLocalOf<Map<String, String>> { emptyMap() }
 
@@ -92,7 +92,7 @@ internal val LocalExtensionDevState = compositionLocalOf { ExtensionDevState() }
 internal val LocalSetupTerminalSessionId = compositionLocalOf<String?> { null }
 
 /** Editor-facing debug state (breakpoints + current stopped location + toggle), provided via a
- *  CompositionLocal so the giant [dev.blamspot.jcode.JCodeShell] composable stays under the register limit. */
+ *  CompositionLocal so the giant [dev.blamspot.jcode.QCodeShell] composable stays under the register limit. */
 internal data class DebugEditorState(
     val breakpoints: Map<String, Set<Int>> = emptyMap(),
     val stoppedPath: String? = null,
@@ -103,7 +103,7 @@ internal data class DebugEditorState(
 internal val LocalDebugEditorState = compositionLocalOf { DebugEditorState() }
 
 /** Live debug-session state + controls for the Run/Debug panel, provided via a CompositionLocal so
- *  the giant [dev.blamspot.jcode.JCodeShell] composable stays under the ART verifier's register limit. */
+ *  the giant [dev.blamspot.jcode.QCodeShell] composable stays under the ART verifier's register limit. */
 internal data class DebugSessionUi(
     val state: DebugState = DebugState.DISCONNECTED,
     val callStack: List<DapStackFrame> = emptyList(),
@@ -143,7 +143,7 @@ internal data class IssueActions(
 internal val LocalIssueActions = compositionLocalOf { IssueActions() }
 
 /**
- * The SDK / LSP / Extension manager callbacks, bundled so the giant [dev.blamspot.jcode.JCodeShell] composable
+ * The SDK / LSP / Extension manager callbacks, bundled so the giant [dev.blamspot.jcode.QCodeShell] composable
  * stays under the ART verifier's per-method register limit (too many individual params overflow it).
  */
 /** Run/Build/Debug callbacks for the Run panel + config editors, bundled (see register-limit note). */
@@ -195,7 +195,7 @@ internal data class WorkbenchManagerActions(
     val onRefreshExtensionSources: () -> Unit = {},
     val onInstallFromSource: (String) -> Unit = {},
     /** Starts the "import a VS Code .vsix" flow from the extension list. Not a developer action —
-     *  importing an extension JCode does not publish is ordinary use, so it is always available. */
+     *  importing an extension QCode does not publish is ordinary use, so it is always available. */
     val onImportExtension: (() -> Unit)? = null,
     /** Opens an extension's web frontend at its `#config` route by extension id (e.g. Source Control
      *  git identity/credentials), reachable without an open project. */
@@ -212,7 +212,7 @@ internal data class WorkbenchManagerActions(
     /** Extension API v1 envelope handler: (extensionId, requestJson) -> response JSON. */
     val onExtensionApiRequest: suspend (extensionId: String, envelopeJson: String) -> String =
         { _, _ -> """{"ok":false,"error":"extension API unavailable"}""" },
-    /** Host events pushed to the live extension WebView as `JCode._onEvent(name, json)`. */
+    /** Host events pushed to the live extension WebView as `QCode._onEvent(name, json)`. */
     val extensionEvents: kotlinx.coroutines.flow.SharedFlow<Pair<String, String>>? = null,
     /** Reveal the Issues pane — where a manager panel's failures are listed rather than bannered. */
     val onShowIssues: () -> Unit = {},
@@ -220,50 +220,50 @@ internal data class WorkbenchManagerActions(
 
 internal enum class WorkbenchTool(
     val label: String,
-    val icon: JCodeIcon,
+    val icon: QCodeIcon,
     val compactLabel: String = label,
     /** Hidden from the activity bar until it has a working UI (kept in the enum for `when` exhaustiveness). */
     val available: Boolean = true,
 ) {
-    Explorer("Explorer", JCodeIcon.Files, "Files"),
-    Search("Search", JCodeIcon.Search, "Find"),
-    Scm("SCM", JCodeIcon.Scm, "SCM"),
-    RunDebug("Run", JCodeIcon.Run, "Run"),
-    Extensions("Extensions", JCodeIcon.Extensions, "Ext"),
+    Explorer("Explorer", QCodeIcon.Files, "Files"),
+    Search("Search", QCodeIcon.Search, "Find"),
+    Scm("SCM", QCodeIcon.Scm, "SCM"),
+    RunDebug("Run", QCodeIcon.Run, "Run"),
+    Extensions("Extensions", QCodeIcon.Extensions, "Ext"),
     /** SDKs + language servers + debug engines, merged into one searchable/filterable catalog. */
-    ToolchainManager("Toolchains", JCodeIcon.Sdk, "Tools"),
-    DbManager("DB Managers", JCodeIcon.Database, "DB"),
-    VmManager("VM Manager", JCodeIcon.Vm, "VM"),
-    Settings("Settings", JCodeIcon.Settings, "Settings"),
+    ToolchainManager("Toolchains", QCodeIcon.Sdk, "Tools"),
+    DbManager("DB Managers", QCodeIcon.Database, "DB"),
+    VmManager("VM Manager", QCodeIcon.Vm, "VM"),
+    Settings("Settings", QCodeIcon.Settings, "Settings"),
 }
 
 internal enum class RightPanelTab(
     val label: String,
-    val icon: JCodeIcon,
+    val icon: QCodeIcon,
     val enabled: Boolean = true,
 ) {
-    Terminal("Terminal", JCodeIcon.Terminal, enabled = true),
-    Output("Output", JCodeIcon.Logs, enabled = true),
-    Problems("Issues", JCodeIcon.Problems, enabled = true),
+    Terminal("Terminal", QCodeIcon.Terminal, enabled = true),
+    Output("Output", QCodeIcon.Logs, enabled = true),
+    Problems("Issues", QCodeIcon.Problems, enabled = true),
     /** Agentic chat (Claude Code / Antigravity) running inside the Linux environment. */
-    Agent("Agent", JCodeIcon.Chat, enabled = true),
-    DebugConsole("Debug", JCodeIcon.Debug, enabled = true),
-    Tasks("Tasks", JCodeIcon.Tasks, enabled = true),
+    Agent("Agent", QCodeIcon.Chat, enabled = true),
+    DebugConsole("Debug", QCodeIcon.Debug, enabled = true),
+    Tasks("Tasks", QCodeIcon.Tasks, enabled = true),
     /** Built-in browser DevTools (console / network / elements); only shown once the in-app browser
      *  has been opened this session (see [dev.blamspot.jcode.workbench.BuiltinBrowser]). */
-    Devtools("DevTools", JCodeIcon.DevTools, enabled = true),
+    Devtools("DevTools", QCodeIcon.DevTools, enabled = true),
     /** Extension-authoring tools (inspector / manifest validator / live log); shown only when
      *  Developer options is enabled (see [dev.blamspot.jcode.design.LocalDeveloperSetting]). */
-    ExtensionDev("Ext Dev", JCodeIcon.Extensions, enabled = true),
+    ExtensionDev("Ext Dev", QCodeIcon.Extensions, enabled = true),
 
     /**
      * The Android Dev Pack's virtual device, when its `deviceSurface` setting puts it here.
      *
      * Shown only when a pack actually provides a device *and* has been asked to put it in the
      * drawer — the device is a real embedded surface with one guest behind it, so it exists in one
-     * place at a time and JCode moves it rather than drawing it twice.
+     * place at a time and QCode moves it rather than drawing it twice.
      */
-    Device("Device", JCodeIcon.Vm, enabled = true),
+    Device("Device", QCodeIcon.Vm, enabled = true),
 }
 
 /**

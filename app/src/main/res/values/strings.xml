@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">QCode</string>
+    <string name="app_name">QCODE IDE</string>
     <string name="backend_service_channel_name">Backend sessions</string>
     <string name="backend_service_channel_description">Keeps active terminal, language server, and debug sessions running.</string>
-    <string name="backend_service_notification_title">QCode backend active</string>
+    <string name="backend_service_notification_title">QCODE IDE backend active</string>
     <plurals name="backend_service_active_sessions">
         <item quantity="one">%d active session</item>
         <item quantity="other">%d active sessions</item>
@@ -13,5 +13,5 @@
         <item quantity="other">%d terminals</item>
     </plurals>
     <string name="backend_service_memory">%s in use</string>
-    <string name="backend_service_stop_action">Quit QCode</string>
+    <string name="backend_service_stop_action">Quit QCODE IDE</string>
 </resources>

@@ -15,9 +15,9 @@ There are **two independent extension runtimes**, with two different protocols:
 
 | Runtime | For | Executes | Protocol |
 |---|---|---|---|
-| **WebView bridge** | First-party `.jext` extensions with a web UI | JavaScript in an Android `WebView` | `window.JCodeNative` ↔ `window.JCode._on*` |
+| **WebView bridge** | First-party `.jext` extensions with a web UI | JavaScript in an Android `WebView` | `window.QCodeNative` ↔ `window.QCode._on*` |
 | **VS Code host** | Imported `.vsix` extensions | Node inside the Linux runtime | Newline-delimited JSON over stdio |
-| **Native** | First-party packs that ship Kotlin — the layout designer, the virtual device | Dalvik, **in JCode's own process** | Kotlin interfaces in `:core:ext-api`, versioned by `JCODE_EXT_ABI` |
+| **Native** | First-party packs that ship Kotlin — the layout designer, the virtual device | Dalvik, **in QCode's own process** | Kotlin interfaces in `:core:ext-api`, versioned by `QCODE_EXT_ABI` |
 
 Conflating them is easy and wrong; they share no code.
 
@@ -25,7 +25,7 @@ Conflating them is easy and wrong; they share no code.
 
 ## 2. The WebView bridge
 
-### 2.1 Injected object — `window.JCodeNative`
+### 2.1 Injected object — `window.QCodeNative`
 
 ```kotlin
 class ExtensionBridge(
@@ -54,9 +54,9 @@ Replies are delivered by evaluating JavaScript in the page:
 
 | Callback | Payload |
 |---|---|
-| `window.JCode._onExec(reqId, result)` | Legacy `exec` result |
-| `window.JCode._onResult(reqId, json)` | `{"ok":true,"data":{…}}` or `{"ok":false,"error":"…"}` |
-| `window.JCode._onEvent(name, json)` | Host-pushed events, e.g. the focused editor file |
+| `window.QCode._onExec(reqId, result)` | Legacy `exec` result |
+| `window.QCode._onResult(reqId, json)` | `{"ok":true,"data":{…}}` or `{"ok":false,"error":"…"}` |
+| `window.QCode._onEvent(name, json)` | Host-pushed events, e.g. the focused editor file |
 
 The host side is `WorkbenchModel`'s
 
@@ -110,20 +110,20 @@ validator, and a live log. **Its `console` output goes to the Ext Dev log, not t
 ## 2a. The native runtime
 
 A native extension's payload is loaded by `NativeExtensionLoader` with a `DexClassLoader` whose
-**parent is JCode's own class loader**. That inversion — the guest loader's parent is the *boot*
-loader — is what lets the composition a plugin returns be spliced into JCode's, and it is safe only
+**parent is QCode's own class loader**. That inversion — the guest loader's parent is the *boot*
+loader — is what lets the composition a plugin returns be spliced into QCode's, and it is safe only
 because the packaging forbids a plugin from bundling AndroidX: with nothing shared present twice,
 there is no second `R` for an id to resolve against.
 
-**This is a real ABI, and `JCODE_EXT_ABI` is the whole of the compatibility story.** It must match
+**This is a real ABI, and `QCODE_EXT_ABI` is the whole of the compatibility story.** It must match
 exactly; "at least" would be wrong in both directions, since a plugin can be newer than the host.
 
 | Interface | Process | What it is |
 |---|---|---|
-| `JCodeNativeExtension` | IDE | one `Content(host, params)` composable. A plugin that draws several surfaces dispatches on `Params.VIEW` |
+| `QCodeNativeExtension` | IDE | one `Content(host, params)` composable. A plugin that draws several surfaces dispatches on `Params.VIEW` |
 | `NativeHost` | IDE | what a plugin may ask of the workbench — read/write the editor buffer, run a command in the runtime, open a view, decorate the Explorer |
-| `JCodeVirtualDevice` | IDE | *(ABI 8)* a pack offering to **be** JCode's virtual device: open/stop an APK, hand back an adb handler and the device's two content providers |
-| `JCodeVirtualDeviceGuest` | `:guest` | *(ABI 8)* the container half, loaded into the app's `:guest` process by its `GuestSessionService` stub |
+| `QCodeVirtualDevice` | IDE | *(ABI 8)* a pack offering to **be** QCode's virtual device: open/stop an APK, hand back an adb handler and the device's two content providers |
+| `QCodeVirtualDeviceGuest` | `:guest` | *(ABI 8)* the container half, loaded into the app's `:guest` process by its `GuestSessionService` stub |
 | `VirtualDeviceHost` | IDE | the four things the device asks back: open its tab, open the hardware bench, a snackbar, a line in the Output pane |
 | `VirtualDeviceComponents` | both | the names of the four manifest components the app declares on the device's behalf |
 
@@ -146,7 +146,7 @@ Why the virtual device is split across two processes, and what that costs, is
 flowchart LR
     subgraph app["App process"]
         H["VsCodeExtensionHost"]
-        WV["Panel WebView<br/>window.JCodeVsix"]
+        WV["Panel WebView<br/>window.QCodeVsix"]
     end
     subgraph guest["Linux runtime"]
         N["node host.js<br/>--ext-dir --main --id"]
@@ -216,17 +216,17 @@ A `createWebviewPanel` becomes an **editor tab** (`EditorPageKind.VsixPanel`); a
 (`RightPanelSelection.Extension`). Menu contributions under `view/title` become the panel's chip and
 its `⋮` menu.
 
-The panel page exposes `window.JCodeVsix.postMessage(...)` to the extension's own webview HTML.
+The panel page exposes `window.QCodeVsix.postMessage(...)` to the extension's own webview HTML.
 
 ### 3.4 The `vscode` module shim
 
-`host.js` intercepts `Module._load` so `require('vscode')` returns JCode's implementation. Provided:
+`host.js` intercepts `Module._load` so `require('vscode')` returns QCode's implementation. Provided:
 `Uri`, `Disposable`, `EventEmitter`, `commands`, `window`, `workspace`, `env`, `l10n`.
 
 `languages`, `debug`, `tasks` and `scm` are **throwing `Proxy` objects**. The rationale is stated in
 the file:
 
-> Anything outside it throws by name — `vscode.debug.startDebugging is not implemented by JCode` —
+> Anything outside it throws by name — `vscode.debug.startDebugging is not implemented by QCode` —
 > because an extension failing loudly at the call it actually made is far easier to act on than one
 > that silently does nothing.
 
@@ -272,7 +272,7 @@ data class VsixCompatibility(
 
 Warnings are raised when: there is no `main` ("no extension code to run"), unsupported contribution
 points exist, or neither `views` nor `viewsContainers` is contributed ("may have no visible surface
-in JCode").
+in QCode").
 
 `inspectVsix(file)` returns the manifest and this report **before** installing.
 
@@ -282,7 +282,7 @@ The `extension/` subtree becomes the install directory, a `.jcode-vsix` marker f
 a manifest is generated:
 
 ```yaml
-# Generated by JCode from a .vsix. Edits here are lost on reinstall.
+# Generated by QCode from a .vsix. Edits here are lost on reinstall.
 id: "publisher.name"
 name: "Display Name"
 publisher: "publisher"
@@ -304,7 +304,7 @@ vsix:
 
 Every scalar is quoted and escaped so punctuation survives the YAML round trip.
 
-> The `workbench` capability is declared so JCode can answer the host's questions about which file
+> The `workbench` capability is declared so QCode can answer the host's questions about which file
 > is open, which project, and which theme. Without it those calls are refused and the extension falls
 > back to whatever it last persisted, showing the wrong project. It remains a *declaration* — the
 > user can still revoke it from the extension's permissions page.

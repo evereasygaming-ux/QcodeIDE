@@ -77,7 +77,7 @@ class WorkspaceManager @Inject constructor(
     }
 
     /**
-     * One-time move of existing Local projects/workspaces from shared storage (/storage/emulated/0/JCode,
+     * One-time move of existing Local projects/workspaces from shared storage (/storage/emulated/0/QCode,
      * or the old app-external fallback) to the app-private ext4 root ([StorageRoots], filesDir/workspace).
      * COPIES the trees (the shared originals stay as a backup — nothing is lost if this half-completes)
      * and re-anchors the absolute host paths in the DB (workspaces.rootPath, projects.location, and Local
@@ -89,8 +89,8 @@ class WorkspaceManager @Inject constructor(
         if (marker.exists()) return@withContext
 
         val oldBases = listOfNotNull(
-            File(DEFAULT_SHARED_PROJECTS_ROOT).parentFile,                 // /storage/emulated/0/JCode
-            context.getExternalFilesDir(null)?.let { File(it, "JCode") },  // legacy app-external fallback
+            File(DEFAULT_SHARED_PROJECTS_ROOT).parentFile,                 // /storage/emulated/0/QCode
+            context.getExternalFilesDir(null)?.let { File(it, "QCode") },  // legacy app-external fallback
         ).map { it.absolutePath }.distinct()
 
         fun remap(p: String): String? {
@@ -157,7 +157,7 @@ class WorkspaceManager @Inject constructor(
 
     /**
      * Re-resolve the storage roots after a runtime storage-permission grant. The roots are cached
-     * from before the grant (the shared /JCode location was unwritable then, so the app-private
+     * from before the grant (the shared /QCode location was unwritable then, so the app-private
      * fallback won); this re-anchors the Default Workspace on the shared location.
      */
     suspend fun refreshStorageRoots() {
@@ -369,7 +369,7 @@ class WorkspaceManager @Inject constructor(
      * Resolve a SAF tree that actually names a local folder to its Local path, so picked folders
      * that live inside our managed storage drive the runtime directly; other SAF trees pass through
      * unchanged. Covers primary external storage (`primary:` document ids) and the app's own
-     * "JCode Projects" DocumentsProvider — its ids ARE absolute ext4 paths, and without this mapping
+     * "QCODE IDE Projects" DocumentsProvider — its ids ARE absolute ext4 paths, and without this mapping
      * a pick from that root opened as a bind-less content:// project despite living on our storage.
      */
     fun resolveManageable(path: FsPath): FsPath = when (path) {
@@ -394,7 +394,7 @@ class WorkspaceManager @Inject constructor(
 
     /**
      * True when [path] is a Local folder already inside app-private ext4 storage (context.filesDir) —
-     * i.e. the "JCode Projects" DocumentsProvider or an existing project dir. Such picks already have a
+     * i.e. the "QCODE IDE Projects" DocumentsProvider or an existing project dir. Such picks already have a
      * runtime bind mount and open in place; anything else (primary storage, cloud/third-party SAF) must
      * be copied onto /sources first before the runtime can reach it.
      */
@@ -407,7 +407,7 @@ class WorkspaceManager @Inject constructor(
 
     /**
      * True when [path] resolves to the managed projects root itself (or an ancestor of it) — the
-     * "JCode Projects" DocumentsProvider makes that root pickable, but adopting it as a node would
+     * "QCODE IDE Projects" DocumentsProvider makes that root pickable, but adopting it as a node would
      * nest the whole managed tree inside itself.
      */
     fun isManagedRoot(path: FsPath): Boolean {

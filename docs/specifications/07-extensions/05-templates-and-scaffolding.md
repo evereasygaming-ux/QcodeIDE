@@ -11,10 +11,10 @@
 
 ## 1. Purpose and scope
 
-Project templates: how an extension declares one, and how JCode scaffolds it on-device by running
+Project templates: how an extension declares one, and how QCode scaffolds it on-device by running
 real commands in the Linux runtime.
 
-Templates carry **no** JCode-specific logic — a template is a list of shell commands plus the inputs
+Templates carry **no** QCode-specific logic — a template is a list of shell commands plus the inputs
 they need. That keeps the app generic and small, and lets a template track upstream tooling without
 an app release.
 
@@ -192,7 +192,7 @@ After scaffolding, the new folder is registered as a Project and gets its
 
 ## 7. Invariants and constraints
 
-1. Templates contain no JCode-specific logic — only shell commands and inputs.
+1. Templates contain no QCode-specific logic — only shell commands and inputs.
 2. Generators run in `{{hostStaging}}` (ext4), never directly in a FUSE-backed `/workspace` path.
 3. Recipe steps are ordered and stop at the first failure.
 4. `optionsCommand` must degrade to static `options` when the runtime is not ready.

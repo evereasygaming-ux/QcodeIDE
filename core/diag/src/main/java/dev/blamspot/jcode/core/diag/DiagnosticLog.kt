@@ -157,7 +157,7 @@ object DiagnosticLog {
     }
 
     /**
-     * Replace absolute paths with stable tokens. The app's own data directory, the shared JCode
+     * Replace absolute paths with stable tokens. The app's own data directory, the shared QCode
      * root and the external-storage root all carry the device owner's layout (and sometimes a
      * profile id), none of which helps read a log.
      */
@@ -187,13 +187,13 @@ object DiagnosticLog {
     }
 
     /**
-     * Prefer the shared `JCode/logs` folder: a report there can be attached from any file manager
+     * Prefer the shared `QCode/logs` folder: a report there can be attached from any file manager
      * and pulled over adb without the app being debuggable. Falls back to the app's own external
      * files directory (always writable, no permission) and finally to internal storage.
      */
     private fun resolveLogDir(context: Context): File {
         val candidates = listOfNotNull(
-            File(Environment.getExternalStorageDirectory(), "JCode/$LOG_DIR"),
+            File(Environment.getExternalStorageDirectory(), "QCode/$LOG_DIR"),
             context.getExternalFilesDir(null)?.let { File(it, LOG_DIR) },
             File(context.filesDir, LOG_DIR),
         )
@@ -209,7 +209,7 @@ object DiagnosticLog {
         add("/data/data/${context.packageName}" to "<app-data>")
         add(context.filesDir.absolutePath to "<app-files>")
         val external = Environment.getExternalStorageDirectory().absolutePath
-        add("$external/JCode" to "<jcode>")
+        add("$external/QCode" to "<jcode>")
         add(external to "<storage>")
     }.sortedByDescending { it.first.length } // longest first, so nested roots are not half-replaced
 
@@ -220,7 +220,7 @@ object DiagnosticLog {
         val metrics = context.resources.displayMetrics
         val dir = logDir
         val free = runCatching { (dir?.freeSpace ?: 0L) / (1024 * 1024) }.getOrDefault(0L)
-        append("=== JCode diagnostic session ===")
+        append("=== QCode diagnostic session ===")
         append("app        ${context.packageName} $version")
         append("device     ${Build.MANUFACTURER} ${Build.MODEL} (${Build.DEVICE})")
         append("android    ${Build.VERSION.RELEASE} (SDK ${Build.VERSION.SDK_INT}) ${Build.VERSION.INCREMENTAL}")

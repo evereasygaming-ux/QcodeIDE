@@ -34,7 +34,7 @@ val LocalTabColoringSetting = compositionLocalOf { TabColoringSetting() }
 /**
  * Resolves the accent color of an editor tab from its absolute file path. Backed by a plain map so
  * the (per-frame) tab strip lookup is cheap; returns null for tabs with no color (page tabs, or the
- * Disabled mode). Shared with the tab strip via [LocalEditorTabColors] to dodge JCodeShell params.
+ * Disabled mode). Shared with the tab strip via [LocalEditorTabColors] to dodge QCodeShell params.
  */
 class EditorTabColors(
     val colorFor: (String) -> Color? = { null },

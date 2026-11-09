@@ -33,7 +33,7 @@ class ProotManager(private val context: Context) {
                 "COLORTERM" to "truecolor",
                 "HOME" to (if (user == "root") "/root" else "/home/$user"),
                 "USER" to user,
-                "JCODE" to "1",
+                "QCODE" to "1",
                 // The one locale a minimal rootfs ships (libc-bin). A named one such as en_US.UTF-8 needs
                 // the `locales` package; without it, every tool silently falls back to ASCII "C".
                 "LANG" to "C.UTF-8",

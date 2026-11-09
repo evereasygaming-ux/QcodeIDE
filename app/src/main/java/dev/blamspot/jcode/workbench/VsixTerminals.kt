@@ -6,7 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 /**
  * Terminals a `.vsix` extension opened through `vscode.window.createTerminal`.
  *
- * A real terminal rather than a stand-in, because JCode has terminals and this is what the API is
+ * A real terminal rather than a stand-in, because QCode has terminals and this is what the API is
  * for: Claude Code's "run in terminal" and an extension's setup steps both arrive here, and a call
  * that quietly did nothing would look like a broken button.
  *
@@ -33,7 +33,7 @@ object VsixTerminals {
     val signal = mutableStateOf(0)
 
     /**
-     * The JCode terminal session backing each extension terminal id.
+     * The QCode terminal session backing each extension terminal id.
      *
      * Held here rather than in the composition so text sent to a terminal still lands after the
      * drawer that opened it has been closed and recomposed away.

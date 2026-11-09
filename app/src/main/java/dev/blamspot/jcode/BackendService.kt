@@ -77,7 +77,7 @@ class BackendService : Service() {
         runCatching { MainViewModel.runtimeTeardown?.invoke() }
         // The virtual device runs in a process of its own, and a close that only ends *this* one
         // leaves it up: measured, `:guest` and the logcat a guest had open outlived a Stop & close,
-        // holding 198 MB with no JCode left to show them in. Turned off through its own door first,
+        // holding 198 MB with no QCode left to show them in. Turned off through its own door first,
         // so the guest is told rather than found dead.
         runCatching { VirtualDeviceBridge.shutdown() }
         endEveryOtherProcess()

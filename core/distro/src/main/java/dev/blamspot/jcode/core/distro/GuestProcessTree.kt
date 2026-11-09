@@ -33,10 +33,10 @@ import java.util.concurrent.atomic.AtomicLong
 object GuestProcessTree {
 
     /** Which extension a guest process belongs to; inherited by everything it forks. */
-    const val OWNER_ENV = "JCODE_EXT_ID"
+    const val OWNER_ENV = "QCODE_EXT_ID"
 
     /** Which spawn it came from, so one service can be stopped without touching its siblings. */
-    const val INSTANCE_ENV = "JCODE_PROC_ID"
+    const val INSTANCE_ENV = "QCODE_PROC_ID"
 
     private val nextInstance = AtomicLong()
 

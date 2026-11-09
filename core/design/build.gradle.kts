@@ -36,7 +36,7 @@ dependencies {
     implementation(libs.compose.material3.adaptive.layout)
     implementation(libs.core.ktx)
     implementation(libs.coroutines.android)
-    // Icon packs index their art in YAML, the same format every other JCode manifest uses.
+    // Icon packs index their art in YAML, the same format every other QCode manifest uses.
     implementation(libs.snakeyaml.engine)
     // api: DiagnosticsSetting exposes DiagLevel to the settings screen.
     api(project(":core:diag"))

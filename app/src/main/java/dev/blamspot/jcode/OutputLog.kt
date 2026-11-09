@@ -23,7 +23,7 @@ data class OutputLine(val text: String, val kind: OutputKind)
 object OutputLog {
     private const val MAX_LINES = 2000
 
-    /** The OSC introducer + code of JCode's shell-integration marker, as it appears in an
+    /** The OSC introducer + code of QCode's shell-integration marker, as it appears in an
      *  echoed command line. Must stay in step with the `printf` the run launcher appends. */
     private const val SHELL_INTEGRATION_OSC = "]7713;"
 
@@ -90,7 +90,7 @@ object OutputLog {
     }
 
     /**
-     * Clean one teed PTY line and keep it unless it is JCode talking to itself.
+     * Clean one teed PTY line and keep it unless it is QCode talking to itself.
      *
      * Every run command is sent with a `printf` of [SHELL_INTEGRATION_OSC] appended so the run can
      * unbind on the command's real exit code. A PTY echoes what it is handed, and the shell echoes
@@ -100,7 +100,7 @@ object OutputLog {
      * It survives [cleanLine] because it is not an escape yet: the shell has not run the `printf`,
      * so the `ESC` is still its four-character source form, which no ANSI stripper can recognise.
      * (The OSC the printf eventually emits *is* a real escape and is already gone by here.) Matching
-     * the marker catches both copies; a program printing this JCode-private OSC code is not a real
+     * the marker catches both copies; a program printing this QCode-private OSC code is not a real
      * case.
      */
     private fun addCaptured(raw: String) {

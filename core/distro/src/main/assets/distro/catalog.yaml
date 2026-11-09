@@ -41,7 +41,7 @@ entries:
     description: Node.js runtimes and npm managed with nvm — install multiple versions side by side; the newest installed is the default on PATH.
     multiVersion: true
     # Managed with nvm so several Node versions coexist. nvm is a shell function (not a binary on PATH),
-    # and JCode's terminals / build-run use `sh -c` without sourcing a profile — so after install the
+    # and QCode's terminals / build-run use `sh -c` without sourcing a profile — so after install the
     # default version's node/npm/npx/corepack are symlinked into /usr/local/bin to keep them on PATH.
     # nvm ships upstream (unpatched) npm, avoiding Ubuntu's Debian-patched npm which fails under proot
     # with a phantom `mkdir '/home' ENOENT`. "Newest installed" is kept as the default.
@@ -54,9 +54,9 @@ entries:
         curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
       fi
       . "$NVM_DIR/nvm.sh"
-      jcode_progress 30 "Downloading Node.js ${JCODE_VERSION:-LTS}"
-      # A version chosen in the picker arrives as JCODE_VERSION; otherwise install the newest LTS.
-      if [ -n "${JCODE_VERSION:-}" ]; then nvm install "$JCODE_VERSION"; else nvm install --lts; fi
+      jcode_progress 30 "Downloading Node.js ${QCODE_VERSION:-LTS}"
+      # A version chosen in the picker arrives as QCODE_VERSION; otherwise install the newest LTS.
+      if [ -n "${QCODE_VERSION:-}" ]; then nvm install "$QCODE_VERSION"; else nvm install --lts; fi
       # Keep the newest installed version as the default and expose it on PATH via /usr/local/bin.
       jcode_progress 90 "Selecting the default Node.js"
       DEFAULT_VER="$(nvm version node)"
@@ -72,9 +72,9 @@ entries:
     uninstallScript: |
       export NVM_DIR="$HOME/.nvm"
       [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" || true
-      # Per-version remove from the picker passes JCODE_VERSION; a bare remove tears down nvm entirely.
-      if [ -n "${JCODE_VERSION:-}" ]; then
-        nvm uninstall "$JCODE_VERSION" || true
+      # Per-version remove from the picker passes QCODE_VERSION; a bare remove tears down nvm entirely.
+      if [ -n "${QCODE_VERSION:-}" ]; then
+        nvm uninstall "$QCODE_VERSION" || true
       else
         rm -rf "$NVM_DIR"
       fi
@@ -124,7 +124,7 @@ entries:
     installedVersionsScript: |
       NVM_DIR="$HOME/.nvm"
       # The active version is whatever /usr/local/bin/node resolves to — that symlink, not nvm's
-      # default alias, is what every non-login shell in JCode actually runs. Matched loosely on
+      # default alias, is what every non-login shell in QCode actually runs. Matched loosely on
       # ".../versions/node/<v>/" because under proot readlink can hand back a host-prefixed path that
       # no $HOME-anchored pattern would match; the alias file is the fallback when it resolves nothing.
       ACTIVE=$({ readlink -f /usr/local/bin/node || readlink /usr/local/bin/node; } 2>/dev/null |
@@ -136,7 +136,7 @@ entries:
     useVersionScript: |
       set -e
       export NVM_DIR="$HOME/.nvm"
-      V="${JCODE_VERSION:-}"
+      V="${QCODE_VERSION:-}"
       [ -n "$V" ] || { echo "No Node.js version given."; exit 1; }
       DIR="$NVM_DIR/versions/node/$V"
       [ -d "$DIR" ] || { echo "Node.js $V is not installed."; exit 1; }
@@ -157,7 +157,7 @@ entries:
     # JAVA_HOME (Gradle and jdtls read JAVA_HOME, not PATH).
     installScript: |
       set -e
-      V="${JCODE_VERSION:-}"
+      V="${QCODE_VERSION:-}"
       jcode_progress 5 "Resolving the JDK to install"
       if [ -z "$V" ] || [ "$V" = "latest" ]; then
         sudo apt-get update
@@ -193,7 +193,7 @@ entries:
     verifyScript: |
       command -v java >/dev/null 2>&1 && command -v javac >/dev/null 2>&1 && command -v ktlint >/dev/null 2>&1 && echo ready
     uninstallScript: |
-      V="${JCODE_VERSION:-}"
+      V="${QCODE_VERSION:-}"
       if [ -n "$V" ] && [ "$V" != "latest" ]; then
         sudo apt-get remove -y "openjdk-$V-jdk-headless" || true
       else
@@ -233,7 +233,7 @@ entries:
       done
     useVersionScript: |
       set -e
-      V="${JCODE_VERSION:-}"
+      V="${QCODE_VERSION:-}"
       [ -n "$V" ] || { echo "No JDK version given."; exit 1; }
       JH=$(ls -d /usr/lib/jvm/java-"$V"-openjdk-* 2>/dev/null | head -1)
       [ -n "$JH" ] || { echo "OpenJDK $V is not installed."; exit 1; }
@@ -263,7 +263,7 @@ entries:
         *) echo "Unsupported architecture: $(uname -m)"; exit 1 ;;
       esac
       jcode_progress 4 "Resolving the Go release"
-      V="${JCODE_VERSION:-}"
+      V="${QCODE_VERSION:-}"
       if [ -z "$V" ] || [ "$V" = "latest" ]; then
         V=$(curl -fsSL --retry 3 "https://go.dev/VERSION?m=text" | head -1 | sed 's/^go//')
       fi
@@ -289,7 +289,7 @@ entries:
     verifyScript: |
       command -v go >/dev/null 2>&1 && go version >/dev/null 2>&1 && echo ready
     uninstallScript: |
-      V="${JCODE_VERSION:-}"
+      V="${QCODE_VERSION:-}"
       if [ -n "$V" ] && [ "$V" != "latest" ]; then
         sudo rm -rf "/usr/local/go-$V"
       else
@@ -328,7 +328,7 @@ entries:
       done
     useVersionScript: |
       set -e
-      V="${JCODE_VERSION:-}"
+      V="${QCODE_VERSION:-}"
       [ -n "$V" ] || { echo "No Go version given."; exit 1; }
       [ -x "/usr/local/go-$V/bin/go" ] || { echo "Go $V is not installed."; exit 1; }
       sudo ln -sfn "/usr/local/go-$V" /usr/local/go
@@ -405,7 +405,7 @@ entries:
     name: Rust toolchain
     description: rustc and cargo managed with rustup — several toolchains can be installed side by side and the newest is the default. Installs into the runtime user's home.
     multiVersion: true
-    # rustup already keeps toolchains side by side; what was missing is PATH. JCode's terminals and
+    # rustup already keeps toolchains side by side; what was missing is PATH. QCode's terminals and
     # Build & Run use `sh -c` without sourcing a profile, so ~/.cargo/env is never read and cargo was
     # invisible to everything but an interactive login shell. The shims are symlinked into
     # /usr/local/bin the same way the Node.js entry does it.
@@ -415,7 +415,7 @@ entries:
       jcode_progress 5 "Installing build prerequisites"
       sudo apt-get update
       sudo apt-get install -y curl ca-certificates build-essential
-      V="${JCODE_VERSION:-}"
+      V="${QCODE_VERSION:-}"
       [ -z "$V" ] && V=stable
       [ "$V" = "latest" ] && V=stable
       if [ ! -x "$CARGO_HOME/bin/rustup" ]; then
@@ -444,7 +444,7 @@ entries:
       command -v rustc >/dev/null 2>&1 && command -v cargo >/dev/null 2>&1 && echo ready
     uninstallScript: |
       export CARGO_HOME="$HOME/.cargo" RUSTUP_HOME="$HOME/.rustup"
-      V="${JCODE_VERSION:-}"
+      V="${QCODE_VERSION:-}"
       if [ -n "$V" ] && [ "$V" != "latest" ] && [ -x "$CARGO_HOME/bin/rustup" ]; then
         "$CARGO_HOME/bin/rustup" toolchain uninstall "$V" || true
         # Removing the default leaves rustup with none; promote whatever is left.
@@ -481,7 +481,7 @@ entries:
     useVersionScript: |
       set -e
       export CARGO_HOME="$HOME/.cargo" RUSTUP_HOME="$HOME/.rustup"
-      V="${JCODE_VERSION:-}"
+      V="${QCODE_VERSION:-}"
       [ -n "$V" ] || { echo "No Rust toolchain given."; exit 1; }
       "$CARGO_HOME/bin/rustup" default "$V"
       "$CARGO_HOME/bin/rustc" --version
@@ -489,7 +489,7 @@ entries:
   - id: cmake-ninja
     category: build-tools
     name: CMake and Ninja
-    description: Installs the baseline native build tools used by JCode and Android/NDK projects.
+    description: Installs the baseline native build tools used by QCode and Android/NDK projects.
     installScript: |
       set -e
       jcode_apt 0 100 "Installing CMake and Ninja" cmake ninja-build pkg-config
@@ -620,7 +620,7 @@ entries:
       CLT_ZIP=$(grep -oE 'commandlinetools-linux-[0-9]+_latest\.zip' "$REPO_XML" | sort -u -V |
         awk -F'[-_]' -v max="$CLT_MAX_BUILD" '$3 + 0 <= max' | tail -1)
       if [ -z "$BUILD_TOOLS" ] || [ -z "$ALL_PLATFORMS" ] || [ -z "$CLT_ZIP" ]; then
-        echo "Google's package manifest did not list the packages JCode needs (build-tools / platforms / command-line tools)."
+        echo "Google's package manifest did not list the packages QCode needs (build-tools / platforms / command-line tools)."
         exit 1
       fi
       BT_VER="${BUILD_TOOLS#build-tools;}"
@@ -705,7 +705,7 @@ entries:
       # file or directory)" — for a file that exists — are both really "wrong ELF for this CPU".
       sudo tee /usr/local/bin/jcode-arm-sdk-patch >/dev/null <<'PATCH'
       #!/bin/sh
-      # Written by JCode's android-sdk catalog entry. Everything sdkmanager serves for "linux" is an
+      # Written by QCode's android-sdk catalog entry. Everything sdkmanager serves for "linux" is an
       # x86_64 ELF; this device is aarch64. Idempotent and cheap — safe to run before every build.
       [ "$1" = "-q" ] && exec >/dev/null 2>&1
       ANDROID_HOME="${ANDROID_HOME:-$HOME/android-sdk}"
@@ -827,7 +827,7 @@ entries:
       for GH in "$HOME/.gradle" /root/.gradle; do
         sudo mkdir -p "$GH/init.d"
         sudo tee "$GH/init.d/jcode-arm-sdk.init.gradle" >/dev/null <<'INIT'
-      // Written by JCode's android-sdk entry: sdkmanager only publishes x86_64 Linux binaries, so
+      // Written by QCode's android-sdk entry: sdkmanager only publishes x86_64 Linux binaries, so
       // anything AGP downloads mid-build (an NDK, a pinned build-tools) arrives unrunnable on this
       // aarch64 device. Re-apply the ARM patch around configuration so those pieces are fixed
       // before any task executes them. settingsEvaluated catches what earlier builds left;
@@ -845,7 +845,7 @@ entries:
       import org.gradle.api.provider.ValueSource
       import org.gradle.api.provider.ValueSourceParameters
 
-      abstract class JCodeArmSdkPatch implements ValueSource<String, JCodeArmSdkPatch.Params> {
+      abstract class QCodeArmSdkPatch implements ValueSource<String, QCodeArmSdkPatch.Params> {
           interface Params extends ValueSourceParameters { Property<String> getPhase() }
           @Override String obtain() {
               try { ["/bin/sh", "/usr/local/bin/jcode-arm-sdk-patch", "-q"].execute().waitFor() }
@@ -856,7 +856,7 @@ entries:
 
       def factory = null
       def patch = { phase ->
-          factory?.of(JCodeArmSdkPatch) { it.parameters.phase.set(phase) }?.get()
+          factory?.of(QCodeArmSdkPatch) { it.parameters.phase.set(phase) }?.get()
       }
       gradle.settingsEvaluated { settings -> factory = settings.providers; patch("settings") }
       gradle.taskGraph.whenReady { patch("taskgraph") }
@@ -1003,7 +1003,7 @@ entries:
       ls "$HOME"/android-sdk/platforms/*/android.jar >/dev/null 2>&1 && [ -x /opt/gradle/current/bin/gradle ] && BT=$(ls -d "$HOME"/android-sdk/build-tools/*/ 2>/dev/null | sort -V | tail -1) && "${BT}aapt2" version >/dev/null 2>&1 && echo ready
     uninstallScript: |
       ANDROID_HOME="$HOME/android-sdk"
-      V="${JCODE_VERSION:-}"
+      V="${QCODE_VERSION:-}"
       if [ -n "$V" ] && [ "$V" != "latest" ]; then
         # Removing one platform leaves the shared base (command-line tools, build-tools, Gradle) and
         # every other platform alone.
@@ -1043,7 +1043,7 @@ entries:
   - id: adb
     category: android
     name: ADB (Android Debug Bridge)
-    description: The distro's native aarch64 adb client. With the JCode ADB bridge paired, adb, ./gradlew installDebug, adb logcat and flutter run inside the runtime all target this phone. Google's platform-tools ship an x86_64-only adb that cannot execute here, so this is the one that actually runs.
+    description: The distro's native aarch64 adb client. With the QCode ADB bridge paired, adb, ./gradlew installDebug, adb logcat and flutter run inside the runtime all target this phone. Google's platform-tools ship an x86_64-only adb that cannot execute here, so this is the one that actually runs.
     supportedArches: [arm64]
     installScript: |
       set -e
@@ -1081,7 +1081,7 @@ entries:
       fi
       mkdir -p "$HOME/.dotnet"
       curl -fsSL --retry 3 https://dot.net/v1/dotnet-install.sh -o /tmp/dotnet-install.sh
-      V="${JCODE_VERSION:-}"
+      V="${QCODE_VERSION:-}"
       [ "$V" = "latest" ] && V=LTS
       if [ -n "$V" ]; then
         jcode_progress 20 "Installing .NET $V"
@@ -1127,7 +1127,7 @@ entries:
     verifyScript: |
       [ -x "$HOME/.dotnet/dotnet" ] && /usr/local/bin/dotnet --list-sdks 2>/dev/null | grep -q . && echo ready
     uninstallScript: |
-      V="${JCODE_VERSION:-}"
+      V="${QCODE_VERSION:-}"
       if [ -n "$V" ] && [ "$V" != "latest" ]; then
         # dotnet has no uninstall command; a channel is its sdk/ and shared/ directories.
         MAJOR=$(printf '%s' "$V" | cut -d. -f1)
@@ -1139,7 +1139,7 @@ entries:
         sudo rm -f /usr/local/bin/dotnet /etc/profile.d/jcode-dotnet.sh
       fi
     # Every .NET channel Microsoft still supports, newest first, badged LTS/STS (or Preview). Read
-    # from the official releases index, so a new .NET release needs no JCode update. The index is
+    # from the official releases index, so a new .NET release needs no QCode update. The index is
     # pretty-printed, so the three fields are collected across lines rather than matched on one.
     versionsScript: |
       curl -fsSL --retry 3 https://raw.githubusercontent.com/dotnet/core/main/release-notes/releases-index.json |
@@ -1309,7 +1309,7 @@ entries:
     name: opencode
     description: >-
       The opencode AI coding agent (single self-contained binary, no Node.js needed). Powers the
-      OpenChamber extension's right-drawer panel, and briefs the agent on JCode's environment.
+      OpenChamber extension's right-drawer panel, and briefs the agent on QCode's environment.
       Bring an API key or subscription for your model provider.
     supportedArches: [arm64]
     installScript: |
@@ -1323,9 +1323,9 @@ entries:
       jcode_progress 88 "Putting opencode on PATH"
       sudo ln -sf "$HOME/.opencode/bin/opencode" /usr/local/bin/opencode || true
       mkdir -p "$HOME/.config/opencode"
-      cat > "$HOME/.config/opencode/AGENTS.md" <<'JCODE_EOF'
-      # You are running inside JCode
-      You are an AI coding agent inside JCode, a native Android IDE on an ARM64 handheld. Your shell
+      cat > "$HOME/.config/opencode/AGENTS.md" <<'QCODE_EOF'
+      # You are running inside QCode
+      You are an AI coding agent inside QCODE IDE, a native Android IDE on an ARM64 handheld. Your shell
       runs in a proot Ubuntu 24.04 (aarch64) userland. Hard constraints:
       - Projects live under /workspace (a FUSE mount). It is noexec and has no symlink support: never
         execute compiled binaries from it and never create node_modules there. Use ext4 instead,
@@ -1336,7 +1336,7 @@ entries:
         keep it working when you change how a project runs.
       - Dev servers should bind 127.0.0.1; the IDE opens the device browser against localhost.
       - The screen is small and builds are slow: keep output short, prefer incremental commands.
-      JCODE_EOF
+      QCODE_EOF
       jcode_progress 100 "opencode ready"
       echo "installed: opencode $(opencode --version 2>/dev/null | tail -1)"
     verifyScript: |

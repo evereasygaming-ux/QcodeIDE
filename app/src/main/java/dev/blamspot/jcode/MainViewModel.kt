@@ -144,7 +144,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import org.json.JSONObject
 
-/** Version of the JCode <-> extension request/event API served by this app build. Bump when route
+/** Version of the QCode <-> extension request/event API served by this app build. Bump when route
  *  families or envelope semantics change; extensions gate on it via their manifest's api.minApiVersion. */
 const val EXTENSION_API_VERSION = 1
 
@@ -826,7 +826,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             if (residentCode) {
                 _prompts.tryEmit(
                     WorkbenchPrompt.RestartApp(
-                        "Restart JCode to finish removing ${name ?: "the extension"}.",
+                        "Restart QCode to finish removing ${name ?: "the extension"}.",
                     ),
                 )
             } else if (liveSurfaces) {
@@ -1206,7 +1206,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             .edit().putBoolean(MainActivity.KEY_HW_ACCELERATION, enabled).apply()
         viewModelScope.launch { uiPreferences.edit { it[hardwareAccelerationKey] = enabled } }
         // The window flag is read once at startup (see MainActivity), so only a fresh process applies it.
-        if (changed) _prompts.tryEmit(WorkbenchPrompt.RestartApp("Restart JCode to apply the hardware acceleration change."))
+        if (changed) _prompts.tryEmit(WorkbenchPrompt.RestartApp("Restart QCode to apply the hardware acceleration change."))
     }
 
     // Explorer "hide files at the project root" preference: a mode + the user's newline-separated
@@ -1277,7 +1277,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val respectCutoutKey = booleanPreferencesKey("respect_device_cutout")
 
     /** Whether to keep content out of the display cutout (notch/punch-hole). Mirrored to synchronous
-     *  SharedPreferences so MainActivity applies the window cutout mode on the first frame; JCodeShell
+     *  SharedPreferences so MainActivity applies the window cutout mode on the first frame; QCodeShell
      *  also applies it live (window.attributes is mutable, unlike the hardware-acceleration flag). */
     val respectDeviceCutout: StateFlow<Boolean> = uiPreferences.data
         .map { prefs -> prefs[respectCutoutKey] ?: SettingsDefaults.RESPECT_DEVICE_CUTOUT }
@@ -1332,7 +1332,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private val exitOnSwipeAwayKey = booleanPreferencesKey(EXIT_ON_SWIPE_AWAY_KEY)
 
-    /** When true (default on), swiping JCode off the Android recents screen tears down the Linux
+    /** When true (default on), swiping QCode off the Android recents screen tears down the Linux
      *  runtime (terminals, runs, VMs) and exits the process entirely — handled in
      *  [BackendService.onTaskRemoved], which reads the mirrored [exitOnSwipeAwayEnabled]. */
     val exitOnSwipeAway: StateFlow<Boolean> = uiPreferences.data
@@ -1396,7 +1396,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      *
      * That is what makes it reachable from the distro without a new proot bind -- `<rootfs>/run/x`
      * on this side is `/run/x` on that one -- and unreachable from anywhere else, since the whole
-     * rootfs lives in JCode's private storage where no other uid may open a file. Which file it
+     * rootfs lives in QCode's private storage where no other uid may open a file. Which file it
      * binds in there is the device's business, not this one's.
      */
     private fun virtualDeviceRootfs(): File? {
@@ -1486,7 +1486,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     /**
      * Re-attach the virtual device to the runtime's adb server.
      *
-     * The attachment is not owned by JCode once made: `adb kill-server`, an adb client of a different
+     * The attachment is not owned by QCode once made: `adb kill-server`, an adb client of a different
      * version taking the port, or the runtime restarting all drop it, and the device then goes missing
      * from `adb devices` with nothing to say why. This puts it back without restarting the app.
      */
@@ -1541,7 +1541,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     // --- Android run targets -------------------------------------------------
     // Which device an Android project's Run/Debug goes to. The runtime's adb server is the single
-    // source of truth: JCode's own virtual device and this phone both reach a project only by being
+    // source of truth: QCode's own virtual device and this phone both reach a project only by being
     // connected to it, so anything it does not list cannot be launched on either.
 
     private val _androidRunTargets = MutableStateFlow<List<AndroidRunTarget>>(emptyList())
@@ -1824,7 +1824,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch(Dispatchers.IO) {
             if (distroService.environmentState.value.distroInstalled != true) return@launch
             val fonts = runCatching { discoverEnvironmentFonts() }
-                .onFailure { android.util.Log.w("JCode", "environment font discovery failed", it) }
+                .onFailure { android.util.Log.w("QCODE", "environment font discovery failed", it) }
                 .getOrDefault(emptyList())
             if (fonts != _environmentFonts.value) _environmentFonts.value = fonts
         }
@@ -1949,7 +1949,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     /** Volume-key actions that must run in the Compose layer (focused-pane arrows/scroll, command
-     *  palette). Undo/Redo are invoked directly by the Activity. Collected by JCodeShell. */
+     *  palette). Undo/Redo are invoked directly by the Activity. Collected by QCodeShell. */
     private val _volumeKeyAction = MutableSharedFlow<VolumeKeyAction>(extraBufferCapacity = 8)
     val volumeKeyAction = _volumeKeyAction.asSharedFlow()
 
@@ -2097,7 +2097,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     // A third init block, for the reason the second one gives: [developerOptions] is declared just
     // above and the main init block at the top of the class runs long before it exists.
     //
-    // Developer options is what lets an unsigned, sideloaded pack load code into JCode's process.
+    // Developer options is what lets an unsigned, sideloaded pack load code into QCode's process.
     // Pushed into the loader rather than read on demand, because the loader is called from the
     // composition and a DataStore read is suspending.
     init {
@@ -2232,7 +2232,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         sessionSaveSignal.tryEmit(Unit)
     }
 
-    /** Events pushed to the live extension WebView as `window.JCode._onEvent(name, jsonString)`.
+    /** Events pushed to the live extension WebView as `window.QCode._onEvent(name, jsonString)`.
      *  Declared BEFORE the init block: its collector emits during ViewModel construction. */
     private val _extensionEvents = MutableSharedFlow<Pair<String, String>>(extraBufferCapacity = 16)
     val extensionEvents: SharedFlow<Pair<String, String>> = _extensionEvents
@@ -2267,7 +2267,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private val fileIconSetKey = stringPreferencesKey("file_icon_set_id")
 
-    /** App-wide selected file icon set id; empty means JCode's own folder/file glyphs. */
+    /** App-wide selected file icon set id; empty means QCode's own folder/file glyphs. */
     val fileIconSetId: StateFlow<String> = uiPreferences.data
         .map { prefs -> prefs[fileIconSetKey].orEmpty() }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), "")
@@ -2410,11 +2410,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     // ----- Custom extension sources (user-added .vsix release repos) -------------------------------
-    // An "extension source" is a GitHub repo URL whose releases publish `.vsix` files. JCode resolves
+    // An "extension source" is a GitHub repo URL whose releases publish `.vsix` files. QCode resolves
     // each repo's newest `.vsix` release and, for an extension installed from a source, folds an
     // "Update available" entry into the same Extensions list as the built-in marketplace. Managed on
     // the Extension Sources page (Extensions panel → Sources button). This is how a VSIX extension
-    // like OpenChamber gets updated inside JCode — the host owns updates, the extension doesn't.
+    // like OpenChamber gets updated inside QCode — the host owns updates, the extension doesn't.
 
     private val extensionSourcesKey = stringPreferencesKey("extension_sources")
 
@@ -2680,7 +2680,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun deriveProjectDir(hostPath: String): String {
-        val marker = "/JCode/projects/"
+        val marker = "/QCode/projects/"
         val i = hostPath.indexOf(marker)
         if (i < 0) return java.io.File(hostPath).parent ?: hostPath
         val name = hostPath.substring(i + marker.length).substringBefore('/')
@@ -3588,7 +3588,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     /**
-     * Open a folder the user picked. Picks already on app-private ext4 storage (the "JCode Projects"
+     * Open a folder the user picked. Picks already on app-private ext4 storage (the "QCODE IDE Projects"
      * DocumentsProvider, or an existing project dir) open in place. Anything else — primary storage,
      * cloud, third-party SAF — is copied onto /sources first (the runtime can't bind-mount it
      * otherwise); [importExternalFolder] scans it and refuses an empty or oversized folder.
@@ -3597,7 +3597,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             val resolved = workspaceManager.resolveManageable(path)
             if (workspaceManager.isManagedRoot(resolved)) {
-                emitMessage("That folder is the JCode Projects root — pick a project or workspace folder inside it.")
+                emitMessage("That folder is the QCODE IDE Projects root — pick a project or workspace folder inside it.")
                 return@launch
             }
             if (workspaceManager.isOnManagedStorage(resolved)) {
@@ -4170,7 +4170,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    /** Storage permission was granted mid-onboarding: re-anchor storage on the shared /JCode root. */
+    /** Storage permission was granted mid-onboarding: re-anchor storage on the shared /QCode root. */
     fun onStorageAccessGranted() {
         viewModelScope.launch {
             workspaceManager.refreshStorageRoots()
@@ -4559,8 +4559,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     // --- Extension API v1: versioned request envelope + pushed events over the WebView bridge ---
-    // Requests arrive as {"type":"family.verb","payload":{...}} via JCodeNative.request and are
-    // answered through window.JCode._onResult as {"ok":true,"data":{}} | {"ok":false,"error":""}.
+    // Requests arrive as {"type":"family.verb","payload":{...}} via QCodeNative.request and are
+    // answered through window.QCode._onResult as {"ok":true,"data":{}} | {"ok":false,"error":""}.
     // Route families ("exec", "fs", "workbench") are capability-gated: an extension must declare a
     // family under its manifest's api.capabilities AND the user must not have revoked it.
 
@@ -4680,7 +4680,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      * Where the virtual device belongs: the right drawer, an editor tab, or nowhere at all.
      *
      * The pack that provides the device declares the choice as one of its own settings, because it
-     * is a fact about *that* extension and belongs on its settings screen — JCode only reads it and
+     * is a fact about *that* extension and belongs on its settings screen — QCode only reads it and
      * routes. A flow rather than a lookup: changing it has to move the device while somebody is
      * looking at it, not at the next launch.
      */
@@ -4694,13 +4694,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }.stateIn(viewModelScope, SharingStarted.Eagerly, VirtualDeviceSurface.None)
 
     /**
-     * When true, an Android run config built for the container starts its APK inside JCode's own
+     * When true, an Android run config built for the container starts its APK inside QCode's own
      * process (no install, no adb) once the build finishes — see [VirtualDeviceBridge]. It is
      * also what runs the device's adb daemon, since there is nothing to serve without a device.
      *
      * The pack that provides the device declares it, the same way it declares which surface the
      * device opens on: it is a fact about *that* extension, it should leave with the extension,
-     * and JCode only reads it. A switch in JCode's own settings for a device JCode does not
+     * and QCode only reads it. A switch in QCode's own settings for a device QCode does not
      * contain was a setting that outlived what it configured.
      */
     val runInVirtualDevice: StateFlow<Boolean> =
@@ -4718,7 +4718,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     // but well below the main init block — referencing it from there reads an uninitialised field
     // and crashes the ViewModel's construction.
     init {
-        // JCode's own adbd runs only while the setting is on: it is an authenticated listener on
+        // QCode's own adbd runs only while the setting is on: it is an authenticated listener on
         // loopback, and there is no reason to hold a port open for a feature that is switched off.
         viewModelScope.launch {
             runInVirtualDevice.collect { enabled ->
@@ -4740,7 +4740,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      * `{{extensionDir}}` becomes the extension's own directory and `{{someKey}}` the current value of
      * any of its other settings, so a manifest can point at a script it ships and hand that script
      * whatever the rest of the form says — the tool that was picked, typically. What a tool's models
-     * are called is the extension's business; JCode only runs the command and splits the lines.
+     * are called is the extension's business; QCode only runs the command and splits the lines.
      *
      * Everything about this is best-effort. The command runs in the guest, the tool it asks may not
      * be installed, and it is answering a text field that accepts anything typed into it — so a
@@ -4889,7 +4889,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _explorerScmDecorations.value = emptyMap()
     }
 
-    /** Entry point for JCodeNative.request. Logs the request/response to the Extension Dev tools when
+    /** Entry point for QCodeNative.request. Logs the request/response to the Extension Dev tools when
      *  the caller is a dev (unsigned sideloaded) extension, then delegates to [extensionApiRequestImpl]. */
     suspend fun extensionApiRequest(ext: InstalledExtension, envelopeJson: String): String {
         val isDevExt = dev.blamspot.jcode.workbench.ExtensionDevLog.isDev(ext.id)
@@ -4914,7 +4914,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val type = req.optString("type")
         val payload = req.optJSONObject("payload") ?: JSONObject()
         if (ext.apiMinVersion > EXTENSION_API_VERSION) {
-            return apiError("extension requires API v${ext.apiMinVersion}; this JCode has v$EXTENSION_API_VERSION")
+            return apiError("extension requires API v${ext.apiMinVersion}; this QCode has v$EXTENSION_API_VERSION")
         }
         val family = type.substringBefore('.')
         // "service.*" (long-lived runtime servers) is an exec-level privilege — gate it on "exec".
@@ -5046,7 +5046,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         // The workbench's bin, offered to extensions so a destructive action of theirs can be as
         // recoverable as one of the Explorer's — Source Control's "Discard" is the case it exists
         // for. The setting is honoured here rather than by the caller: whether a delete is kept is
-        // the user's decision about JCode, not a decision each extension gets to make for itself.
+        // the user's decision about QCode, not a decision each extension gets to make for itself.
         "workbench.trash" -> {
             val paths = p.optJSONArray("paths")
             val enabled = trashEnabled.value
@@ -5879,7 +5879,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     // Closing tabs with unsaved changes routes through a Save/Discard/Close-Saved prompt first; the
-    // dialog (shown in JCodeApp) reads this and calls back into [resolveEditorClose].
+    // dialog (shown in QCodeApp) reads this and calls back into [resolveEditorClose].
     private val _pendingEditorClose = MutableStateFlow<PendingEditorClose?>(null)
     val pendingEditorClose: StateFlow<PendingEditorClose?> = _pendingEditorClose.asStateFlow()
     // The (target tab ids, tab to activate afterward) captured while the prompt is up.
@@ -6019,7 +6019,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private fun File.diskSignatureOrNull(): DiskSignature? =
         if (exists() && isFile) DiskSignature(lastModified(), length()) else null
 
-    /** Foreground re-sync trigger, driven by a RESUMED loop in JCodeApp and on tab switch. */
+    /** Foreground re-sync trigger, driven by a RESUMED loop in QCodeApp and on tab switch. */
     fun requestSyncOpenFilesFromDisk() {
         viewModelScope.launch { syncOpenFilesFromDisk() }
     }

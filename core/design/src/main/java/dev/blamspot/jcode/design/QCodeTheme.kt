@@ -10,7 +10,7 @@ import androidx.compose.runtime.Composable
  * objects rather than accessors here: they are the same in every bundle, so routing them through a
  * CompositionLocal only added an indirection and a `@Composable` requirement at every call site.
  */
-object JCodeTheme {
-    val semanticColors: JCodeSemanticColors
+object QCodeTheme {
+    val semanticColors: QCodeSemanticColors
         @Composable get() = LocalSemanticColors.current
 }

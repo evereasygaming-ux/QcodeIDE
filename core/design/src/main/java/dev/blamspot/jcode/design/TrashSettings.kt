@@ -4,7 +4,7 @@ import androidx.compose.runtime.compositionLocalOf
 
 /**
  * The Trash preference, shared by the Settings screen and the Explorer through
- * [LocalTrashSettings] rather than threaded through JCodeShell as parameters (ART register limit —
+ * [LocalTrashSettings] rather than threaded through QCodeShell as parameters (ART register limit —
  * see [ExplorerHiddenSetting], which is here for the same reason).
  *
  * [retentionDays] of 0 is "keep until I empty it".

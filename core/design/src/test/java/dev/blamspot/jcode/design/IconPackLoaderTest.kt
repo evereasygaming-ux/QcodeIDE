@@ -72,7 +72,7 @@ class IconPackLoaderTest {
         assertEquals("ext.id", set.providerId)
         // Two definitions plus the alias.
         assertEquals(3, set.filledSlots)
-        assertEquals(set.art(JCodeIcon.Run), set.art(JCodeIcon.Continue))
+        assertEquals(set.art(QCodeIcon.Run), set.art(QCodeIcon.Continue))
     }
 
     @Test
@@ -83,7 +83,7 @@ class IconPackLoaderTest {
         val set = IconPackLoader.uiIconSet(index, "ext.id", "Ext")!!
         assertEquals(1, set.filledSlots)
         // Debug is not in the pack, so it must be Material's glyph — not the unknown-slot circle.
-        assertEquals(defaultUiIconSet.art(JCodeIcon.Debug), set.art(JCodeIcon.Debug))
+        assertEquals(defaultUiIconSet.art(QCodeIcon.Debug), set.art(QCodeIcon.Debug))
     }
 
     @Test

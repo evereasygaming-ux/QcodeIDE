@@ -3,7 +3,7 @@ package dev.blamspot.jcode.design
 import androidx.compose.runtime.compositionLocalOf
 
 /**
- * One device an Android run or debug can be sent to, as the runtime's adb server reports it: JCode's
+ * One device an Android run or debug can be sent to, as the runtime's adb server reports it: QCode's
  * own virtual device, this phone through the relay, or anything else the guest has connected.
  */
 data class AndroidRunTarget(

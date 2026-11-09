@@ -11,7 +11,7 @@ import androidx.compose.ui.graphics.Color
  * hardcoded at call sites.
  */
 @Immutable
-data class JCodeSemanticColors(
+data class QCodeSemanticColors(
     val success: Color,
     val onSuccess: Color,
     val warning: Color,

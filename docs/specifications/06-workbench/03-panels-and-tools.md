@@ -20,7 +20,7 @@ the extra-keys row, volume-key bindings).
 
 ```kotlin
 internal enum class WorkbenchTool(
-    val label: String, val icon: JCodeIcon,
+    val label: String, val icon: QCodeIcon,
     val compactLabel: String = label,
     val available: Boolean = true,     // hidden from the activity bar until it has a working UI
 )
@@ -46,7 +46,7 @@ the activity bar. A persisted selection that is no longer available falls back t
 ## 3. Right drawer — `RightPanelTab`
 
 ```kotlin
-internal enum class RightPanelTab(val label: String, val icon: JCodeIcon, val enabled: Boolean = true)
+internal enum class RightPanelTab(val label: String, val icon: QCodeIcon, val enabled: Boolean = true)
 ```
 
 | Member | Label | Content | Visibility |
@@ -95,7 +95,7 @@ falls back to the default when the named built-in is not currently offered.
 **Source Control refreshes only while it is on screen.** The SCM extension re-reads the working tree
 when the app raises its `filesChanged` hint, but the app only ever raised it for changes *it* made —
 an editor save, an explorer file operation. Anything done in the terminal (`git add`, a build, a
-coding agent) therefore left the staged/changed lists stale. `JCodeShell` now also ticks that hint
+coding agent) therefore left the staged/changed lists stale. `QCodeShell` now also ticks that hint
 every `SCM_VISIBLE_REFRESH_MS` (3 s) while the Source Control tool is selected **and** the left
 drawer is genuinely visible — `compactDrawerState.isOpen` in the modal layout, `leftSidebarExpanded`
 in the docked one — with the loop parked by `repeatOnLifecycle(STARTED)` while the app is
@@ -104,7 +104,7 @@ on visibility because each tick costs a `git status` inside the distro, which is
 on a panel nobody is looking at.
 
 Terminal tabs can be **pinned** (long-press → Pin): a pinned tab sorts to the front, shows a pin
-instead of its `×`, and is skipped by *Close others* / *Close all*. The pin set lives in `JCodeApp`
+instead of its `×`, and is skipped by *Close others* / *Close all*. The pin set lives in `QCodeApp`
 alongside `terminalSessionIds`, **not** in the terminal panel — the right drawer's content is
 disposed whenever the drawer is collapsed or closed (and again when it swaps between modal and
 docked), which takes a panel-local `rememberSaveable` registry with it. This is the same hazard as
@@ -118,7 +118,7 @@ the collapsible settings groups; see
 ```kotlin
 data class CommandSpec(
     val id: String, val title: String, val group: String,
-    val action: () -> Unit, val isEnabled: () -> Boolean, val icon: JCodeIcon,
+    val action: () -> Unit, val isEnabled: () -> Boolean, val icon: QCodeIcon,
 )
 object CommandRegistry   // linkedMapOf + a Compose-state `version` counter
 ```
@@ -264,7 +264,7 @@ every line of setup output and would otherwise recompose the row continuously du
 4. Root `onPreviewKeyEvent` runs before focused interop views — keep the per-view fallbacks.
 5. Extension `console` output goes to the Ext Dev log, not logcat.
 6. Status-bar `remember` keys must exclude churning fields.
-7. State that must outlive the right drawer (terminal pins) is held in `JCodeApp`, never in a panel.
+7. State that must outlive the right drawer (terminal pins) is held in `QCodeApp`, never in a panel.
 8. Polling that costs guest work (the SCM refresh tick) is gated on the panel being visible AND the
    app being started — never on composition alone, which outlives visibility in a modal drawer.
 

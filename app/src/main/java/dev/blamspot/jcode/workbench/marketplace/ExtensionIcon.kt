@@ -156,7 +156,7 @@ private suspend fun loadIcon(context: Context, iconFile: File?, iconUrl: String?
             connectTimeout = 10_000
             readTimeout = 15_000
             instanceFollowRedirects = true
-            setRequestProperty("User-Agent", "JCode")
+            setRequestProperty("User-Agent", "QCODE IDE")
         }
         if (conn.responseCode !in 200..299) {
             conn.disconnect()

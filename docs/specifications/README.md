@@ -1,6 +1,6 @@
-# JCode — Engineering Specifications
+# QCode — Engineering Specifications
 
-**As-built** specifications for JCode, a native Android IDE with an embedded Linux runtime.
+**As-built** specifications for QCode, a native Android IDE with an embedded Linux runtime.
 
 | | |
 |---|---|
@@ -48,7 +48,7 @@ for *how to work in this repo* (conventions, locked decisions, verification comm
 
 | Document | Covers |
 |---|---|
-| [01 Product overview](00-overview/01-product-overview.md) | What JCode is, capability surface, non-goals |
+| [01 Product overview](00-overview/01-product-overview.md) | What QCode is, capability surface, non-goals |
 | [02 Glossary and conventions](00-overview/02-glossary-and-conventions.md) | Distro, rootfs, guest, workspace, project, `.jext`, Dev Pack, and this document set's conventions |
 
 ### 01 — Architecture
@@ -129,7 +129,7 @@ for *how to work in this repo* (conventions, locked decisions, verification comm
 
 | Document | Covers |
 |---|---|
-| [01 File format index](09-platform/01-file-format-index.md) | Every on-disk artifact JCode reads or writes |
+| [01 File format index](09-platform/01-file-format-index.md) | Every on-disk artifact QCode reads or writes |
 | [02 Build variants and release](09-platform/02-build-variants-and-release.md) | Toolchain versions, variants, version codes, signing |
 | [03 CI, quality and invariants](09-platform/03-ci-quality-and-invariants.md) | The no-host-root scanner, code-quality rules, verification commands |
 | [04 Security and privacy](09-platform/04-security-and-privacy.md) | Trust model, sandbox boundaries, permissions, log hygiene |

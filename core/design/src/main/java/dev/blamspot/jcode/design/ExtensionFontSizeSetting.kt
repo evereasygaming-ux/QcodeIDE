@@ -7,7 +7,7 @@ import androidx.compose.runtime.compositionLocalOf
  * How large an imported `.vsix` extension draws its own text, as a percentage.
  *
  * A percentage rather than a size in sp, which is what the editor and terminal use, because those
- * two render text JCode owns and this one does not. A `.vsix` is a web page the extension author
+ * two render text QCode owns and this one does not. A `.vsix` is a web page the extension author
  * wrote and styled — headings, code blocks and captions all at sizes of their choosing — so there
  * is no single number to set. What there is, is a scale to apply to all of them at once, and saying
  * "125%" is honest about that where "16 sp" would not be.

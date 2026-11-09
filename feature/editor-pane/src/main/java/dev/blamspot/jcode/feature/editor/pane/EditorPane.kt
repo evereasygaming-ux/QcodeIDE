@@ -73,7 +73,7 @@ import dev.blamspot.jcode.design.LocalEditorSaveActions
 import dev.blamspot.jcode.design.LocalEditorTabActions
 import dev.blamspot.jcode.design.LocalEditorTypeface
 import dev.blamspot.jcode.design.LocalExtraKeysState
-import dev.blamspot.jcode.design.JCodeIcon
+import dev.blamspot.jcode.design.QCodeIcon
 import dev.blamspot.jcode.design.FileTypeIcon
 import dev.blamspot.jcode.design.LocalFileIconSet
 import dev.blamspot.jcode.design.JcTooltip
@@ -255,7 +255,7 @@ private fun TabItem(
             // protected from accidental close (close it via the long-press menu).
             if (tab.pinned) {
                 Icon(
-                    painter = jcIcon(JCodeIcon.Pin),
+                    painter = jcIcon(QCodeIcon.Pin),
                     contentDescription = "Pinned",
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(13.dp),
@@ -321,14 +321,14 @@ private fun TabItem(
             expanded = menuOpen,
             onDismissRequest = { menuOpen = false },
             listActions = buildList {
-                add(ContextAction(JCodeIcon.Pin, if (tab.pinned) "Unpin" else "Pin") { tabActions.onTogglePin(tab.id) })
+                add(ContextAction(QCodeIcon.Pin, if (tab.pinned) "Unpin" else "Pin") { tabActions.onTogglePin(tab.id) })
                 // Real file tabs only (non-blank path), and hidden when tab coloring is Disabled.
                 if (!tab.isPage && tab.filePath.path.isNotBlank() && tabColors.pickerEnabled) {
-                    add(ContextAction(JCodeIcon.Palette, "Change Tab Color") { colorDialogOpen = true })
+                    add(ContextAction(QCodeIcon.Palette, "Change Tab Color") { colorDialogOpen = true })
                 }
-                add(ContextAction(JCodeIcon.Close, "Close") { onClosed() })
-                add(ContextAction(JCodeIcon.Close, "Close others") { tabActions.onCloseOthers(tab.id) })
-                add(ContextAction(JCodeIcon.Close, "Close to the right") { tabActions.onCloseToRight(tab.id) })
+                add(ContextAction(QCodeIcon.Close, "Close") { onClosed() })
+                add(ContextAction(QCodeIcon.Close, "Close others") { tabActions.onCloseOthers(tab.id) })
+                add(ContextAction(QCodeIcon.Close, "Close to the right") { tabActions.onCloseToRight(tab.id) })
             },
         )
         if (colorDialogOpen) {
@@ -596,18 +596,18 @@ fun EditorViewHost(
                     }
                 },
                 quickActions = listOf(
-                    ContextAction(JCodeIcon.Copy, "Copy") { view?.copySelection() },
-                    ContextAction(JCodeIcon.Cut, "Cut") { view?.cutSelection() },
-                    ContextAction(JCodeIcon.Paste, "Paste") { view?.pasteClipboard() },
+                    ContextAction(QCodeIcon.Copy, "Copy") { view?.copySelection() },
+                    ContextAction(QCodeIcon.Cut, "Cut") { view?.cutSelection() },
+                    ContextAction(QCodeIcon.Paste, "Paste") { view?.pasteClipboard() },
                 ),
                 listActions = buildList {
-                    add(ContextAction(JCodeIcon.Cursor, "Select Text") { view?.beginTextSelection() })
-                    add(ContextAction(JCodeIcon.SelectAll, "Select all") { view?.selectAll() })
+                    add(ContextAction(QCodeIcon.Cursor, "Select Text") { view?.beginTextSelection() })
+                    add(ContextAction(QCodeIcon.SelectAll, "Select all") { view?.selectAll() })
                     menuExtras.onGoToLine?.let { go ->
-                        add(ContextAction(JCodeIcon.GoToLine, "Go to line") { go() })
+                        add(ContextAction(QCodeIcon.GoToLine, "Go to line") { go() })
                     }
                     menuExtras.onFindText?.let { find ->
-                        add(ContextAction(JCodeIcon.Search, "Find text") { find(req.word) })
+                        add(ContextAction(QCodeIcon.Search, "Find text") { find(req.word) })
                     }
                     menuExtras.previewToggle?.let { toggle ->
                         add(ContextAction(menuExtras.previewIcon, menuExtras.previewLabel) { toggle() })
@@ -632,11 +632,11 @@ fun EditorViewHost(
     }
 }
 
-private fun EditorLanguageAction.menuIcon(): JCodeIcon = when (this) {
-    EditorLanguageAction.GoToDefinition -> JCodeIcon.Definition
-    EditorLanguageAction.FindReferences -> JCodeIcon.References
-    EditorLanguageAction.RenameSymbol -> JCodeIcon.Rename
-    EditorLanguageAction.FormatDocument -> JCodeIcon.Format
+private fun EditorLanguageAction.menuIcon(): QCodeIcon = when (this) {
+    EditorLanguageAction.GoToDefinition -> QCodeIcon.Definition
+    EditorLanguageAction.FindReferences -> QCodeIcon.References
+    EditorLanguageAction.RenameSymbol -> QCodeIcon.Rename
+    EditorLanguageAction.FormatDocument -> QCodeIcon.Format
 }
 
 /** Routes extra-keys row presses to the editor as synthesized key events ([EditorView.dispatchKeyEvent]

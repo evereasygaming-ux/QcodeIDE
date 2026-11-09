@@ -20,7 +20,7 @@ const maxAttachmentBytes = 64 << 20
 var unsafeNameChars = regexp.MustCompile(`[^A-Za-z0-9._ -]+`)
 
 func (m *Manager) attachmentsRoot() string {
-	return filepath.Join(m.HomeDir, ".antigem", "claude-attachments")
+	return filepath.Join(m.HomeDir, ".qcode", "claude-attachments")
 }
 
 // handleAttachments: POST saves one file for a chat; GET /attachments/raw?path= returns a saved file.

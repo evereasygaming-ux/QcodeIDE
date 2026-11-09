@@ -22,7 +22,7 @@ enum class TabMaxSize(val titleMaxWidth: Dp) {
 }
 
 /** App setting: the editor/terminal tab width cap. Shared with the tab strips + settings screen via
- *  [LocalTabMaxSize] without threading params through JCodeShell (ART register limit). */
+ *  [LocalTabMaxSize] without threading params through QCodeShell (ART register limit). */
 class TabMaxSizeSetting(
     val size: TabMaxSize = SettingsDefaults.TAB_MAX_SIZE,
     val onChange: (TabMaxSize) -> Unit = {},

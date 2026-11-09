@@ -23,7 +23,7 @@ enum class VolumeKeyAction(val repeatable: Boolean) {
 }
 
 /** App setting: the action bound to each hardware volume button. Shared with the settings screen and
- *  the key handler via [LocalVolumeKeysSetting] without threading params through JCodeShell. */
+ *  the key handler via [LocalVolumeKeysSetting] without threading params through QCodeShell. */
 class VolumeKeysSetting(
     val up: VolumeKeyAction = SettingsDefaults.VOLUME_UP_ACTION,
     val down: VolumeKeyAction = SettingsDefaults.VOLUME_DOWN_ACTION,

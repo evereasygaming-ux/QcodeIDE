@@ -52,7 +52,7 @@ class ExtensionSettingsUi(
      *
      * Not everything an extension wants on its settings screen is something to store. A device
      * that has come unattached needs reattaching, and there is no value that expresses that: it
-     * is a thing to *do*, and the manifest names a command JCode already has rather than
+     * is a thing to *do*, and the manifest names a command QCode already has rather than
      * describing behaviour of its own.
      */
     val onAction: (extensionId: String, key: String) -> Unit = { _, _ -> },

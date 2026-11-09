@@ -5,7 +5,7 @@ import android.content.Intent
 import android.os.IBinder
 import android.util.Log
 import dev.blamspot.jcode.ext.NativeExtensionLoader
-import dev.blamspot.jcode.ext.api.JCodeVirtualDeviceGuest
+import dev.blamspot.jcode.ext.api.QCodeVirtualDeviceGuest
 import dev.blamspot.jcode.feature.marketplace.MarketplaceServiceLocator
 import dev.blamspot.jcode.feature.marketplace.nativeGuestModule
 
@@ -29,7 +29,7 @@ import dev.blamspot.jcode.feature.marketplace.nativeGuestModule
  */
 class GuestSessionService : Service() {
 
-    private var guest: JCodeVirtualDeviceGuest? = null
+    private var guest: QCodeVirtualDeviceGuest? = null
 
     override fun onBind(intent: Intent?): IBinder? {
         val loaded = guest ?: load() ?: return null
@@ -53,7 +53,7 @@ class GuestSessionService : Service() {
      * as a device that will not start rather than left as a half-hooked process pretending to be one,
      * because the second is far harder to diagnose from the guest app's side.
      */
-    private fun load(): JCodeVirtualDeviceGuest? {
+    private fun load(): QCodeVirtualDeviceGuest? {
         // This is a different process from the workbench, so the flag it pushes into the loader is
         // not set here — every unsigned pack was refused with developer options on, and the device
         // opened only to say it could not start its guest.

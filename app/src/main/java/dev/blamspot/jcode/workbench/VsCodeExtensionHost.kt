@@ -148,7 +148,7 @@ class VsCodeExtensionHost(
         pending.clear()
     }
 
-    /** Answer something the extension asked JCode for. */
+    /** Answer something the extension asked QCode for. */
     fun reply(id: Int, result: Any?, error: String? = null) {
         val frame = JSONObject().put("id", id)
         if (error != null) frame.put("error", error) else frame.put("result", result ?: JSONObject.NULL)

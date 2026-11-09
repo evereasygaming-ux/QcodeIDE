@@ -45,10 +45,10 @@ fun ManagerPanelHeader(
     onManage: (() -> Unit)? = null,
     manageContentDescription: String = "Manage",
     onImport: (() -> Unit)? = null,
-    importIcon: JCodeIcon = JCodeIcon.Open,
+    importIcon: QCodeIcon = QCodeIcon.Open,
     importContentDescription: String = "Import",
     onExtras: (() -> Unit)? = null,
-    extrasIcon: JCodeIcon = JCodeIcon.MoreVert,
+    extrasIcon: QCodeIcon = QCodeIcon.MoreVert,
     extrasContentDescription: String = "More",
     /**
      * Problems this panel wants to report. A count rather than the text: the messages themselves go
@@ -95,7 +95,7 @@ fun ManagerPanelHeader(
             }
             if (onManage != null) {
                 HeaderIconButton(
-                    icon = jcIcon(JCodeIcon.Settings),
+                    icon = jcIcon(QCodeIcon.Settings),
                     contentDescription = manageContentDescription,
                     onClick = onManage,
                 )
@@ -104,7 +104,7 @@ fun ManagerPanelHeader(
                 HeaderNoticeButton(count = noticeCount, onClick = onNotice)
             }
             HeaderIconButton(
-                icon = jcIcon(JCodeIcon.Search),
+                icon = jcIcon(QCodeIcon.Search),
                 contentDescription = "Search",
                 onClick = onToggleSearch,
                 active = searchActive,
@@ -121,7 +121,7 @@ fun ManagerPanelHeader(
                 }
             } else {
                 HeaderIconButton(
-                    icon = jcIcon(JCodeIcon.Refresh),
+                    icon = jcIcon(QCodeIcon.Refresh),
                     contentDescription = "Refresh",
                     onClick = onRefresh,
                 )

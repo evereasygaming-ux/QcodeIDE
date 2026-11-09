@@ -7,12 +7,12 @@
  * nobody defined made the label the same colour as the button under it. There were 259 others.
  *
  * Nothing here is a literal colour. Every token resolves through the `--jc-*` ramp below, which
- * JCode overwrites from whichever theme bundle is active — so an extension is drawn in the
+ * QCode overwrites from whichever theme bundle is active — so an extension is drawn in the
  * user's theme rather than in one hard-coded palette, and follows it when they switch. The
  * defaults are the Pierre-dark values, so the file still stands on its own if that never runs.
  */
 :root{
-  /* --- the ramp JCode fills from the live theme --- */
+  /* --- the ramp QCode fills from the live theme --- */
   --jc-bg-deep: #101118;
   --jc-bg: #14151d;
   --jc-bg-raised: #181a24;

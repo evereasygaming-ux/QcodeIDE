@@ -73,7 +73,7 @@ handshake.
 | Field | Value |
 |---|---|
 | `clientID` | `"jcode"` |
-| `clientName` | `"JCode"` |
+| `clientName` | `"QCode"` |
 | `adapterID` | `debugType` |
 | `locale` | `"en"` |
 | `linesStartAt1`, `columnsStartAt1` | `true` |
@@ -184,9 +184,9 @@ the frame's file directly.
 ### 7.1 The Java debug adapter
 
 A small Gradle project in the **Java Dev Pack** (`adapter/`) wrapping Microsoft's java-debug
-with JCode-specific providers:
-`JCodeSourceLookUpProvider`, `JCodeEvaluationProvider`, `JCodeCompletionsProvider`,
-`JCodeHotCodeReplaceProvider`, `JCodeVirtualMachineManagerProvider`, and a `Main` entry point.
+with QCode-specific providers:
+`QCodeSourceLookUpProvider`, `QCodeEvaluationProvider`, `QCodeCompletionsProvider`,
+`QCodeHotCodeReplaceProvider`, `QCodeVirtualMachineManagerProvider`, and a `Main` entry point.
 
 ---
 
@@ -216,7 +216,7 @@ One `CoroutineScope(SupervisorJob() + Dispatchers.IO)` per session, holding the 
 Device-verified findings:
 
 - **debugpy (Python) works fully.**
-- **js-debug**: a proot loopback **transport** problem, not a JCode protocol defect — the child
+- **js-debug**: a proot loopback **transport** problem, not a QCode protocol defect — the child
   session cannot reach `__jsDebugChildServer` over the guest's loopback.
 - **netcoredbg**: attach stalls.
 - **java-debug**: functional through the Java Dev Pack's adapter for Android attach; the general JVM launch path

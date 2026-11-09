@@ -11,7 +11,7 @@
 
 ## 1. Purpose and scope
 
-How JCode is built and shipped: the toolchain matrix, the three app identities, the version scheme,
+How QCode is built and shipped: the toolchain matrix, the three app identities, the version scheme,
 and the post-build signing flow.
 
 ---
@@ -59,9 +59,9 @@ There are **no product flavors**. Three identities come from build types plus a 
 
 | Build | `applicationId` | Label | Launcher icon |
 |---|---|---|---|
-| `debug` | `dev.blamspot.jcode.debug` | JCode (debug) | `ic_launcher_debug` (whole mark hollow) |
-| `release` | `dev.blamspot.jcode` | JCode | `ic_launcher` |
-| `release -PjcodeIdSuffix=.beta` | `dev.blamspot.jcode.beta` | JCode (beta) | `ic_launcher_beta` (hollow J) |
+| `debug` | `dev.blamspot.jcode.debug` | QCode (debug) | `ic_launcher_debug` (whole mark hollow) |
+| `release` | `dev.blamspot.jcode` | QCode | `ic_launcher` |
+| `release -PjcodeIdSuffix=.beta` | `dev.blamspot.jcode.beta` | QCode (beta) | `ic_launcher_beta` (hollow J) |
 
 All three install **side by side**. The `namespace` — the compile-time R and BuildConfig package —
 is also `dev.blamspot.jcode`, and the Kotlin, Java, AIDL and JNI sources sit under it: at 1.7.7 the
@@ -84,7 +84,7 @@ editing a string — both were done for 1.7.7 rather than deferred:
   `VirtualLauncher`'s own ids are synthetic — they label the *drawn* fallback launcher's nodes in a
   uiautomator dump and have no APK behind them.
 - **The Java debug adapter** is now `dev.blamspot.jcode.javadap`, and its source is the Java Dev
-  Pack's `adapter/`. The jar is not built during a JCode
+  Pack's `adapter/`. The jar is not built during a QCode
   build; it is downloaded from a pinned release and launched by main class, so the package could
   only move together with a republished jar. `DebugEngineModels` now fetches `java-dap-v2` and
   launches `dev.blamspot.jcode.javadap.Main` — **that release must exist before 1.7.7 ships**, or
@@ -101,7 +101,7 @@ release uses it — it exists so a build can be produced under a *different* pac
 way to exercise the migration path in §4.5 (an update that is not an update).
 
 Each identity gets its own private data — Linux rootfs, settings, sessions — because the package
-differs. Only the legacy shared `/storage/emulated/0/JCode` projects folder was common; post-migration
+differs. Only the legacy shared `/storage/emulated/0/QCode` projects folder was common; post-migration
 projects live under each package's own `filesDir`.
 
 Manifest placeholders `appLabel`, `appIcon`, `appIconRound` carry the differences.
@@ -291,7 +291,7 @@ asks the user, because installing gives them the new version with nothing in it 
 install intact, and that trade is theirs to make. The already-downloaded APK path is carried so
 "install anyway" does not download it again.
 
-`dev.blamspot.jcode.MigrationBundle` is the format: `/storage/emulated/0/JCode/migration/` holding
+`dev.blamspot.jcode.MigrationBundle` is the format: `/storage/emulated/0/QCode/migration/` holding
 `settings.json` (a `SettingsBackup` document), `rootfs.tar.gz` (byte-for-byte an ordinary environment
 backup), `projects.tar.gz`, `extensions.tar.gz`, and `manifest.json` naming the parts that landed.
 **The manifest is written last** — a bundle is found by its manifest, so an interrupted export leaves
@@ -328,12 +328,12 @@ There is **no `signingConfigs {}` block in Gradle**. Release APKs are signed pos
 Keystore resolution order:
 
 1. `-KeystorePath` argument
-2. `$env:JCODE_KEYSTORE`
+2. `$env:QCODE_KEYSTORE`
 3. The default `~/.jcode/jcode-release.jks`
 4. An interactive file picker
-5. An offer to create one: `keytool -genkeypair -keystore <path> -alias jcode -keyalg RSA -keysize 4096 -validity 10000 -dname 'CN=JCode, O=Blamspot, C=PH'`
+5. An offer to create one: `keytool -genkeypair -keystore <path> -alias jcode -keyalg RSA -keysize 4096 -validity 10000 -dname 'CN=QCode, O=Blamspot, C=PH'`
 
-Password from `$env:JCODE_KEYSTORE_PASS` or a password file. If `JCODE_KEYSTORE` is set but is not a
+Password from `$env:QCODE_KEYSTORE_PASS` or a password file. If `QCODE_KEYSTORE` is set but is not a
 file, or no password is available, the build **fails** rather than silently producing an unsigned
 APK.
 
@@ -422,10 +422,10 @@ nothing they name can collide with a release.
 Covered fully in [Native layer and JNI](../01-architecture/04-native-layer-and-jni.md). Key points
 for building:
 
-- One `native/CMakeLists.txt` superbuild, selected per module by `-DJCODE_NATIVE_MODULE`.
+- One `native/CMakeLists.txt` superbuild, selected per module by `-DQCODE_NATIVE_MODULE`.
 - Rust FFI via `gradle/cargo.gradle.kts` (`cargo ndk`), falling back to a CMake stub when cargo is
   unavailable. Once cargo has produced the real library for a variant, the root build passes
-  `-DJCODE_REAL_LIB_PRESENT=ON` and the stub is built **STATIC** instead of shared — a shared one
+  `-DQCODE_REAL_LIB_PRESENT=ON` and the stub is built **STATIC** instead of shared — a shared one
   lands in the CMake object directory under the same name AGP takes the cargo library from, and
   `mergeReleaseNativeLibs` cannot choose between them. Dropping the target altogether would leave
   the module's CMake project with nothing to build; a `.a` is never packaged. The same flag decides
@@ -472,7 +472,7 @@ The root `detekt` task is currently a **bootstrap placeholder** registered in `b
 | Deep Windows checkout path | Native build fails on `MAX_PATH` |
 | No network on a clean build | `FetchContent` cannot fetch pinned upstreams |
 | `cargo` absent | Search falls back to the Kotlin walk; the app still links |
-| `JCODE_KEYSTORE` set but missing | Build fails with a clear message |
+| `QCODE_KEYSTORE` set but missing | Build fails with a clear message |
 | Version formula drifting between script and Gradle | The APK's `versionCode` disagrees with its filename |
 | A pre-release label that resolves to none of `alpha.N`/`beta.N`/`rc.N` | Refused before the build — it would derive the release tier, giving a preview the same `versionCode` as the release |
 | A hand-written label at or below one already published for the train | Refused before the build; a tag check alone cannot see the "below" case |
