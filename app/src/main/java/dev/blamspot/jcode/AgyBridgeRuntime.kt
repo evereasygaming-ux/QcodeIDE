@@ -148,6 +148,17 @@ class AgyBridgeRuntime(
     }
 
     private suspend fun findAgy(): String? {
+        // The installer writes to ~/.local/bin, which is not on the non-login PATH used by exec().
+        val user = distroService.environmentState.value.runtime.user
+        val home = guestHome(user)
+        val rootfs = distroService.activeRootfsPath()
+        listOf(
+            "$home/.local/bin/agy",
+            "$home/.gemini/bin/agy",
+            "/usr/local/bin/agy",
+            "/usr/bin/agy",
+        ).firstOrNull { File(rootfs, it.trimStart('/')).isFile }?.let { return it }
+
         val result = distroService.exec(
             command = "command -v agy 2>/dev/null || true",
             timeoutMs = 5_000,
