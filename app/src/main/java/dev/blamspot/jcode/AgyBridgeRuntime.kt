@@ -35,7 +35,7 @@ class AgyBridgeRuntime(
     sealed interface State {
         data object Stopped : State
         data object Starting : State
-        data class Running(val pid: Long) : State
+        data object Running : State
         data class Failed(val message: String) : State
     }
 
@@ -76,7 +76,7 @@ class AgyBridgeRuntime(
 
             repeat(HEALTH_ATTEMPTS) {
                 if (AgyBridgeClient.isHealthy(httpUrl)) {
-                    _state.value = State.Running(started.pid())
+                    _state.value = State.Running
                     return@withContext Result.success(Unit)
                 }
                 if (!started.isAlive) {
@@ -214,7 +214,7 @@ class AgyBridgeRuntime(
     }
 
     private fun logTail(): String = synchronized(log) {
-        log.lineSequence().takeLast(8).joinToString(" | ").take(600)
+        log.lineSequence().toList().takeLast(8).joinToString(" | ").take(600)
     }
 
     private fun guestHome(user: String): String = if (user == "root") "/root" else "/home/$user"
