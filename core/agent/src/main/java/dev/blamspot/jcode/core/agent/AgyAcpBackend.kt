@@ -213,7 +213,11 @@ class AgyAcpBackend(
     private suspend fun ensureSession(cwd: String, resume: String?): String = connectLock.withLock {
         ensureProcessLocked(cwd)
         val current = sessionId
-        if (current != null && sessionCwd == cwd) return@withLock current
+        // Reuse the live session only when the chat still points at it. A null resume id means the
+        // user started a new chat, so a fresh ACP session must be created even if agy is still alive.
+        if (!resume.isNullOrBlank() && current == resume && sessionCwd == cwd) {
+            return@withLock current
+        }
 
         if (!resume.isNullOrBlank()) {
             val resumed = runCatching {
