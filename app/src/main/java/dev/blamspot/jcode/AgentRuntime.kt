@@ -1,6 +1,7 @@
 package dev.blamspot.jcode
 
 import android.content.Context
+import dev.blamspot.jcode.core.agent.AcpMcpServer
 import dev.blamspot.jcode.core.agent.AgentChatStore
 import dev.blamspot.jcode.core.agent.AgentKind
 import dev.blamspot.jcode.core.agent.AgyAcpBackend
@@ -51,9 +52,15 @@ object AgentRuntime {
             }
         }
         val storeDir = File(context.filesDir, "agent")
+        val rootfs = distroService.activeRootfsPath()
+        val home = if (user == "root") "/root" else "/home/$user"
+        val deepxScript = "$home/.qcode/deepx/deepx-lite-mcp.mjs"
         val agyBackend = AgyAcpBackend(
             launcher = launcher,
             defaultWorkdir = distroService.environmentState.value.runtime.workdir,
+            mcpServers = {
+                resolveDeepxServer(rootfs, home, deepxScript)?.let(::listOf).orEmpty()
+            },
         )
         return AgentController(
             backends = linkedMapOf(
@@ -66,5 +73,22 @@ object AgentRuntime {
                 AgentKind.AGY to AgentChatStore(File(storeDir, "chat-agy.json")),
             ),
         )
+    }
+
+    private fun resolveDeepxServer(rootfs: File, home: String, script: String): AcpMcpServer? {
+        if (!File(rootfs, script.trimStart('/')).isFile) return null
+        val node = resolveNode(rootfs, home) ?: return null
+        return AcpMcpServer(name = "deepx-flow", command = node, args = listOf(script))
+    }
+
+    private fun resolveNode(rootfs: File, home: String): String? {
+        listOf("/usr/local/bin/node", "/usr/bin/node", "/bin/node")
+            .firstOrNull { File(rootfs, it.trimStart('/')).exists() }
+            ?.let { return it }
+        val nvm = File(rootfs, home.trimStart('/') + "/.nvm/versions/node")
+        return nvm.listFiles()
+            ?.sortedByDescending { it.name }
+            ?.firstOrNull { File(it, "bin/node").exists() }
+            ?.let { "$home/.nvm/versions/node/${it.name}/bin/node" }
     }
 }

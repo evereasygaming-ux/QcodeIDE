@@ -38,10 +38,18 @@ import java.util.concurrent.atomic.AtomicLong
  * `session/update` notifications; a tool that needs consent arrives as `session/request_permission`
  * and is answered by [resolvePermission].
  */
+data class AcpMcpServer(
+    val name: String,
+    val command: String,
+    val args: List<String> = emptyList(),
+    val env: Map<String, String> = emptyMap(),
+)
+
 class AgyAcpBackend(
     private val launcher: AgentProcessLauncher,
     private val defaultWorkdir: String = "/root",
     private val cliPath: String = "agy",
+    private val mcpServers: () -> List<AcpMcpServer> = { emptyList() },
 ) : AgentBackend {
 
     override val kind: AgentKind = AgentKind.AGY
@@ -527,7 +535,23 @@ class AgyAcpBackend(
     private fun sessionParams(resume: String?, cwd: String): JsonObject = buildJsonObject {
         if (resume != null) put("sessionId", resume)
         put("cwd", cwd)
-        put("mcpServers", buildJsonArray {})
+        put("mcpServers", buildJsonArray {
+            for (server in mcpServers()) {
+                add(buildJsonObject {
+                    put("name", server.name)
+                    put("command", server.command)
+                    put("args", buildJsonArray { server.args.forEach { add(it) } })
+                    put("env", buildJsonArray {
+                        server.env.forEach { (name, value) ->
+                            add(buildJsonObject {
+                                put("name", name)
+                                put("value", value)
+                            })
+                        }
+                    })
+                })
+            }
+        })
     }
 
     private fun rpcError(response: JsonObject): AgentRpcException {
