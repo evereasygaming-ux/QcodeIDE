@@ -228,7 +228,13 @@ class DeepXBridgeServer(
         val code = payload.string("code") ?: payload.string("expression") ?: ""
         val expression = normalizeExpression(code)
         val literal = JsonPrimitive(expression).toString()
-        val wrapper = "(function(){try{return {success:true,result:(0,eval)($literal)}}" +
+        val wrapper = "(function(){try{" +
+            "var src=$literal;" +
+            "var tt=window.trustedTypes,p=window.__qcodeEvalPolicy;" +
+            "if(tt&&tt.createPolicy&&!p){try{p=tt.createPolicy('qcode-eval'," +
+            "{createScript:function(s){return s}});window.__qcodeEvalPolicy=p}catch(_){}}" +
+            "if(p)src=p.createScript(src);" +
+            "return {success:true,result:(0,eval)(src)}}" +
             "catch(e){return {success:false,error:String((e&&e.message)||e)}}})()"
         val result = evaluateJson(wrapper, 30_000) as? JsonObject
             ?: throw IllegalStateException("The QCODE Browser tab is not open.")
