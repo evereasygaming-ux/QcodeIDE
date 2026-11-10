@@ -218,8 +218,8 @@ class DeepXBridgeServer(
             put("flowTabUrl", url)
             put("hasToken", false)
             put("account", account)
-            put("projectId", projectId ?: JsonNull)
-            put("projectName", projectName ?: JsonNull)
+            put("projectId", projectId?.let(::JsonPrimitive) ?: JsonNull)
+            put("projectName", projectName?.let(::JsonPrimitive) ?: JsonNull)
             put("activeBatches", 0)
         }
     }
