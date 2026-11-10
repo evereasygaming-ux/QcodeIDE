@@ -540,7 +540,7 @@ class AgyAcpBackend(
                 add(buildJsonObject {
                     put("name", server.name)
                     put("command", server.command)
-                    put("args", buildJsonArray { server.args.forEach { add(it) } })
+                    put("args", buildJsonArray { server.args.forEach { add(JsonPrimitive(it)) } })
                     put("env", buildJsonArray {
                         server.env.forEach { (name, value) ->
                             add(buildJsonObject {
