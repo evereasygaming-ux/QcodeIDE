@@ -39,6 +39,7 @@ include(":core:config")
 include(":core:ext-api")
 include(":core:diag")
 include(":core:agent")
+include(":core:browserext")
 
 // Feature modules
 include(":feature:explorer")
@@ -50,6 +51,7 @@ include(":feature:lsp-manager")
 include(":feature:marketplace")
 include(":feature:onboarding")
 include(":feature:agent")
+include(":feature:browser")
 
 // Native modules
 include(":native:buffer")

@@ -255,6 +255,7 @@ dependencies {
     implementation(project(":core:ext-api"))
     implementation(project(":core:diag"))
     implementation(project(":core:agent"))
+    implementation(project(":core:browserext"))
 
     // Feature modules
     implementation(project(":feature:explorer"))
@@ -266,6 +267,7 @@ dependencies {
     implementation(project(":feature:marketplace"))
     implementation(project(":feature:onboarding"))
     implementation(project(":feature:agent"))
+    implementation(project(":feature:browser"))
 
     // Native modules
     implementation(project(":native:buffer"))
