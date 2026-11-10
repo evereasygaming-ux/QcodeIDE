@@ -274,6 +274,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val workspaceManager: WorkspaceManager = WorkspaceServiceLocator.workspaceManager(application)
     val configService: ConfigService = ConfigServiceLocator.configService()
     val distroService: DistroService = DistroServiceLocator.distroService(application)
+    val deepxRuntime: DeepXRuntime = DeepXRuntime(application, distroService, viewModelScope)
     val adbBridge: AdbBridge = AdbBridgeLocator.adbBridge(application)
     val resourceManager: ResourceManager = ResourceManagerLocator.resourceManager(application)
     val currentWorkspace: StateFlow<Workspace?> = workspaceManager.currentWorkspace
@@ -296,6 +297,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val runTerminalCompletions: SharedFlow<Pair<String, Int>> = _runTerminalCompletions.asSharedFlow()
 
     init {
+        deepxRuntime.start()
         TerminalSessionHost.manager(appContext).onTaskComplete = { sessionId, payload ->
             setupTerminalRunner.handleTaskComplete(sessionId, payload)
             _runTerminalCompletions.tryEmit(sessionId to (payload.substringAfter(';').trim().toIntOrNull() ?: -1))

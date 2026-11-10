@@ -23,4 +23,5 @@ android {
 
 dependencies {
     implementation(libs.coroutines.core)
+    implementation(libs.kotlinx.serialization.json)
 }
