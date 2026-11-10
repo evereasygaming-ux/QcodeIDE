@@ -223,7 +223,17 @@ class AgentController(
                 _state.update { it.copy(pendingApproval = event) }
             }
 
-            is AgentEvent.Session -> _state.update { it.copy(sessionId = event.id) }
+            is AgentEvent.Session -> {
+                val models = backend().availableModels()
+                _state.update { state ->
+                    val selected = listOfNotNull(event.model, state.model)
+                        .firstOrNull { id -> models.any { it.id == id } }
+                        ?: models.firstOrNull()?.id
+                        ?: "default"
+                    state.copy(sessionId = event.id, models = models, model = selected)
+                }
+                persist()
+            }
 
             is AgentEvent.Usage -> _state.update {
                 it.copy(
