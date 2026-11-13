@@ -97,8 +97,41 @@ jobs:
       - name: Build the Rust JNI libraries (debug)
         run: ./gradlew --no-daemon :native:ripgrep-ffi:cargoBuildDebugJniLibs :native:wasmtime-ffi:cargoBuildDebugJniLibs
 
+      # Compile before assembling: a Kotlin error then surfaces in minutes instead of after the
+      # packaging stages, and the assemble run below is incremental anyway.
+      - name: Compile the Kotlin sources
+        run: |
+          set -o pipefail
+          ./gradlew --no-daemon :app:compileDebugKotlin 2>&1 | tee /tmp/kotlin.log
+
       - name: Assemble the debug APK
-        run: ./gradlew --no-daemon :app:assembleDebug
+        run: |
+          set -o pipefail
+          ./gradlew --no-daemon :app:assembleDebug 2>&1 | tee /tmp/assemble.log
+
+      # The run log needs an authenticated session to read, so on failure the compiler's own
+      # lines are echoed into the job summary — that is public for a public repo and is enough to
+      # see the first `e:` without another round trip.
+      - name: Report the Gradle failure
+        if: failure()
+        run: |
+          log=/tmp/assemble.log
+          [ -s "$log" ] || log=/tmp/kotlin.log
+          [ -s "$log" ] || exit 0
+          {
+            echo '## Gradle failure'
+            echo
+            echo '```'
+            grep -E '^e: |^w: .*(error|Error)|error:|FAILURE:|What went wrong|Execution failed for task|Caused by:|Could not (resolve|find|create|download)|> Task .* FAILED|A problem occurred' "$log" | head -120 || true
+            echo '```'
+            echo
+            echo '<details><summary>Tail of the build log</summary>'
+            echo
+            echo '```'
+            tail -200 "$log" || true
+            echo '```'
+            echo '</details>'
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload the debug APK
         if: always()

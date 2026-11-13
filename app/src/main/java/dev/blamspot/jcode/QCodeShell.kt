@@ -47,8 +47,8 @@ import dev.blamspot.jcode.design.TabCloseButtonSetting
 import dev.blamspot.jcode.editor.SyntaxHighlighter
 import dev.blamspot.jcode.feature.agent.AgentController
 import dev.blamspot.jcode.feature.agent.AgentPane
-import dev.blamspot.jcode.feature.browser.BrowserPane
 import dev.blamspot.jcode.editor.TokenPalette
+import dev.blamspot.jcode.feature.browser.BrowserPane
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
