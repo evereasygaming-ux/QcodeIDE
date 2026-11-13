@@ -55,8 +55,8 @@ import dev.blamspot.jcode.design.Space
  *
  * [onOpenUrl] is how a row reaches the web: the panel owns no WebView of its own, so opening Flow
  * hands the URL to the workbench's single browser rather than starting a second one. [onInstallSkills]
- * copies the extension's `skills/*` into the embedded Linux environment; it is null when the host does
- * not have a runtime to install into.
+ * copies the extension's `skills/` tree into the embedded Linux environment; it is null when the host
+ * does not have a runtime to install into.
  */
 @Composable
 fun BrowserPane(
