@@ -109,15 +109,37 @@ jobs:
           set -o pipefail
           ./gradlew --no-daemon :app:assembleDebug 2>&1 | tee /tmp/assemble.log
 
-      # Phase 5 turns R8 on for `release`, and shipping a variant nobody compiles is how a
-      # minified release breaks unnoticed. This compiles the release Kotlin and runs the exact
-      # R8 step `assembleRelease` would, so a missing keep rule fails CI here instead of in a
-      # release build. Native release libs are irrelevant to R8 (it never reads the .so files),
-      # so this stays a few minutes rather than a second full build.
-      - name: Check the release build under R8
+      # Phase 5 turns R8 on for `release`, and shipping a variant nobody assembles is how a
+      # minified release breaks unnoticed. This builds the release JNI libraries and assembles the
+      # whole variant, so a missing keep rule, a resource the shrinker removed, or a release-only
+      # compile error fails CI here instead of in a signed release.
+      - name: Build the Rust JNI libraries (release)
+        run: ./gradlew --no-daemon :native:ripgrep-ffi:cargoBuildReleaseJniLibs :native:wasmtime-ffi:cargoBuildReleaseJniLibs
+
+      - name: Assemble the release APK under R8
         run: |
           set -o pipefail
-          ./gradlew --no-daemon :app:compileReleaseKotlin :app:minifyReleaseWithR8 2>&1 | tee /tmp/r8.log
+          ./gradlew --no-daemon :app:assembleRelease 2>&1 | tee /tmp/r8.log
+
+      # The real signing key lives in the admin-only `release` environment, so the workflow cannot
+      # produce the shipping APK. It can still produce an *installable* minified build by signing
+      # with the debug keystore: enough to verify on a device that R8 kept every extension-facing
+      # name, and otherwise throwaway.
+      - name: Sign the release build with the debug key for testing
+        run: |
+          set -eu
+          apk="$(find app/build/outputs/apk/release -name '*.apk' | head -1)"
+          [ -n "$apk" ] || { echo "::error::no release APK produced"; exit 1; }
+          keystore="$HOME/.android/debug.keystore"
+          [ -f "$keystore" ] || { echo "::error::debug keystore missing at $keystore"; exit 1; }
+          aligned=app/build/outputs/apk/release/app-release-test-aligned.apk
+          out=app/build/outputs/apk/release/app-release-test.apk
+          "$ANDROID_HOME/build-tools/34.0.0/zipalign" -f -p 4 "$apk" "$aligned"
+          "$ANDROID_HOME/build-tools/34.0.0/apksigner" sign \
+            --ks "$keystore" --ks-pass pass:android --key-pass pass:android \
+            --ks-key-alias androiddebugkey --out "$out" "$aligned"
+          "$ANDROID_HOME/build-tools/34.0.0/apksigner" verify --print-certs "$out" | head -4
+          ls -l app/build/outputs/apk/debug/*.apk "$out"
 
       # The run log needs an authenticated session to read, so on failure the compiler's own
       # lines are echoed into the job summary — that is public for a public repo and is enough to
@@ -163,10 +185,20 @@ jobs:
           path: app/build/outputs/apk/debug/*.apk
           if-no-files-found: warn
 
+      - name: Upload the release test APK
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qcode-release-test-apk
+          path: app/build/outputs/apk/release/app-release-test.apk
+          if-no-files-found: warn
+
       - name: Show the APK identity
         run: |
           set -eu
-          apk="$(find app/build/outputs/apk/debug -name '*.apk' | head -1)" || true
-          [ -n "$apk" ] || { echo "no APK produced"; exit 0; }
-          echo "APK: $apk"
-          "$ANDROID_HOME/build-tools/34.0.0/aapt2" dump badging "$apk" | grep -E "package:|application-label" || true
+          for variant in debug release; do
+            apk="$(find "app/build/outputs/apk/$variant" -name '*.apk' ! -name '*aligned*' 2>/dev/null | head -1)" || true
+            [ -n "$apk" ] || { echo "no $variant APK produced"; continue; }
+            echo "APK ($variant): $apk — $(stat -c %s "$apk") bytes"
+            "$ANDROID_HOME/build-tools/34.0.0/aapt2" dump badging "$apk" | grep -E "package:|application-label" || true
+          done
