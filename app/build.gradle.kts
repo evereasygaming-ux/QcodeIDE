@@ -172,7 +172,10 @@ android {
             manifestPlaceholders["appIconRound"] = "@mipmap/ic_launcher_debug_round"
         }
         release {
-            isMinifyEnabled = false
+            // R8 was off until Phase 5: the extension ABI needs the keeps in proguard-rules.pro, but
+            // the IDE's own code is the bulk of the dex and is safe to shrink and rename.
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

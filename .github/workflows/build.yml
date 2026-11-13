@@ -109,18 +109,32 @@ jobs:
           set -o pipefail
           ./gradlew --no-daemon :app:assembleDebug 2>&1 | tee /tmp/assemble.log
 
+      # Phase 5 turns R8 on for `release`, and shipping a variant nobody compiles is how a
+      # minified release breaks unnoticed. This compiles the release Kotlin and runs the exact
+      # R8 step `assembleRelease` would, so a missing keep rule fails CI here instead of in a
+      # release build. Native release libs are irrelevant to R8 (it never reads the .so files),
+      # so this stays a few minutes rather than a second full build.
+      - name: Check the release build under R8
+        run: |
+          set -o pipefail
+          ./gradlew --no-daemon :app:compileReleaseKotlin :app:minifyReleaseWithR8 2>&1 | tee /tmp/r8.log
+
       # The run log needs an authenticated session to read, so on failure the compiler's own
       # lines are echoed into the job summary — that is public for a public repo and is enough to
       # see the first `e:` without another round trip.
       - name: Report the Gradle failure
         if: failure()
         run: |
-          log=/tmp/assemble.log
-          [ -s "$log" ] || log=/tmp/kotlin.log
-          [ -s "$log" ] || exit 0
+          # Whichever log was written last is the step that failed.
+          log="$(ls -t /tmp/kotlin.log /tmp/assemble.log /tmp/r8.log 2>/dev/null | head -1)"
+          [ -n "$log" ] && [ -s "$log" ] || exit 0
           # The run log needs a session; annotations are readable on a public repo without one, so
           # the first compiler errors are raised as annotations as well as put in the summary.
           grep -E '^e: ' "$log" | head -6 | while IFS= read -r line; do
+            printf '::error::%s\n' "${line//'%'/'%25'}"
+          done
+          # R8 reports missing classes and rule problems on their own lines.
+          grep -E '^Missing class |^ERROR: |^Error: |^Warning: ' "$log" | head -6 | while IFS= read -r line; do
             printf '::error::%s\n' "${line//'%'/'%25'}"
           done
           grep -E '^> Task .* FAILED|^FAILURE:|Execution failed for task|^Caused by: ' "$log" | head -4 | while IFS= read -r line; do
@@ -130,7 +144,7 @@ jobs:
             echo '## Gradle failure'
             echo
             echo '```'
-            grep -E '^e: |^w: .*(error|Error)|error:|FAILURE:|What went wrong|Execution failed for task|Caused by:|Could not (resolve|find|create|download)|> Task .* FAILED|A problem occurred' "$log" | head -120 || true
+            grep -E '^e: |^w: .*(error|Error)|error:|^Missing class |^ERROR: |^Warning: |FAILURE:|What went wrong|Execution failed for task|Caused by:|Could not (resolve|find|create|download)|> Task .* FAILED|A problem occurred' "$log" | head -120 || true
             echo '```'
             echo
             echo '<details><summary>Tail of the build log</summary>'
