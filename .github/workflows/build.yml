@@ -128,10 +128,16 @@ jobs:
       - name: Sign the release build with the debug key for testing
         run: |
           set -eu
-          apk="$(find app/build/outputs/apk/release -name '*.apk' | head -1)"
+          apk="$(find app/build/outputs/apk/release -name '*.apk' ! -name '*test*' | head -1)"
           [ -n "$apk" ] || { echo "::error::no release APK produced"; exit 1; }
-          keystore="$HOME/.android/debug.keystore"
-          [ -f "$keystore" ] || { echo "::error::debug keystore missing at $keystore"; exit 1; }
+          keystore=/tmp/qcode-release-test.keystore
+          # A keystore of our own rather than the runner's debug one: AGP only writes the debug
+          # keystore when it has to sign a debug variant, and relying on that side effect breaks
+          # the step the moment the debug build is cached or its signing changes.
+          keytool -genkeypair -noprompt \
+            -keystore "$keystore" -storepass android -keypass android \
+            -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 \
+            -dname "CN=QCODE Release Test,O=QCODE,C=US"
           aligned=app/build/outputs/apk/release/app-release-test-aligned.apk
           out=app/build/outputs/apk/release/app-release-test.apk
           "$ANDROID_HOME/build-tools/34.0.0/zipalign" -f -p 4 "$apk" "$aligned"
@@ -194,6 +200,7 @@ jobs:
           if-no-files-found: warn
 
       - name: Show the APK identity
+        if: always()
         run: |
           set -eu
           for variant in debug release; do

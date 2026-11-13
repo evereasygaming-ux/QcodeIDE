@@ -2,9 +2,9 @@
 
 | | |
 |---|---|
-| **Status** | Implemented — one enforced guard plus version-bump automation; broader CI is planned |
+| **Status** | Implemented — build gate, one enforced guard plus version-bump automation; tests are not gated |
 | **Modules** | Repository-wide |
-| **Primary sources** | scripts/check-no-host-root.sh, scripts/bump-version.sh, .github/workflows/version-bump.yml, .githooks/pre-commit, scripts/install-git-hooks.sh, scripts/build-release.ps1, CONTRIBUTING.md, AGENTS.md, app/src/androidTest/, core/buffer/src/test/, core/buffer/src/androidTest/ |
+| **Primary sources** | scripts/check-no-host-root.sh, scripts/bump-version.sh, .github/workflows/build.yml, .github/workflows/version-bump.yml, .githooks/pre-commit, scripts/install-git-hooks.sh, scripts/build-release.ps1, CONTRIBUTING.md, AGENTS.md, app/src/androidTest/, core/buffer/src/test/, core/buffer/src/androidTest/ |
 | **Verified against** | commit `cea581c`, 2026-08-09 |
 
 ---
@@ -240,10 +240,11 @@ Repository conventions worth knowing:
 
 ## 8. Known gaps
 
-- **No CI workflow gates anything.** The two that exist — `release.yml` and `version-bump.yml` —
-  publish and bump; neither checks. The no-host-root scanner runs only from the commit hook and the
-  release scripts, so a contributor without hooks enabled, or a pull request from a fork, reaches
-  `main` unscanned. There is no build, lint, unit-test or instrumented-test workflow.
+- **CI is a build gate, not a test gate.** `.github/workflows/build.yml` compiles the debug APK and
+  assembles the release variant under R8 on every push and pull request; `release.yml` publishes and
+  `version-bump.yml` bumps. No workflow runs unit or instrumented tests, and the no-host-root scanner
+  still runs only from the commit hook and the release scripts, so a contributor without hooks
+  enabled, or a pull request from a fork, reaches `main` unscanned.
 - `detekt` is a placeholder task with no configuration.
 - Warning-free builds and the contrast standards are conventions, not gates.
 - Test coverage is narrow: the buffer and the highlighter have differential tests; the terminal, LSP,

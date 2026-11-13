@@ -106,8 +106,23 @@ projects live under each package's own `filesDir`.
 
 Manifest placeholders `appLabel`, `appIcon`, `appIconRound` carry the differences.
 
-`release` sets `isMinifyEnabled = false` — R8 shrinking and obfuscation are **off**, though
-`proguard-rules.pro` exists.
+`release` sets `isMinifyEnabled = true` and `isShrinkResources = true` — R8 shrinks, obfuscates and
+removes unused resources. Not everything may be renamed: a **native extension** is a dex file
+loaded into QCode's own process with QCode's class loader as its parent, so its bytecode names host
+classes directly and R8 cannot see those references. `app/proguard-rules.pro` therefore keeps
+
+- `dev.blamspot.jcode.ext.api.**` — the promised surface, versioned by `QCODE_EXT_ABI`;
+- `dev.blamspot.jcode.design.**` and `dev.blamspot.jcode.core.distro.adb.**` — the surface the
+  extension documentation calls "reachable but not promised";
+- `kotlin.**`, `kotlinx.coroutines.**`, `androidx.compose.**`, `androidx.activity.**` and
+  `androidx.lifecycle.**` — the runtime those packs compile against, because their own dex calls
+  `kotlin.jvm.internal.Intrinsics` and Compose's generated classes by name;
+- `@JavascriptInterface` members, which web content calls by name.
+
+Everything belonging to the IDE itself is free to shrink and rename. Extending the ABI means adding
+a keep rule in the same change, or rebuilding the affected pack and bumping `QCODE_EXT_ABI`; the
+`build` workflow assembles the release variant on every push so a missing rule fails CI rather than
+a release.
 
 ### 3.1 ABI filters
 
@@ -484,9 +499,13 @@ The root `detekt` task is currently a **bootstrap placeholder** registered in `b
 ## 11. Known gaps
 
 - `detekt` is a placeholder task with no configuration.
-- R8 is disabled on release, so the APK ships unshrunk and unobfuscated.
-- There is still no CI workflow that builds or tests a pull request; `release.yml` is the first
-  workflow that compiles the app, and it only runs when a release is published by hand.
+- ~~R8 is disabled on release, so the APK ships unshrunk and unobfuscated.~~ Fixed: `release` enables
+  R8 and the resource shrinker, `proguard-rules.pro` keeps the extension ABI (see §3), and the
+  `build` workflow assembles the release variant on every push. The signed release itself still
+  needs the admin-only signing secrets.
+- `build.yml` compiles the debug APK and assembles the release under R8 on every push and pull
+  request, but no unit or instrumented tests run there — the workflow is a build gate, not a test
+  gate.
 - `UPDATE_CHANNEL` has exactly two values. A second side-by-side preview slot (an `alpha` app id
   beside `beta`) would need a third, and `jcodeIdSuffix` is a free-form string that nothing
   validates against the channel derivation.

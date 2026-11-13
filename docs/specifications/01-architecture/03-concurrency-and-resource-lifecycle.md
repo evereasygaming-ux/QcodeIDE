@@ -137,9 +137,34 @@ for a few kilobytes.
 | `LOW` | 0.7 |
 | `CRITICAL` | 0.9 |
 
-`onTrimMemory(level)` only ever **raises** pressure (`if (newPressure.ordinal > oldPressure.ordinal)`)
-— it never lowers it automatically — but it calls `applyTrimming` unconditionally, so a repeated
-callback at the same level keeps trimming.
+`onTrimMemory(level)` reports the **last** level rather than a high-water mark (`_pressure.value =
+newPressure`) and calls `applyTrimming` unconditionally, so a repeated callback at the same level
+keeps trimming. It used to only raise, which let one `CRITICAL` callback pin the flow for the rest
+of the process; `onAppForegrounded()` is the recovery signal, because `ComponentCallbacks2` has no
+"you are fine now" callback of its own.
+
+### 4.3 What starts when, and what is destroyed
+
+RAM on a phone is dominated by what is running, not by what is cached, so heavy subsystems start on
+first use:
+
+| Subsystem | Starts | Stops |
+|---|---|---|
+| Terminal PTY | the first terminal tab | tab closed, the app swiped away (`EXIT_ON_SWIPE_AWAY`), or — when *Auto-close idle terminals* is on — an idle prompt past the threshold |
+| Agent (`agy` over ACP) | the first message in the Agent panel | session end |
+| Browser `WebView` | the single Browser tab | leaving the tab: only the active editor page is composed, so `BrowserPage.onDispose` calls `destroy()` |
+| Extension `WebView` (page/tab) | the tab that shows it | leaving that tab — `onDispose` destroys the `WebView` — or the extension being uninstalled or updated |
+| SCM background host | a project opens | project change or uninstall; it is persistent by design and is not trimmed under pressure (see §7) |
+| Native plugin (`DexClassLoader`) | the page that uses it | that page's dispose, or eviction from `LoadedPlugins` under pressure |
+| DeepX bridge | app start, while the extension switch is on | switching the extension off, which also removes the agent's MCP entry |
+
+The DeepX bridge is the deliberate exception to "only while its panel is open": it is a loopback
+`ServerSocket`, not a process, and the extension keeps its connection while the user works
+elsewhere. Its cost is a socket and a few threads, and stopping it would break the `deepx_status`
+tool the agent is promised.
+
+Log buffers are capped rather than trimmed: `OutputLog` keeps 2,000 lines and `DiagnosticLog` keeps
+600 recent lines with a 2 MB rotating file, so a long build cannot grow them without bound.
 
 ---
 
