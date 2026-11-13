@@ -9,10 +9,13 @@ import dev.blamspot.jcode.core.browserext.BundledExtensionPreferences
 import dev.blamspot.jcode.core.browserext.DeepXBridgeServer
 import dev.blamspot.jcode.core.browserext.DeepXSurface
 import dev.blamspot.jcode.core.distro.DistroService
+import dev.blamspot.jcode.core.distro.WorkspaceHostPaths
 import dev.blamspot.jcode.workbench.BuiltinBrowser
+import java.io.BufferedInputStream
 import java.io.File
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import java.util.zip.ZipInputStream
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -220,6 +223,73 @@ class DeepXRuntime(
     private fun assetExists(path: String): Boolean =
         runCatching { context.assets.open(path).close() }.isSuccess
 
+    /**
+     * Extract the bundled video tool into the guest's `/workspace/.qcode-tools/video`.
+     *
+     * The tree ships as one compressed asset because most of its 56 MB is the static ffmpeg binary
+     * the guest has no system copy of. Extraction is versioned: the marker stops a second tap from
+     * rewriting 56 MB, while a new bundled version replaces the code and leaves the user's `.env`
+     * alone (it is not in the archive).
+     */
+    suspend fun installBundledVideoTool(): Result<File> = withContext(Dispatchers.IO) {
+        runCatching {
+            val destination = File(WorkspaceHostPaths.projectsRoot, VIDEO_TOOL_DIR)
+            val marker = File(destination, VIDEO_TOOL_MARKER)
+            val ffmpeg = File(destination, VIDEO_TOOL_FFMPEG)
+            if (
+                marker.isFile &&
+                marker.readText().trim() == VIDEO_TOOL_VERSION &&
+                ffmpeg.isFile &&
+                File(destination, "qcode-video.mjs").isFile
+            ) {
+                return@runCatching destination
+            }
+            if (!destination.isDirectory && !destination.mkdirs()) {
+                throw IllegalStateException("Could not create ${destination.absolutePath}")
+            }
+            val root = destination.canonicalFile
+            val prefix = root.path + File.separator
+            context.assets.open(ASSET_VIDEO_TOOL).use { raw ->
+                ZipInputStream(BufferedInputStream(raw)).use { zip ->
+                    while (true) {
+                        val entry = zip.nextEntry ?: break
+                        // A zip entry is attacker-controlled text: resolve it, then prove the
+                        // result stays under the tool directory before writing anything.
+                        val target = File(root, entry.name).canonicalFile
+                        if (target != root && !target.path.startsWith(prefix)) {
+                            throw IllegalStateException(
+                                "Refusing to extract ${entry.name} outside ${root.path}",
+                            )
+                        }
+                        if (entry.isDirectory) {
+                            if (!target.isDirectory && !target.mkdirs()) {
+                                throw IllegalStateException("Could not create ${target.absolutePath}")
+                            }
+                        } else {
+                            val parent = target.parentFile
+                            if (parent != null && !parent.isDirectory && !parent.mkdirs()) {
+                                throw IllegalStateException("Could not create ${parent.absolutePath}")
+                            }
+                            target.outputStream().use { output -> zip.copyTo(output) }
+                        }
+                        zip.closeEntry()
+                    }
+                }
+            }
+            // The archive carries no POSIX modes, and the pipeline spawns ffmpeg directly.
+            ffmpeg.setExecutable(true, false)
+            listOf(
+                "list-voices.sh",
+                "run-hindi.sh",
+                "run-test.sh",
+                "run-tutorial.sh",
+                "test-skill.sh",
+            ).forEach { File(destination, it).setExecutable(true, false) }
+            marker.writeText(VIDEO_TOOL_VERSION)
+            destination
+        }
+    }
+
     private fun copyAsset(asset: String, destination: File) {
         val temp = File(destination.parentFile, destination.name + ".tmp")
         context.assets.open(asset).use { input ->
@@ -347,6 +417,11 @@ class DeepXRuntime(
     private companion object {
         const val ASSET = "deepx/deepx-lite-mcp.mjs"
         const val ASSET_SKILLS = "extensions/deepx-flow/skills"
+        const val ASSET_VIDEO_TOOL = "tools/qcode-video/qcode-video.zip"
+        const val VIDEO_TOOL_VERSION = "1.0.0"
+        const val VIDEO_TOOL_DIR = ".qcode-tools/video"
+        const val VIDEO_TOOL_MARKER = ".qcode-tool-version"
+        const val VIDEO_TOOL_FFMPEG = "node_modules/ffmpeg-static/ffmpeg"
         const val KEY_INSTALLED = "installed_update"
     }
 }

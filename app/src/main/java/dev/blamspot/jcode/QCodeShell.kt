@@ -1115,17 +1115,27 @@ fun QCodeApp(
                 onEnabledChange = viewModel.deepxRuntime::setBundledExtensionEnabled,
                 onInstallSkills = {
                     bundledBrowserScope.launch {
-                        val result = viewModel.deepxRuntime.installBundledSkills()
-                        snackbarHostState.showSnackbar(
-                            result.fold(
-                                onSuccess = { count ->
-                                    "Installed $count bundled skill${if (count == 1) "" else "s"} into the Linux environment."
-                                },
-                                onFailure = { failure ->
-                                    "Could not install skills: ${failure.message ?: "unknown error"}"
-                                },
-                            ),
+                        val skills = viewModel.deepxRuntime.installBundledSkills()
+                        // The video tool is a host-side tree, not guest state, so it installs even
+                        // when the Linux environment is not up yet.
+                        val tool = viewModel.deepxRuntime.installBundledVideoTool()
+                        val message = skills.fold(
+                            onSuccess = { count ->
+                                val noun = "$count bundled skill${if (count == 1) "" else "s"}"
+                                tool.fold(
+                                    onSuccess = {
+                                        "Installed $noun and the video tool into the Linux environment."
+                                    },
+                                    onFailure = { failure ->
+                                        "Installed $noun; the video tool failed: ${failure.message ?: "unknown error"}"
+                                    },
+                                )
+                            },
+                            onFailure = { failure ->
+                                "Could not install skills: ${failure.message ?: "unknown error"}"
+                            },
                         )
+                        snackbarHostState.showSnackbar(message)
                     }
                 },
             )
