@@ -96,6 +96,10 @@ class DeepXRuntime(
     private fun halt() {
         bridge.stop()
         _state.value = State.Waiting
+        // `agy` reads the guest's `~/.gemini/config/mcp_config.json` for every session, whatever
+        // servers QCode passes over ACP, so leaving the entry behind would hand a disabled
+        // extension's tools to the agent anyway.
+        scope.launch(Dispatchers.IO) { runCatching { removeMcpConfig() } }
     }
 
     private fun bundledExtensionEnabled(): Boolean =
@@ -230,6 +234,37 @@ class DeepXRuntime(
         destination.setReadable(true, false)
     }
 
+    /**
+     * Drop this extension's entry from the guest's agent MCP config.
+     *
+     * Only `deepx-flow` is touched: the file is the user's agent configuration and may hold other
+     * servers, which a bundled extension has no business editing. A missing file or entry is a
+     * no-op, so the disable path stays safe when the runtime never started.
+     */
+    private fun removeMcpConfig() {
+        if (!distroService.isRuntimeReady()) return
+        val user = distroService.environmentState.value.runtime.user
+        val home = if (user == "root") "/root" else "/home/$user"
+        val configFile = mcpConfigFile(distroService.activeRootfsPath(), home)
+        if (!configFile.isFile) return
+        val root = runCatching { JSONObject(configFile.readText()) }.getOrNull() ?: return
+        val servers = root.optJSONObject("mcpServers") ?: return
+        if (servers.remove("deepx-flow") == null) return
+        val temp = File(configFile.parentFile, configFile.name + ".tmp")
+        temp.writeText(root.toString(2))
+        temp.setReadable(true, false)
+        configFile.delete()
+        if (!temp.renameTo(configFile)) {
+            temp.copyTo(configFile, overwrite = true)
+            temp.delete()
+        }
+        configFile.setReadable(true, false)
+    }
+
+    /** The MCP config `agy` reads for every session, inside the guest. */
+    private fun mcpConfigFile(rootfs: File, home: String): File =
+        File(rootfs, home.trimStart('/') + "/.gemini/config/mcp_config.json")
+
     private fun writeMcpConfig(rootfs: File, home: String, scriptGuestPath: String) {
         val configDir = File(rootfs, home.trimStart('/') + "/.gemini/config")
         if (!configDir.isDirectory && !configDir.mkdirs()) {
@@ -237,7 +272,7 @@ class DeepXRuntime(
         }
         configDir.setReadable(true, false)
         configDir.setExecutable(true, false)
-        val configFile = File(configDir, "mcp_config.json")
+        val configFile = mcpConfigFile(rootfs, home)
         val existing = if (configFile.isFile) configFile.readText() else ""
         val root = if (existing.isBlank()) {
             JSONObject()
