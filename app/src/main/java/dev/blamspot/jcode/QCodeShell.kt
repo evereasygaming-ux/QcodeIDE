@@ -47,6 +47,7 @@ import dev.blamspot.jcode.design.TabCloseButtonSetting
 import dev.blamspot.jcode.editor.SyntaxHighlighter
 import dev.blamspot.jcode.feature.agent.AgentController
 import dev.blamspot.jcode.feature.agent.AgentPane
+import dev.blamspot.jcode.feature.browser.BrowserPane
 import dev.blamspot.jcode.editor.TokenPalette
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -1092,6 +1093,44 @@ fun QCodeApp(
     // A page tab has no close callback, so the guest is reaped by watching the tab list.
     LaunchedEffect(editorGroup.tabs) { viewModel.pruneAppSandbox() }
     val snackbarHostState = remember { SnackbarHostState() }
+    // The bundled-browser panel runs on tap, after composition, so it needs a scope and the live
+    // bridge state; the panel itself stays a plain slot so the drawer does not depend on the runtime.
+    val bundledBrowserScope = rememberCoroutineScope()
+    // Remembered for the same reason as [devicePanel]: a new lambda on every pass of this shell
+    // would recompose the drawer for no state change.
+    val bundledBrowserPanel: @Composable (Modifier) -> Unit = remember(
+        viewModel,
+        snackbarHostState,
+        bundledBrowserScope,
+    ) {
+        { panelModifier: Modifier ->
+            // Collected here, inside the slot, so the bridge's transitions recompose only the panel
+            // that shows them — not the shell that owns the slot.
+            val bridgeState by viewModel.deepxRuntime.state.collectAsStateWithLifecycle()
+            BrowserPane(
+                modifier = panelModifier,
+                bridgeLabel = deepxBridgeLabel(bridgeState),
+                bridgeReady = bridgeState is DeepXRuntime.State.Running,
+                onOpenUrl = { BuiltinBrowser.requestOpen(it) },
+                onEnabledChange = viewModel.deepxRuntime::setBundledExtensionEnabled,
+                onInstallSkills = {
+                    bundledBrowserScope.launch {
+                        val result = viewModel.deepxRuntime.installBundledSkills()
+                        snackbarHostState.showSnackbar(
+                            result.fold(
+                                onSuccess = { count ->
+                                    "Installed $count bundled skill${if (count == 1) "" else "s"} into the Linux environment."
+                                },
+                                onFailure = { failure ->
+                                    "Could not install skills: ${failure.message ?: "unknown error"}"
+                                },
+                            ),
+                        )
+                    }
+                },
+            )
+        }
+    }
     val openFolderLauncher = rememberOpenFolderLauncher(
         onFolderPicked = viewModel::openExternalFolder,
     )
@@ -1765,6 +1804,7 @@ fun QCodeApp(
         onEditorLanguageAction = viewModel::editorLanguageAction,
         workspaceManager = viewModel.workspaceManager,
         snackbarHostState = snackbarHostState,
+        browserPanel = bundledBrowserPanel,
         openFolderLauncher = openFolderLauncher,
         breadcrumb = breadcrumb,
         onCloseWorkspace = viewModel::closeWorkspace,
@@ -2106,6 +2146,8 @@ private fun QCodeShell(
     onEditorLanguageAction: (EditorLanguageAction, String, Int) -> Unit,
     workspaceManager: WorkspaceManager,
     snackbarHostState: SnackbarHostState,
+    /** The bundled-browser manager panel, composed where the DeepX runtime's state lives. */
+    browserPanel: @Composable (Modifier) -> Unit,
     openFolderLauncher: ActivityResultLauncher<Uri?>,
     breadcrumb: List<WorkspaceCrumb>,
     onCloseWorkspace: () -> Unit,
@@ -4092,6 +4134,7 @@ private fun QCodeShell(
                         vsixExtensions = vsixExtensions,
                         distroService = distroService,
                         devicePanel = devicePanel,
+                        browserPanel = browserPanel,
                         selectedProject = selectedProject,
                         terminalSessionIds = terminalSessionIds,
                         selectedTerminalSessionId = selectedTerminalSessionId,
@@ -4184,6 +4227,7 @@ private fun QCodeShell(
                             vsixExtensions = vsixExtensions,
                             distroService = distroService,
                             devicePanel = devicePanel,
+                            browserPanel = browserPanel,
                             selectedProject = selectedProject,
                             terminalSessionIds = terminalSessionIds,
                             selectedTerminalSessionId = selectedTerminalSessionId,
@@ -5002,6 +5046,8 @@ private fun WorkbenchRightSidebar(
      * also the honest shape of the decision: either there is a device to show here or there is not.
      */
     devicePanel: (@Composable (Modifier) -> Unit)?,
+    /** The bundled-browser manager, or null when the host does not offer one. */
+    browserPanel: (@Composable (Modifier) -> Unit)?,
     selectedProject: Project?,
     terminalSessionIds: List<String>,
     selectedTerminalSessionId: String,
@@ -5113,6 +5159,7 @@ private fun WorkbenchRightSidebar(
                     tab = (selected as? RightPanelSelection.Builtin)?.tab ?: RightPanelTab.Terminal,
                     agentController = agentController,
                     devicePanel = devicePanel,
+                    browserPanel = browserPanel,
                     selectedProject = selectedProject,
                     terminalSessionIds = terminalSessionIds,
                     selectedTerminalSessionId = selectedTerminalSessionId,
@@ -5286,6 +5333,8 @@ private fun WorkbenchRightSidebarBody(
     agentController: AgentController,
     /** See [WorkbenchRightSidebar]'s parameter of the same name. */
     devicePanel: (@Composable (Modifier) -> Unit)?,
+    /** See [WorkbenchRightSidebar]'s parameter of the same name. */
+    browserPanel: (@Composable (Modifier) -> Unit)?,
     selectedProject: Project?,
     terminalSessionIds: List<String>,
     selectedTerminalSessionId: String,
@@ -5308,6 +5357,7 @@ private fun WorkbenchRightSidebarBody(
         // Null only for the moment between the setting changing and the selection following it; the
         // strip stops offering the tab at the same time, so this is a frame rather than a state.
         RightPanelTab.Device -> devicePanel?.invoke(modifier)
+        RightPanelTab.Browser -> browserPanel?.invoke(modifier)
 
         RightPanelTab.Terminal -> {
             TerminalSidebarContent(
@@ -5985,4 +6035,12 @@ private fun contributedMenuIcon(name: String?): QCodeIcon = when (name?.lowercas
     "trash", "clear-all" -> QCodeIcon.Delete
     "history", "clock" -> QCodeIcon.Logs
     else -> QCodeIcon.Extensions
+}
+
+/** One line for the bundled-browser panel's bridge row; the port is the useful part when it runs. */
+private fun deepxBridgeLabel(state: DeepXRuntime.State): String = when (state) {
+    DeepXRuntime.State.Waiting -> "Bridge idle"
+    DeepXRuntime.State.Starting -> "Bridge starting…"
+    is DeepXRuntime.State.Running -> "Bridge ready · :${state.port}"
+    is DeepXRuntime.State.Failed -> "Bridge failed"
 }

@@ -247,6 +247,11 @@ internal enum class RightPanelTab(
     Problems("Issues", QCodeIcon.Problems, enabled = true),
     /** Agentic chat (Claude Code / Antigravity) running inside the Linux environment. */
     Agent("Agent", QCodeIcon.Chat, enabled = true),
+    /**
+     * The manager for the extensions bundled with the browser. The browser page itself opens as an
+     * editor tab; this is where its extensions are registered, switched, and their skills installed.
+     */
+    Browser("Browser", QCodeIcon.Browser, enabled = true),
     DebugConsole("Debug", QCodeIcon.Debug, enabled = true),
     Tasks("Tasks", QCodeIcon.Tasks, enabled = true),
     /** Built-in browser DevTools (console / network / elements); only shown once the in-app browser

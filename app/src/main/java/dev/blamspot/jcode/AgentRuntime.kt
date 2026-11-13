@@ -7,6 +7,8 @@ import dev.blamspot.jcode.core.agent.AgentKind
 import dev.blamspot.jcode.core.agent.AgyAcpBackend
 import dev.blamspot.jcode.core.agent.AgentProcessLauncher
 import dev.blamspot.jcode.core.agent.ClaudeAgentBackend
+import dev.blamspot.jcode.core.browserext.BundledBrowserExtensions
+import dev.blamspot.jcode.core.browserext.BundledExtensionPreferences
 import dev.blamspot.jcode.core.distro.DistroService
 import dev.blamspot.jcode.feature.agent.AgentController
 import kotlinx.coroutines.CoroutineScope
@@ -59,7 +61,13 @@ object AgentRuntime {
             launcher = launcher,
             defaultWorkdir = distroService.environmentState.value.runtime.workdir,
             mcpServers = {
-                resolveDeepxServer(rootfs, home, deepxScript)?.let(::listOf).orEmpty()
+                // The extension manager's switch decides whether the agent gets the Flow tools at
+                // all; a disabled extension must not leave a dead server in every new session.
+                if (BundledExtensionPreferences(context).isEnabled(BundledBrowserExtensions.DEEPX_FLOW_ID)) {
+                    resolveDeepxServer(rootfs, home, deepxScript)?.let(::listOf).orEmpty()
+                } else {
+                    emptyList()
+                }
             },
         )
         return AgentController(

@@ -31,5 +31,6 @@ dependencies {
     implementation(libs.compose.ui)
     implementation(libs.compose.material3)
     implementation("androidx.compose.foundation:foundation")
+    implementation(project(":core:design"))
     api(project(":core:browserext"))
 }

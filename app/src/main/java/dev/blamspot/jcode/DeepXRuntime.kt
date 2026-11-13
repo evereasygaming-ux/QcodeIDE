@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Handler
 import android.os.Looper
+import dev.blamspot.jcode.core.browserext.BundledBrowserExtensions
+import dev.blamspot.jcode.core.browserext.BundledExtensionPreferences
 import dev.blamspot.jcode.core.browserext.DeepXBridgeServer
 import dev.blamspot.jcode.core.browserext.DeepXSurface
 import dev.blamspot.jcode.core.distro.DistroService
@@ -59,16 +61,45 @@ class DeepXRuntime(
                 }
                 .distinctUntilChanged()
                 .collect { (ready, _, _) ->
-                    if (ready) ensureStarted() else _state.value = State.Waiting
+                    // The enable switch is a real gate, not a badge: disabling the extension stops
+                    // the bridge now, and re-enabling starts it without a shell restart.
+                    if (!bundledExtensionEnabled()) {
+                        halt()
+                    } else if (ready) {
+                        ensureStarted()
+                    } else {
+                        _state.value = State.Waiting
+                    }
                 }
         }
     }
 
     fun stop() {
-        bridge.stop()
+        halt()
         observing = false
+    }
+
+    /** Persist the bundled extension's enable switch and start/stop the bridge to match. */
+    fun setBundledExtensionEnabled(enabled: Boolean) {
+        BundledExtensionPreferences(context).setEnabled(BundledBrowserExtensions.DEEPX_FLOW_ID, enabled)
+        if (enabled) {
+            if (observing) {
+                scope.launch { ensureStarted() }
+            } else {
+                start()
+            }
+        } else {
+            halt()
+        }
+    }
+
+    private fun halt() {
+        bridge.stop()
         _state.value = State.Waiting
     }
+
+    private fun bundledExtensionEnabled(): Boolean =
+        BundledExtensionPreferences(context).isEnabled(BundledBrowserExtensions.DEEPX_FLOW_ID)
 
     suspend fun ensureStarted(): Result<Int> = lock.withLock {
         withContext(Dispatchers.IO) {
@@ -136,6 +167,67 @@ class DeepXRuntime(
             return Result.failure(it)
         }
         return Result.success(scriptGuestPath)
+    }
+
+    /**
+     * Copy every skill bundled with the extension into the guest's agent skills directory.
+     *
+     * The same assets the extension ships, installed where `agy` discovers customizations
+     * (`~/.gemini/config/skills/<id>/SKILL.md`). Idempotent: a second call rewrites the files, so a
+     * newer APK updates skills without the user removing the old copies first.
+     */
+    suspend fun installBundledSkills(): Result<Int> = withContext(Dispatchers.IO) {
+        if (!distroService.isRuntimeReady()) {
+            return@withContext Result.failure(IllegalStateException("Linux environment is not ready"))
+        }
+        val user = distroService.environmentState.value.runtime.user
+        val home = if (user == "root") "/root" else "/home/$user"
+        val rootfs = distroService.activeRootfsPath()
+        val skillsRoot = File(rootfs, home.trimStart('/') + "/.gemini/config/skills")
+        runCatching {
+            val ids = context.assets.list(ASSET_SKILLS).orEmpty()
+                .filter { id -> assetExists("$ASSET_SKILLS/$id/SKILL.md") }
+            if (ids.isEmpty()) {
+                throw IllegalStateException("No bundled skills found in $ASSET_SKILLS")
+            }
+            if (!skillsRoot.isDirectory && !skillsRoot.mkdirs()) {
+                throw IllegalStateException("Could not create ${skillsRoot.absolutePath}")
+            }
+            skillsRoot.setReadable(true, false)
+            skillsRoot.setExecutable(true, false)
+            ids.forEach { id ->
+                val dir = File(skillsRoot, id)
+                if (!dir.isDirectory && !dir.mkdirs()) {
+                    throw IllegalStateException("Could not create ${dir.absolutePath}")
+                }
+                dir.setReadable(true, false)
+                dir.setExecutable(true, false)
+                copyAsset("$ASSET_SKILLS/$id/SKILL.md", File(dir, "SKILL.md"))
+            }
+            // The extension's own installer drops its rules file beside the skills
+            // (`cp -r skills/*`), and agy reads it from the same config tree.
+            if (assetExists("$ASSET_SKILLS/GEMINI.md")) {
+                copyAsset("$ASSET_SKILLS/GEMINI.md", File(skillsRoot, "GEMINI.md"))
+            }
+            ids.size
+        }
+    }
+
+    private fun assetExists(path: String): Boolean =
+        runCatching { context.assets.open(path).close() }.isSuccess
+
+    private fun copyAsset(asset: String, destination: File) {
+        val temp = File(destination.parentFile, destination.name + ".tmp")
+        context.assets.open(asset).use { input ->
+            temp.outputStream().use { output -> input.copyTo(output) }
+        }
+        temp.setReadable(true, false)
+        destination.delete()
+        if (!temp.renameTo(destination)) {
+            temp.copyTo(destination, overwrite = true)
+            temp.delete()
+        }
+        destination.setReadable(true, false)
     }
 
     private fun writeMcpConfig(rootfs: File, home: String, scriptGuestPath: String) {
@@ -219,6 +311,7 @@ class DeepXRuntime(
 
     private companion object {
         const val ASSET = "deepx/deepx-lite-mcp.mjs"
+        const val ASSET_SKILLS = "extensions/deepx-flow/skills"
         const val KEY_INSTALLED = "installed_update"
     }
 }
