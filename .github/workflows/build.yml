@@ -118,6 +118,14 @@ jobs:
           log=/tmp/assemble.log
           [ -s "$log" ] || log=/tmp/kotlin.log
           [ -s "$log" ] || exit 0
+          # The run log needs a session; annotations are readable on a public repo without one, so
+          # the first compiler errors are raised as annotations as well as put in the summary.
+          grep -E '^e: ' "$log" | head -6 | while IFS= read -r line; do
+            printf '::error::%s\n' "${line//'%'/'%25'}"
+          done
+          grep -E '^> Task .* FAILED|^FAILURE:|Execution failed for task|^Caused by: ' "$log" | head -4 | while IFS= read -r line; do
+            printf '::error::%s\n' "${line//'%'/'%25'}"
+          done
           {
             echo '## Gradle failure'
             echo
