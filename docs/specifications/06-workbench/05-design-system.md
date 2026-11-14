@@ -76,16 +76,19 @@ has no effect on the editor unless the host explicitly pushes the new theme into
 
 ### 2.4 The launcher mark
 
-The app icon is the `<Q/>` glyph from the QCODE IDE master lockup: a red-orange `Q`
-(`#FE5A1E`) between a cream slash and chevrons (`#F4F0EC`), on the matte-black adaptive
-background (`#0B0B0E`). The artwork was traced from the master PNG rather than redrawn, so the
-glyph keeps the logo's proportions (a condensed `Q` with its tail, 62dp wide inside the 108dp
-adaptive canvas, which keeps it clear of every standard mask).
+The app icon is the CoreX core mark: a red-orange diamond — the *core* — threaded by a cream
+`X`, on the matte-black adaptive background (`#0B0B0E`). The diamond is 64dp across and the X is a
+10dp round-capped stroke inset from its tips, so both stay inside the 66dp adaptive-icon safe
+circle and no launcher mask can clip either. It is drawn as geometry rather than traced art: the
+two paths are exact, so the mark stays crisp at every density.
 
 `ic_launcher_foreground` is used by the adaptive icons, by the `_debug`/`_beta` variants, and by
-`splash_screen.xml`, so the launcher, the splash and the task switcher can never disagree.
-`ic_launcher_monochrome` carries the same paths for Android 13 themed icons; the system tints it
-with the wallpaper palette, so it must stay a single-colour fill.
+`splash_screen.xml`, so the launcher, the splash and the task switcher can never disagree. The
+debug variant draws the diamond hollow in orange and the beta variant swaps the two colours, so a
+side-loaded build is identifiable at a glance. `ic_launcher_monochrome` carries an outlined diamond
+with the X solid inside it, because Android 13 tints the whole layer with one wallpaper colour: a
+second fill would disappear, and an even-odd knockout would leave a filled seam where the two X
+strokes overlap.
 
 ---
 
