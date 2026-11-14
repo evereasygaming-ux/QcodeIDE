@@ -7,6 +7,20 @@ import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
+import dev.blamspot.jcode.design.jcIcon
+import dev.blamspot.jcode.design.QCodeIcon
+import dev.blamspot.jcode.design.IconSize
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.material3.Icon
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.border
+import androidx.compose.foundation.background
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,15 +48,11 @@ import dev.blamspot.jcode.design.AlertDialog
 import dev.blamspot.jcode.design.CompactDestructiveButton
 import dev.blamspot.jcode.design.CompactFilledButton
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -93,7 +103,7 @@ object OnboardingFeature {
         // onboarding shows through the status/navigation-bar strips (visible in landscape).
         Surface(
             modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.surface,
+            color = MaterialTheme.colorScheme.background,
         ) {
             Box(
                 modifier = Modifier
@@ -137,45 +147,53 @@ object OnboardingFeature {
         modifier: Modifier = Modifier,
     ) {
         val running = progress as? DistroWizardProgress.Running
-        Surface(modifier = modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
+        Surface(modifier = modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .safeDrawingPadding()
-                    .padding(Space.xxxl),
+                    .padding(horizontal = Space.xxl),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
+                SetupBrandMark(size = 120.dp)
+                Spacer(Modifier.height(Space.lg))
                 Text(
-                    text = "QCODE IDE",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.SemiBold,
+                    text = "QCODE",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 3.sp,
                 )
-                Spacer(Modifier.height(10.dp))
+                Spacer(Modifier.height(Space.xxs))
                 Text(
-                    // A running setup step is the more specific thing to say; otherwise the wait is
-                    // the environment being probed and started.
+                    text = "IDE",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 4.sp,
+                )
+                Spacer(Modifier.height(Space.xxl))
+                // A running setup step is the more specific thing to say; otherwise the wait is the
+                // environment being probed and started.
+                Text(
                     text = running?.label ?: "Starting $distroLabel…",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onSurface,
                     textAlign = TextAlign.Center,
                 )
-                Spacer(Modifier.height(20.dp))
-                val percent = running?.progressPercent
-                if (percent != null) {
-                    LinearProgressIndicator(
-                        progress = { percent / 100f },
-                        modifier = Modifier.fillMaxWidth(0.7f),
-                    )
-                } else {
-                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth(0.7f))
-                }
+                Spacer(Modifier.height(Space.md))
+                SetupProgressBar(
+                    percent = running?.progressPercent,
+                    modifier = Modifier.fillMaxWidth(0.78f),
+                )
                 running?.progressDetail?.let { detail ->
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(Space.sm))
                     Text(
                         text = detail,
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
                     )
                 }
             }
@@ -345,11 +363,10 @@ private fun StepperScreen(
     Surface(
         modifier = modifier,
         shape = shape,
-        color = MaterialTheme.colorScheme.surface,
+        color = MaterialTheme.colorScheme.background,
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             Header()
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f))
             // Portrait: one scrolling column of steps. Landscape (wide + short): selection steps
             // on the left, the configure/log card as a full-height pane on the right, so the log
             // stays visible without scrolling past the other cards.
@@ -453,12 +470,17 @@ private fun MigrationImportCard(
             horizontalArrangement = Arrangement.spacedBy(Space.sm),
             verticalArrangement = Arrangement.spacedBy(Space.sm),
         ) {
-            FilledTonalButton(onClick = onImport, enabled = interactive) {
-                Text("Import")
-            }
-            OutlinedButton(onClick = onSetUpFresh, enabled = interactive) {
-                Text("Set up fresh instead")
-            }
+            SetupButton(
+                label = "Import",
+                onClick = onImport,
+                enabled = interactive,
+                primary = true,
+            )
+            SetupButton(
+                label = "Set up fresh instead",
+                onClick = onSetUpFresh,
+                enabled = interactive,
+            )
         }
         if (interactive) {
             Text(
@@ -501,42 +523,88 @@ private fun DistroSelectionCard(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         val availableDistros = environmentState.availableDistros.ifEmpty { DistroProfile.defaults() }
-        Column(verticalArrangement = Arrangement.spacedBy(Space.xs)) {
+        // The distro picker is a deck of tiles, not a list of radio rows: each option shows what it
+        // costs on disk, and the chosen one carries the accent so the choice survives a glance.
+        Column(verticalArrangement = Arrangement.spacedBy(Space.s)) {
             availableDistros.forEach { profile ->
                 val selected = environmentState.runtime.selectedDistro == profile
-                Row(
+                Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(Radius.xl))
-                        .clickable(enabled = interactive) { onSelectDistro(profile) }
-                        .padding(vertical = Space.xxs),
-                    verticalAlignment = Alignment.CenterVertically,
+                        .clip(RoundedCornerShape(Radius.xxl))
+                        .clickable(enabled = interactive) { onSelectDistro(profile) },
+                    shape = RoundedCornerShape(Radius.xxl),
+                    color = if (selected) {
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                    } else {
+                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.16f)
+                    },
+                    border = BorderStroke(
+                        1.dp,
+                        if (selected) {
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.38f)
+                        } else {
+                            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.24f)
+                        },
+                    ),
                 ) {
-                    RadioButton(
-                        selected = selected,
-                        onClick = { onSelectDistro(profile) },
-                        enabled = interactive,
-                    )
-                    Text(profile.label, style = MaterialTheme.typography.bodyMedium)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = Space.md, vertical = Space.sm),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(Space.sm),
+                    ) {
+                        SelectionDot(selected = selected, enabled = interactive)
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(1.dp),
+                        ) {
+                            Text(
+                                text = profile.label,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+                                color = if (selected) {
+                                    MaterialTheme.colorScheme.onSurface
+                                } else {
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                },
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                            Text(
+                                text = "${profile.arch.name.lowercase()} · ${profile.approxFootprint}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
                 }
             }
         }
-        // FlowRow so the "Use <distro>" + Refresh buttons wrap instead of squishing on narrow portrait.
+        // FlowRow so the "Install <distro>" + Refresh buttons wrap instead of squishing on portrait.
         FlowRow(
             horizontalArrangement = Arrangement.spacedBy(Space.sm),
             verticalArrangement = Arrangement.spacedBy(Space.sm),
         ) {
-            FilledTonalButton(onClick = onAutoSetup, enabled = interactive) {
-                Text("Use ${environmentState.runtime.selectedDistro.label}")
-            }
+            SetupButton(
+                label = "Install ${environmentState.runtime.selectedDistro.label}",
+                onClick = onAutoSetup,
+                enabled = interactive,
+                primary = true,
+            )
             if (onRestoreEnvironment != null) {
-                OutlinedButton(onClick = onRestoreEnvironment, enabled = interactive) {
-                    Text("Restore from backup…")
-                }
+                SetupButton(
+                    label = "Restore from backup…",
+                    onClick = onRestoreEnvironment,
+                    enabled = interactive,
+                )
             }
-            OutlinedButton(onClick = onRefresh, enabled = interactive) {
-                Text("Refresh")
-            }
+            SetupButton(
+                label = "Refresh",
+                onClick = onRefresh,
+                enabled = interactive,
+            )
         }
         if (onRestoreEnvironment != null && interactive) {
             Text(
@@ -562,6 +630,7 @@ private fun ConfigureStepCard(
     modifier: Modifier = Modifier,
     fillLog: Boolean = false,
 ) {
+    val failed = autoSetupProgress is DistroWizardProgress.Failed
     StepCard(
         number = number,
         active = running || completed,
@@ -576,22 +645,30 @@ private fun ConfigureStepCard(
             DistroWizardProgress.Idle -> idleLabel
         }
         Row(
-            horizontalArrangement = Arrangement.spacedBy(Space.ms),
+            horizontalArrangement = Arrangement.spacedBy(Space.sm),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            when {
-                running -> CircularProgressIndicator(
-                    modifier = Modifier.size(18.dp),
-                    strokeWidth = 2.dp,
-                )
-                completed -> Text("✓", color = QCodeTheme.semanticColors.success, fontWeight = FontWeight.Bold)
-                autoSetupProgress is DistroWizardProgress.Failed -> Text("✕", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
-                else -> Text(number.toString(), color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
-            }
+            SetupStatusGlyph(
+                number = number,
+                running = running,
+                completed = completed,
+                failed = failed,
+            )
             Text(
                 text = progressText,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.weight(1f),
+            )
+            SetupStatusChip(
+                label = when {
+                    running -> "LIVE"
+                    completed -> "READY"
+                    failed -> "FAILED"
+                    else -> "IDLE"
+                },
+                accent = running || completed,
+                failed = failed,
             )
         }
 
@@ -600,23 +677,32 @@ private fun ConfigureStepCard(
             (runningProgress.progressPercent != null || runningProgress.progressDetail != null)
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(Space.xs)) {
-                val percent = runningProgress.progressPercent
-                if (percent != null) {
-                    LinearProgressIndicator(
-                        progress = { percent / 100f },
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                } else {
-                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-                }
-                Text(
-                    text = listOfNotNull(
-                        percent?.let { "$it%" },
-                        runningProgress.progressDetail,
-                    ).joinToString(" — "),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                SetupProgressBar(
+                    percent = runningProgress.progressPercent,
+                    modifier = Modifier.fillMaxWidth(),
                 )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = runningProgress.progressDetail ?: "Working…",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.weight(1f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    runningProgress.progressPercent?.let { percent ->
+                        Text(
+                            text = "$percent%",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
+                }
             }
         }
 
@@ -630,13 +716,12 @@ private fun ConfigureStepCard(
         )
 
         if (completed && onDismiss != null) {
-            Spacer(modifier = Modifier.height(8.dp))
-            FilledTonalButton(
+            SetupButton(
+                label = "Open the workbench",
                 onClick = onDismiss,
+                primary = true,
                 modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text("Done")
-            }
+            )
         }
     }
 }
@@ -659,7 +744,11 @@ private fun WebEngineHintCard() {
     if (major !in 1 until 110) return
     Surface(
         shape = RoundedCornerShape(Radius.sheet),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.18f),
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.24f),
+        ),
     ) {
         Column(
             modifier = Modifier
@@ -677,7 +766,9 @@ private fun WebEngineHintCard() {
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            FilledTonalButton(
+            SetupButton(
+                label = "Get latest WebView",
+                primary = true,
                 onClick = {
                     val id = "com.google.android.webview"
                     val play = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$id"))
@@ -692,9 +783,7 @@ private fun WebEngineHintCard() {
                         }
                     }
                 },
-            ) {
-                Text("Get latest WebView")
-            }
+            )
         }
     }
 }
@@ -704,7 +793,11 @@ private fun WebEngineHintCard() {
 private fun AddEnvironmentCard(onAdd: () -> Unit) {
     Surface(
         shape = RoundedCornerShape(Radius.sheet),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.18f),
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.24f),
+        ),
     ) {
         Column(
             modifier = Modifier
@@ -719,7 +812,7 @@ private fun AddEnvironmentCard(onAdd: () -> Unit) {
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            FilledTonalButton(onClick = onAdd) { Text("Install another distro") }
+            SetupButton(label = "Install another distro", onClick = onAdd, primary = true)
         }
     }
 }
@@ -736,7 +829,11 @@ private fun InstalledEnvironmentsCard(
 
     Surface(
         shape = RoundedCornerShape(Radius.sheet),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.18f),
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.24f),
+        ),
     ) {
         Column(
             modifier = Modifier
@@ -819,10 +916,10 @@ private fun EnvironmentRow(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Space.s),
         ) {
-            RadioButton(
+            SelectionDot(
                 selected = env.isActive,
-                onClick = onSwitch,
                 enabled = enabled && !env.isActive,
+                onClick = onSwitch,
             )
             Column(
                 modifier = Modifier.weight(1f),
@@ -847,8 +944,23 @@ private fun EnvironmentRow(
                     },
                 )
             }
-            TextButton(onClick = onDelete, enabled = canDelete) {
-                Text("Remove", color = MaterialTheme.colorScheme.error)
+            Surface(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(Radius.pill))
+                    .clickable(enabled = canDelete, onClick = onDelete),
+                shape = RoundedCornerShape(Radius.pill),
+                color = if (canDelete) {
+                    MaterialTheme.colorScheme.error.copy(alpha = 0.10f)
+                } else {
+                    Color.Transparent
+                },
+            ) {
+                Text(
+                    text = "Remove",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.error.copy(alpha = if (canDelete) 1f else 0.4f),
+                    modifier = Modifier.padding(horizontal = Space.ms, vertical = Space.xs),
+                )
             }
         }
     }
@@ -859,17 +971,54 @@ private fun Header() {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = Space.xl, vertical = Space.xl),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.Top,
+            .padding(horizontal = Space.lg, vertical = Space.lg),
+        horizontalArrangement = Arrangement.spacedBy(Space.md),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
+        Surface(
+            modifier = Modifier.size(52.dp),
+            shape = RoundedCornerShape(Radius.xxl),
+            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.14f),
+            border = BorderStroke(
+                1.dp,
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.30f),
+            ),
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                SetupBrandMark(size = 46.dp)
+            }
+        }
         Column(
             modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(Space.xs),
+            verticalArrangement = Arrangement.spacedBy(Space.xxs),
         ) {
-            Text("Environment setup", fontWeight = FontWeight.SemiBold)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Space.s),
+            ) {
+                Text(
+                    text = "QCODE",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.6.sp,
+                )
+                Text(
+                    text = "IDE",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 1.2.sp,
+                )
+            }
             Text(
-                text = "Pick a Linux distro and QCODE IDE configures the rest automatically.",
+                text = "Set up this device",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+            )
+            Text(
+                text = "One Linux environment powers the editor, terminal and agents. " +
+                    "Pick a distro and QCODE prepares the rest.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -919,7 +1068,10 @@ private fun StorageAccessCard(
                 Text("Storage access granted", style = MaterialTheme.typography.bodyMedium)
             }
         } else {
-            FilledTonalButton(
+            SetupButton(
+                label = "Allow \"All files access\"",
+                enabled = enabled,
+                primary = true,
                 onClick = {
                     val packageUri = Uri.fromParts("package", context.packageName, null)
                     try {
@@ -930,10 +1082,7 @@ private fun StorageAccessCard(
                         launcher.launch(Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION))
                     }
                 },
-                enabled = enabled,
-            ) {
-                Text("Allow \"All files access\"")
-            }
+            )
             if (deniedOnce) {
                 Text(
                     text = "Without it, projects fall back to app-private storage and are removed " +
@@ -956,31 +1105,54 @@ private fun StepCard(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Surface(
-        modifier = modifier,
+        modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(Radius.sheet),
-        color = if (active) {
-            MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)
-        } else {
-            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.18f)
-        },
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(
+            1.dp,
+            if (active) {
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.34f)
+            } else {
+                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.24f)
+            },
+        ),
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .then(if (fillHeight) Modifier.fillMaxHeight() else Modifier)
-                .padding(Space.lg),
-            horizontalArrangement = Arrangement.spacedBy(Space.lg),
+                .padding(Space.md),
+            horizontalArrangement = Arrangement.spacedBy(Space.md),
             verticalAlignment = Alignment.Top,
         ) {
+            // The step badge: a filled accent disc only while the step is the one in play.
             Surface(
-                shape = RoundedCornerShape(Radius.pill),
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
+                shape = CircleShape,
+                color = if (active) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f)
+                },
+                border = if (active) {
+                    null
+                } else {
+                    BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.32f))
+                },
             ) {
                 Box(
-                    modifier = Modifier.size(36.dp),
+                    modifier = Modifier.size(28.dp),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text(number.toString(), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                    Text(
+                        text = number.toString(),
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = if (active) {
+                            MaterialTheme.colorScheme.onPrimary
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        },
+                    )
                 }
             }
 
@@ -988,7 +1160,7 @@ private fun StepCard(
                 modifier = Modifier
                     .weight(1f)
                     .then(if (fillHeight) Modifier.fillMaxHeight() else Modifier),
-                verticalArrangement = Arrangement.spacedBy(Space.ms),
+                verticalArrangement = Arrangement.spacedBy(Space.sm),
                 content = content,
             )
         }
@@ -1006,8 +1178,12 @@ private fun ActivityLogCard(
 ) {
     Surface(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(Radius.xxxl),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.12f),
+        shape = RoundedCornerShape(Radius.xxl),
+        color = MaterialTheme.colorScheme.background,
+        border = BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.24f),
+        ),
     ) {
         Column(
             modifier = Modifier
@@ -1017,24 +1193,51 @@ private fun ActivityLogCard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = Space.lg, vertical = Space.ms),
+                    .padding(horizontal = Space.md, vertical = Space.sm),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(Space.xxs)) {
-                    Text("Setup log", fontWeight = FontWeight.SemiBold)
-                    Text(
-                        text = runningStep?.key ?: "Waiting for progress",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(Space.sm),
+                ) {
+                    ConsoleDots()
+                    Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
+                        Text(
+                            text = "SETUP LOG",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.SemiBold,
+                            letterSpacing = 1.2.sp,
+                        )
+                        Text(
+                            text = runningStep?.key ?: "waiting for progress",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontFamily = FontFamily.Monospace,
+                            ),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
                 }
-                TextButton(onClick = onToggle) {
-                    Text(if (expanded) "Hide" else "Show")
+                Surface(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(Radius.pill))
+                        .clickable(onClick = onToggle),
+                    shape = RoundedCornerShape(Radius.pill),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.30f),
+                ) {
+                    Text(
+                        text = if (expanded) "Hide" else "Show",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = Space.ms, vertical = Space.xs),
+                    )
                 }
             }
             if (expanded) {
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.22f))
                 val listState = rememberLazyListState()
                 LaunchedEffect(activityLog.size) {
                     if (activityLog.isNotEmpty()) {
@@ -1046,8 +1249,8 @@ private fun ActivityLogCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .then(if (fixedLogHeight) Modifier.height(320.dp) else Modifier.weight(1f))
-                        .padding(horizontal = Space.lg, vertical = Space.ms),
-                    verticalArrangement = Arrangement.spacedBy(Space.xs),
+                        .padding(horizontal = Space.md, vertical = Space.sm),
+                    verticalArrangement = Arrangement.spacedBy(Space.xxs),
                 ) {
                     if (activityLog.isEmpty()) {
                         item {
@@ -1065,16 +1268,269 @@ private fun ActivityLogCard(
 }
 
 @Composable
+private fun ConsoleDots() {
+    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        listOf(
+            MaterialTheme.colorScheme.primary,
+            MaterialTheme.colorScheme.tertiary,
+            MaterialTheme.colorScheme.outlineVariant,
+        ).forEach { dot ->
+            Box(
+                modifier = Modifier
+                    .size(6.dp)
+                    .clip(CircleShape)
+                    .background(dot),
+            )
+        }
+    }
+}
+
+@Composable
 private fun LogLine(text: String) {
-    Text(
-        text = "$ $text",
-        style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
-        color = when {
-            text.contains("failed", ignoreCase = true) || text.contains("error", ignoreCase = true) -> MaterialTheme.colorScheme.error
-            text.contains("done", ignoreCase = true) || text.contains("ok", ignoreCase = true) || text.contains("success", ignoreCase = true) -> QCodeTheme.semanticColors.success
-            else -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.88f)
+    val failed = text.contains("failed", ignoreCase = true) || text.contains("error", ignoreCase = true)
+    val succeeded = !failed && (
+        text.contains("done", ignoreCase = true) ||
+            text.contains("ready", ignoreCase = true) ||
+            text.contains("installed", ignoreCase = true) ||
+            text.contains("success", ignoreCase = true)
+        )
+    Row(horizontalArrangement = Arrangement.spacedBy(Space.s)) {
+        Text(
+            text = "\$",
+            style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
+            color = MaterialTheme.colorScheme.primary,
+        )
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
+            color = when {
+                failed -> MaterialTheme.colorScheme.error
+                succeeded -> QCodeTheme.semanticColors.success
+                else -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.88f)
+            },
+            maxLines = 4,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
+
+// --- Setup deck primitives -------------------------------------------------------------------
+
+/**
+ * The app's own mark for the setup screens: the launcher icon's foreground layer at [size], so
+ * onboarding shows the same `<Q/>` the launcher does. Decoding is keyed on the size and cached, and
+ * a missing icon simply draws nothing rather than failing the first-run gate.
+ */
+@Composable
+private fun SetupBrandMark(size: Dp) {
+    val context = LocalContext.current
+    val px = with(LocalDensity.current) { size.roundToPx() }
+    val mark = remember(context, px) {
+        runCatching {
+            val icon = context.packageManager.getApplicationIcon(context.packageName)
+            val layer = (icon as? android.graphics.drawable.AdaptiveIconDrawable)?.foreground ?: icon
+            val bitmap = android.graphics.Bitmap.createBitmap(
+                px,
+                px,
+                android.graphics.Bitmap.Config.ARGB_8888,
+            )
+            layer.setBounds(0, 0, px, px)
+            layer.draw(android.graphics.Canvas(bitmap))
+            bitmap.asImageBitmap()
+        }.getOrNull()
+    }
+    if (mark != null) {
+        Image(bitmap = mark, contentDescription = null, modifier = Modifier.size(size))
+    }
+}
+
+/**
+ * A setup action as a pill: the accent-filled primary choice, or a quiet secondary one. Built here
+ * rather than from the Material buttons so every action on the first-run deck shares one height and
+ * one corner.
+ */
+@Composable
+private fun SetupButton(
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    primary: Boolean = false,
+    icon: QCodeIcon? = null,
+) {
+    val container = when {
+        !enabled -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.16f)
+        primary -> MaterialTheme.colorScheme.primary
+        else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.30f)
+    }
+    val content = when {
+        !enabled -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f)
+        primary -> MaterialTheme.colorScheme.onPrimary
+        else -> MaterialTheme.colorScheme.onSurface
+    }
+    Surface(
+        modifier = modifier
+            .clip(RoundedCornerShape(Radius.pill))
+            .clickable(enabled = enabled, onClick = onClick),
+        shape = RoundedCornerShape(Radius.pill),
+        color = container,
+        contentColor = content,
+        border = if (!primary && enabled) {
+            BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.32f))
+        } else {
+            null
         },
-        maxLines = 4,
-        overflow = TextOverflow.Ellipsis,
-    )
+    ) {
+        Row(
+            modifier = Modifier
+                .height(42.dp)
+                .padding(horizontal = Space.lg),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Space.s),
+        ) {
+            if (icon != null) {
+                Icon(
+                    painter = jcIcon(icon),
+                    contentDescription = null,
+                    modifier = Modifier.size(IconSize.sm),
+                    tint = content,
+                )
+            }
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelMedium,
+                color = content,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
+
+/** The install bar: 6dp, rounded, accent-filled, with a static track for the indeterminate case. */
+@Composable
+private fun SetupProgressBar(percent: Int?, modifier: Modifier = Modifier) {
+    val track = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
+    val color = MaterialTheme.colorScheme.primary
+    val shape = RoundedCornerShape(Radius.pill)
+    if (percent != null) {
+        LinearProgressIndicator(
+            progress = { (percent / 100f).coerceIn(0f, 1f) },
+            modifier = modifier
+                .height(6.dp)
+                .clip(shape),
+            color = color,
+            trackColor = track,
+            strokeCap = StrokeCap.Round,
+        )
+    } else {
+        LinearProgressIndicator(
+            modifier = modifier
+                .height(6.dp)
+                .clip(shape),
+            color = color,
+            trackColor = track,
+            strokeCap = StrokeCap.Round,
+        )
+    }
+}
+
+/** The leading glyph of the configure step's status row. */
+@Composable
+private fun SetupStatusGlyph(
+    number: Int,
+    running: Boolean,
+    completed: Boolean,
+    failed: Boolean,
+) {
+    Box(modifier = Modifier.size(26.dp), contentAlignment = Alignment.Center) {
+        when {
+            running -> CircularProgressIndicator(
+                modifier = Modifier.size(18.dp),
+                strokeWidth = 2.dp,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            completed -> Text(
+                text = "✓",
+                color = QCodeTheme.semanticColors.success,
+                fontWeight = FontWeight.Bold,
+            )
+            failed -> Text(
+                text = "✕",
+                color = MaterialTheme.colorScheme.error,
+                fontWeight = FontWeight.Bold,
+            )
+            else -> Text(
+                text = number.toString(),
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Bold,
+            )
+        }
+    }
+}
+
+/** LIVE / READY / FAILED / IDLE, right-aligned in the configure step's status row. */
+@Composable
+private fun SetupStatusChip(label: String, accent: Boolean, failed: Boolean) {
+    val container = when {
+        failed -> MaterialTheme.colorScheme.error.copy(alpha = 0.12f)
+        accent -> MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
+        else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.28f)
+    }
+    val content = when {
+        failed -> MaterialTheme.colorScheme.error
+        accent -> MaterialTheme.colorScheme.primary
+        else -> MaterialTheme.colorScheme.onSurfaceVariant
+    }
+    Surface(shape = RoundedCornerShape(Radius.pill), color = container) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = content,
+            fontWeight = FontWeight.SemiBold,
+            letterSpacing = 0.8.sp,
+            modifier = Modifier.padding(horizontal = Space.s, vertical = 2.dp),
+        )
+    }
+}
+
+/** A radio dot without Material's control size: the distro and environment rows draw their own. */
+@Composable
+private fun SelectionDot(
+    selected: Boolean,
+    enabled: Boolean,
+    onClick: (() -> Unit)? = null,
+) {
+    Box(
+        modifier = Modifier
+            .size(18.dp)
+            .clip(CircleShape)
+            .then(
+                if (onClick != null) {
+                    Modifier.clickable(enabled = enabled, onClick = onClick)
+                } else {
+                    Modifier
+                },
+            )
+            .border(
+                1.5.dp,
+                if (selected) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f)
+                },
+                CircleShape,
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (selected) {
+            Box(
+                modifier = Modifier
+                    .size(9.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primary),
+            )
+        }
+    }
 }
