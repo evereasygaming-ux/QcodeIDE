@@ -26,6 +26,7 @@ loaded by the PRoot process via `LD_LIBRARY_PATH`, not by QCode's own code.
 | PRoot (incl. `loader` / `loader32`) | 5.1.107.76 (Termux build) | **GPL-2.0** | https://github.com/termux/proot |
 | libtalloc | 2.4.3 | **LGPL-3.0** | https://talloc.samba.org/ |
 | libandroid-shmem | upstream `7f0bd7e2` + QCode memfd modifications (modified source: `native/proot/libandroid-shmem/`) | BSD-3-Clause | https://github.com/termux/libandroid-shmem |
+| FFmpeg (static, inside the bundled `qcode-video` tool tree) | 7.0.2 (`--enable-gpl --enable-version3`, johnvansickle.com build) | **GPL-3.0** | https://ffmpeg.org/ , https://johnvansickle.com/ffmpeg/ |
 
 ### Written offer for corresponding source (GPL-2.0 / LGPL-3.0)
 
@@ -41,6 +42,24 @@ These binaries are unmodified upstream builds. Their licenses (GPL-2.0 / LGPL-3.
 apply only to the binaries themselves and, because they execute as separate
 processes / dynamically loaded libraries of a separate process, do not extend to
 QCode's own code.
+
+### FFmpeg (GPL-3.0)
+
+The `qcode-video` skill ships a compressed tool tree
+(`app/src/main/assets/tools/qcode-video/qcode-video.zip`) that contains the
+`ffmpeg-static` npm package. Most of that tree's 56 MB is a static FFmpeg 7.0.2
+binary built with `--enable-gpl --enable-version3`, so it is **GPL-3.0**, not
+LGPL. QCode runs it as a separate process, which keeps the GPL off QCode's own
+code, but redistributing the binary still carries the GPL's notice and
+source-availability obligations. The binary's own `LICENSE`, `ffmpeg.LICENSE` and
+`ffmpeg.README` ship inside the zip next to it. Source for FFmpeg and for the
+libraries that build enables is available from https://ffmpeg.org/download.html
+and https://johnvansickle.com/ffmpeg/ ; the Licensor will provide the
+corresponding source for the exact build on request.
+
+The rest of that tree (`msedge-tts`, `axios`, `ws` and their transitive
+dependencies) is permissively licensed and ships each package's own license file
+inside the tree.
 
 ---
 
@@ -138,3 +157,15 @@ libraries `jcodebuffer`, `jcode_core`, `pty`, `jcode_vt`, and the
 editor-render / ripgrep-ffi / wasmtime-ffi / tree-sitter / libgit2 FFI wrappers —
 are © 2026 blamspotdev (Janrick Samorin) and licensed under the MIT License (see
 [`LICENSE`](LICENSE)).
+
+---
+
+## 6. Bundled browser extension
+
+`app/src/main/assets/extensions/deepx-flow/` (and the `deepx/` MCP server asset it
+installs) carries the **DeepX Flow bridge** — Manifest V3 pages, a Node MCP server
+and the skills that ship with it. Its upstream does not declare a license, so it
+is **not** covered by this repository's license and must not be redistributed in a
+public build until the Licensor obtains permission from its authors or replaces it
+with a clean-room implementation. Private builds are unaffected; see `plan.md`'s
+risk table.
