@@ -32,6 +32,33 @@
     @android.webkit.JavascriptInterface <methods>;
 }
 
+# --- JNI field-name contract ---------------------------------------------------------------
+# The three JNI bridges resolve Kotlin fields by name at runtime with GetFieldID(name, sig):
+#   pty    -> PtyProcess.nativeHandle
+#   vt     -> VtParser.nativeHandle
+#   buffer -> Buffer.nativeHandle, Snapshot.nativeHandle,
+#             NativeEditOp.type/offset/length/data (read by nativeApplyEdits)
+# R8 renames or removes those fields in release, which aborts the process the first time the
+# bridge runs ("JNI DETECTED ERROR IN APPLICATION: fid == null ... in call to GetLongField").
+# The declaring classes are kept too: jni_buffer.cpp's JNI_OnLoad does FindClass on all three
+# buffer classes, and NativeEditOp declares no native methods, so AGP's default
+# `keepclasseswithmembernames` rule does not preserve its name.
+#
+# These are private/internal Kotlin properties, so `-keepclassmembers` (not
+# `-keepclassmembernames`) is required: without the accessor call sites R8 would otherwise drop
+# the field entirely, and a missing field is just as fatal as a renamed one.
+
+-keep class dev.blamspot.jcode.core.buffer.Buffer { long nativeHandle; }
+-keep class dev.blamspot.jcode.core.buffer.Snapshot { long nativeHandle; }
+-keep class dev.blamspot.jcode.core.buffer.NativeEditOp {
+    int type;
+    long offset;
+    long length;
+    byte[] data;
+}
+-keep class dev.blamspot.jcode.core.term.PtyProcess { long nativeHandle; }
+-keep class dev.blamspot.jcode.core.term.VtParser { long nativeHandle; }
+
 # Kotlin top-level functions and object singletons are reached through their file/object class names
 # from extension bytecode; the rule above keeps those classes whole.
 -keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod,MethodParameters
