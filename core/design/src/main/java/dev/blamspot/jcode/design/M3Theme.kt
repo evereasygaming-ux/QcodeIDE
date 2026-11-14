@@ -25,7 +25,7 @@ private val QCodeTypography = Typography(
 
 @Composable
 fun M3Theme(
-    themeMode: ThemeMode = ThemeMode.System,
+    themeMode: ThemeMode = ThemeMode.Dark,
     densityMode: DensityMode = DensityMode.Compact,
     themeBundle: ThemeBundle = ThemeBundleRegistry.default,
     uiIconSet: UiIconSet = UiIconSetRegistry.default,

@@ -74,6 +74,19 @@ enum class ThemeMode(val configId: String) { System("system"), Light("light"), D
 has no effect on the editor unless the host explicitly pushes the new theme into
 `EditorState.theme`. The same applies to `TerminalView`'s colour resolution.
 
+### 2.4 The launcher mark
+
+The app icon is the `<Q/>` glyph from the QCODE IDE master lockup: a red-orange `Q`
+(`#FE5A1E`) between a cream slash and chevrons (`#F4F0EC`), on the matte-black adaptive
+background (`#0B0B0E`). The artwork was traced from the master PNG rather than redrawn, so the
+glyph keeps the logo's proportions (a condensed `Q` with its tail, 62dp wide inside the 108dp
+adaptive canvas, which keeps it clear of every standard mask).
+
+`ic_launcher_foreground` is used by the adaptive icons, by the `_debug`/`_beta` variants, and by
+`splash_screen.xml`, so the launcher, the splash and the task switcher can never disagree.
+`ic_launcher_monochrome` carries the same paths for Android 13 themed icons; the system tints it
+with the wallpaper palette, so it must stay a single-colour fill.
+
 ---
 
 ## 3. Icon sets

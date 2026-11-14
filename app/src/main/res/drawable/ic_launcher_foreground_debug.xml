@@ -1,82 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  Generated from ic_launcher_foreground.xml: the same three paths, all of it drawn as an
-  outline instead of a fill. The variants differ by how much of the mark is hollow, not by
-  background colour, so every build sits on the same tile and the shape says which one it is.
-  Regenerate from the base rather than hand-editing: the gradients are shared.
--->
+<!-- CoreX launcher mark: the <Q/> glyph from the QCODE IDE logo, traced from the master art.
+     Cream chevrons and slash frame a red-orange Q; 62dp wide so nothing is clipped by an
+     adaptive-icon mask, centred on the matte-black adaptive background. (debug) -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
-    android:viewportWidth="6000"
-    android:viewportHeight="6000">
-    <group
-        android:scaleX="0.8"
-        android:scaleY="0.8"
-        android:pivotX="3044"
-        android:pivotY="2975"
-        android:translateX="-44"
-        android:translateY="25">
-    <path android:pathData="M1880,2073 c-25,12 -97,63 -160,112 -63,48 -144,111 -180,139 -94,73 -581,450 -672,519 -100,77 -138,145 -138,246 0,124 27,160 267,354 65,52 273,221 461,376 343,280 344,281 391,281 63,0 76,-15 140,-163 52,-120 59,-153 41,-187 -7,-13 -733,-602 -809,-657 -3,-2 5,-10 16,-18 12,-8 192,-147 400,-307 208,-161 404,-313 435,-336 73,-55 98,-105 98,-192 0,-128 -61,-190 -186,-190 -41,1 -73,8 -104,23Z"
-        android:fillColor="#00000000"
-        android:strokeWidth="120">
-        <aapt:attr name="android:strokeColor">
-            <gradient
-                android:endX="830"
-                android:endY="4050"
-                android:startX="2050"
-                android:startY="2000"
-                android:type="linear">
-                <item
-                    android:color="#FF4D2E"
-                    android:offset="0" />
-                <item
-                    android:color="#FF6829"
-                    android:offset="1" />
-            </gradient>
-        </aapt:attr>
-    </path>
-    <path android:pathData="M4246,2148 c-21,13 -43,49 -87,147 -62,137 -70,180 -41,213 9,11 103,87 207,169 105,81 266,206 357,278 92,71 167,132 167,135 0,3 -98,82 -217,177 -648,514 -611,481 -612,528 0,37 82,266 103,285 29,28 77,34 118,17 19,-8 81,-53 139,-99 58,-46 286,-227 507,-401 221,-175 411,-331 423,-347 67,-94 65,-244 -4,-335 -21,-27 -857,-706 -946,-768 -31,-22 -77,-22 -114,1Z"
-        android:fillColor="#00000000"
-        android:strokeWidth="120">
-        <aapt:attr name="android:strokeColor">
-            <gradient
-                android:endX="5350"
-                android:endY="4050"
-                android:startX="4200"
-                android:startY="2050"
-                android:type="linear">
-                <item
-                    android:color="#FF8A2E"
-                    android:offset="0" />
-                <item
-                    android:color="#FFB03C"
-                    android:offset="1" />
-            </gradient>
-        </aapt:attr>
-    </path>
-    <path android:pathData="M3120,1305 c-20,25 -90,357 -79,377 5,10 13,18 17,18 17,0 405,70 409,74 12,12 -8,87 -155,596 -88,305 -215,746 -282,980 -69,239 -137,456 -156,496 -43,91 -110,166 -178,199 -99,49 -260,29 -417,-50 -35,-18 -54,-23 -66,-16 -9,5 -34,47 -54,93 -20,45 -65,148 -101,228 -35,80 -62,152 -60,161 4,21 147,88 286,134 361,121 670,66 883,-158 124,-131 204,-280 272,-507 22,-74 92,-311 156,-525 141,-473 306,-1023 385,-1280 173,-564 193,-637 179,-650 -8,-8 -153,-38 -334,-70 -176,-31 -395,-69 -487,-85 -192,-35 -201,-35 -218,-15Z"
-        android:fillColor="#00000000"
-        android:strokeWidth="120">
-        <aapt:attr name="android:strokeColor">
-            <gradient
-                android:endX="2450"
-                android:endY="4620"
-                android:startX="3650"
-                android:startY="1250"
-                android:type="linear">
-                <item
-                    android:color="#FF7427"
-                    android:offset="0" />
-                <item
-                    android:color="#FF5A2C"
-                    android:offset="0.48" />
-                <item
-                    android:color="#FF9E34"
-                    android:offset="1" />
-            </gradient>
-        </aapt:attr>
-    </path>
-    </group>
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FFF4F0EC"
+        android:fillType="evenOdd"
+        android:pathData="M65.41,39.43L65.26,39.57L65.02,40.12L62.85,45.90L55.17,66.52L55.24,66.59L55.51,66.67L58.81,66.67L59.04,66.52L61.65,59.64L69.11,39.57L68.98,39.45L68.71,39.42ZM35.44,46.12L23.16,51.94L23.00,52.22L23.00,55.52L23.34,55.85L35.17,61.36L35.99,61.67L36.09,61.57L36.11,61.29L36.11,58.54L35.97,58.27L26.92,54.08L26.18,53.87L26.42,53.59L27.19,53.40L35.99,49.26L36.11,48.92L36.11,46.17L35.99,45.95ZM72.01,45.95L71.89,46.17L71.89,48.92L71.90,49.20L72.01,49.31L78.88,52.57L81.88,53.87L79.98,54.59L72.28,58.18L72.01,58.38L71.89,58.54L71.89,61.29L71.91,61.57L72.01,61.67L72.83,61.36L84.66,55.85L85.00,55.52L85.00,52.22L84.84,51.94L73.11,46.37Z" />
+    <path
+        android:fillColor="#FFFE5A1E"
+        android:fillType="evenOdd"
+        android:pathData="M44.51,42.01L43.41,42.22L42.59,42.52L41.22,43.42L40.01,44.80L39.49,45.90L39.15,47.55L39.13,57.17L39.22,58.54L39.50,59.64L40.05,60.74L40.94,61.84L42.04,62.70L42.59,63.02L43.96,63.50L44.79,63.62L45.89,63.63L46.09,63.77L48.93,68.44L49.19,68.58L52.76,68.55L52.87,68.44L49.50,62.94L49.74,62.66L50.84,61.85L51.72,60.74L52.32,59.37L52.53,58.27L52.60,48.37L52.53,47.27L52.31,46.17L51.70,44.80L51.11,44.09L50.47,43.42L49.19,42.55L48.36,42.23L46.99,41.97L45.89,41.91ZM44.51,45.30L43.69,45.81L43.36,46.17L43.03,46.72L42.81,47.55L42.79,57.99L43.04,58.82L43.35,59.37L43.96,59.95L44.79,60.33L45.89,60.44L46.71,60.35L47.26,60.22L48.14,59.64L48.67,58.82L48.88,57.99L48.96,57.17L48.96,48.37L48.86,47.55L48.78,47.00L48.52,46.45L48.09,45.88L47.54,45.48L46.99,45.24L45.89,45.10Z" />
 </vector>
