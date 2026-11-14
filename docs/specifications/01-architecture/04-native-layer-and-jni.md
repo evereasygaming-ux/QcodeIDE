@@ -211,8 +211,12 @@ the JVM.
 
 ## 5. Invariants and constraints
 
-1. Native handle fields consumed by C++ `GetFieldID` must keep their exact names (`nativeHandle`
-   for `Buffer`/`Snapshot`).
+1. Fields and classes that native code resolves by name must keep those names. `GetFieldID` reads
+   `nativeHandle` on `Buffer`, `Snapshot`, `PtyProcess` and `VtParser`, plus `type`/`offset`/
+   `length`/`data` on `NativeEditOp`; `jni_buffer.cpp`'s `JNI_OnLoad` also finds the three
+   `core.buffer` classes with `FindClass`. `app/proguard-rules.pro` pins all of them for the release
+   build — a lookup added in native code needs a keep rule in the same change, or R8 aborts the
+   process with `JNI DETECTED ERROR ... fid == null` the first time the bridge runs.
 2. Bit-flag constants duplicated on both sides must move together — `NativeSearch.FLAG_*`
    (`REGEX=1`, `CASE_SENSITIVE=2`, `WHOLE_WORD=4`, `INCLUDE_HIDDEN=8`) mirror the Rust constants,
    and `VtParser.MODE_*` / `MOUSE_*` mirror the `VT_MODE_*` defines in `vt_parser.h`.

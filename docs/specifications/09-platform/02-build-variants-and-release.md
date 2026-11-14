@@ -117,12 +117,17 @@ classes directly and R8 cannot see those references. `app/proguard-rules.pro` th
 - `kotlin.**`, `kotlinx.coroutines.**`, `androidx.compose.**`, `androidx.activity.**` and
   `androidx.lifecycle.**` — the runtime those packs compile against, because their own dex calls
   `kotlin.jvm.internal.Intrinsics` and Compose's generated classes by name;
-- `@JavascriptInterface` members, which web content calls by name.
+- `@JavascriptInterface` members, which web content calls by name;
+- the names the JNI bridges resolve at runtime — the `nativeHandle` fields of `Buffer`, `Snapshot`,
+  `PtyProcess` and `VtParser`, `NativeEditOp`'s edit fields, and the three `core.buffer` class names
+  that `jni_buffer.cpp` looks up with `FindClass` (see the native-layer invariants).
 
-Everything belonging to the IDE itself is free to shrink and rename. Extending the ABI means adding
-a keep rule in the same change, or rebuilding the affected pack and bumping `QCODE_EXT_ABI`; the
-`build` workflow assembles the release variant on every push so a missing rule fails CI rather than
-a release.
+Everything belonging to the IDE itself is free to shrink and rename, except those runtime name
+lookups: from the JVM's point of view a field renamed by R8 is gone, and the bridge aborts with
+`JNI DETECTED ERROR ... fid == null` on its first call — no earlier build step catches it. Extending
+the ABI means adding a keep rule in the same change, or rebuilding the affected pack and bumping
+`QCODE_EXT_ABI`; the `build` workflow assembles the release variant on every push so a missing rule
+fails CI rather than a release.
 
 ### 3.1 ABI filters
 
