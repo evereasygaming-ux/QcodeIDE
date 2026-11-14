@@ -312,6 +312,8 @@ internal fun WorkbenchTopBar(
             // before the field gets too narrow to carry it, rather than being crushed to an ellipsis.
             val palette = LocalCommandPaletteLauncher.current
             BoxWithConstraints(modifier = Modifier.weight(1f)) {
+                // Captured before the Surface/Row scopes below shadow this scope's implicit receiver.
+                val fieldWidth = maxWidth
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -332,7 +334,7 @@ internal fun WorkbenchTopBar(
                             modifier = Modifier.size(IconSize.sm),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
-                        if (maxWidth > 150.dp) {
+                        if (fieldWidth > 150.dp) {
                             Text(
                                 text = "Search files and commands",
                                 style = MaterialTheme.typography.bodySmall,

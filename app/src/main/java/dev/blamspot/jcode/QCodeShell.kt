@@ -3606,6 +3606,9 @@ private fun QCodeShell(
                             onOpenConsole = {
                                 selectRightPanelTab(RightPanelTab.Terminal)
                                 rightSidebarVisible = !rightSidebarVisible
+                                // The sheet would otherwise open over an already-open drawer, which
+                                // is still there when the sheet closes.
+                                if (rightSidebarVisible) scope.launch { compactDrawerState.close() }
                             },
                         )
                     }
