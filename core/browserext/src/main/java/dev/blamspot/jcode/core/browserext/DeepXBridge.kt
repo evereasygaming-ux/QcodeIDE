@@ -75,7 +75,7 @@ class DeepXBridgeServer(
             acceptJob = newScope.launch { acceptLoop(candidate, newScope) }
             return Result.success(port)
         }
-        return Result.failure(last ?: IllegalStateException("Could not bind the DeepX bridge"))
+        return Result.failure(last ?: IllegalStateException("Could not bind the CoreX bridge"))
     }
 
     @Synchronized
@@ -171,7 +171,7 @@ class DeepXBridgeServer(
             surface.reload()
             buildJsonObject { put("reloaded", true) }
         }
-        else -> throw IllegalArgumentException("Unsupported DeepX command: $command")
+        else -> throw IllegalArgumentException("Unsupported CoreX command: $command")
     }
 
     private suspend fun status(): JsonObject {

@@ -1,12 +1,12 @@
 ---
 name: deepx-rapid-flow
 description: >-
-  Ultra-fast production engine for DeepX Google Flow automation. Use when the user requests image/video generation, storyboard execution, character creation, multi-scene video ads, or mentions 'DeepX', 'Google Flow', 'veo', 'start task', 'start our task', 'video script', 'full_script_hindi', 'commercial', 'make video', or 'flow bridge'. Enforces zero loading pauses, master creative director script breakdown for ANY raw input, instant protagonist auto-detection (human, animal, car, product), compulsory reference card locking across all scenes (unless explicitly told not to use reference), in-memory HTMLCanvas terminal frame extraction, and rapid autonomous scene-to-scene chaining without repetitive alignment interviews or redundant status polling.
+  Ultra-fast production engine for CoreX Google Flow automation. Use when the user requests image/video generation, storyboard execution, character creation, multi-scene video ads, or mentions 'CoreX', 'Google Flow', 'veo', 'start task', 'start our task', 'video script', 'full_script_hindi', 'commercial', 'make video', or 'flow bridge'. Enforces zero loading pauses, master creative director script breakdown for ANY raw input, instant protagonist auto-detection (human, animal, car, product), compulsory reference card locking across all scenes (unless explicitly told not to use reference), in-memory HTMLCanvas terminal frame extraction, and rapid autonomous scene-to-scene chaining without repetitive alignment interviews or redundant status polling.
 ---
 
-# DeepX Rapid Flow Production Engine
+# CoreX Rapid Flow Production Engine
 
-This skill governs the high-speed, zero-latency execution pipeline between Antigravity and Google Flow via the DeepX Extension bridge.
+This skill governs the high-speed, zero-latency execution pipeline between Antigravity and Google Flow via the CoreX Extension bridge.
 
 ## Core Directives
 
@@ -23,7 +23,7 @@ This skill governs the high-speed, zero-latency execution pipeline between Antig
      - Ingest local asset references from `assets/` or generate master reference keyframes/cards via Imagen 3 / 🍌 Nano Banana 2.1 before rendering videos.
 
 2. **Compulsory Protagonist Auto-Detection & Universal Reference Locking (FLAGSHIP CORE)**:
-   - Consistent protagonist appearance across all video scenes and reference images is DeepX's primary feature and is **STRICTLY COMPULSORY**.
+   - Consistent protagonist appearance across all video scenes and reference images is CoreX's primary feature and is **STRICTLY COMPULSORY**.
    - **Universal Protagonist Definition**: Protagonist can be a **Car/Vehicle** (e.g. Tesla Roadster, vintage Mustang), **Animal/Creature** (e.g. golden tiger, dragon), **Human** (e.g. samurai, student, astronaut), or **Hero Product** (e.g. smart ring, luxury chronometer, smartphone).
    - **Automatic Action**:
      - Auto-detect the protagonist entity from the user's script/concept.
@@ -59,9 +59,9 @@ This skill governs the high-speed, zero-latency execution pipeline between Antig
    - Call `deepx_status` once to check status (<10ms).
 
 6. **Universal Antigravity Connect & Disconnect Protocol**:
-   - **Connect Prompt**: `"Connect to DeepX Flow Bridge MCP server (deepx-flow) at ws://127.0.0.1:8792/ws. Call deepx_status to verify that Google Flow is attached and ready. Once connected, confirm that you are ready to generate images and videos on Google Flow with 100% user script fidelity."`
+   - **Connect Prompt**: `"Connect to CoreX Flow Bridge MCP server (deepx-flow) at ws://127.0.0.1:8792/ws. Call deepx_status to verify that Google Flow is attached and ready. Once connected, confirm that you are ready to generate images and videos on Google Flow with 100% user script fidelity."`
      - Action: Call `deepx_status` once (<10ms). If `ready: true`, acknowledge connection immediately and confirm readiness to generate with 100% adherence to user script and data.
-   - **Disconnect Prompt**: `"Disconnect from DeepX Flow Bridge MCP. Pause all automated generation, stop sending jobs to Google Flow, and stand by in offline mode until I ask you to reconnect."`
+   - **Disconnect Prompt**: `"Disconnect from CoreX Flow Bridge MCP. Pause all automated generation, stop sending jobs to Google Flow, and stand by in offline mode until I ask you to reconnect."`
      - Action: Acknowledge disconnection immediately, halt all generation dispatching, and enter standby mode without calling any `deepx_*` tools until instructed to reconnect.
 
 7. **Universal Multi-Reference Stacking (<300ms)**:

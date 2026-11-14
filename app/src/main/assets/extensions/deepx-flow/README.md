@@ -1,4 +1,4 @@
-# 🚀 DeepX Flow Bridge for Google Flow & Antigravity (v1.2.0)
+# 🚀 CoreX Flow Bridge for Google Flow & Antigravity (v1.2.0)
 
 > **Autonomous AI Generation Bridge connecting Antigravity Coding Agents directly to Google Flow (Veo 3.1 & Imagen 3) without API costs.**
 
@@ -31,7 +31,7 @@ This single script will automatically:
 
 ### Step 3: Tell Antigravity AI
 In your Antigravity AI chat, say:
-> *"Check DeepX status and start video generation!"*
+> *"Check CoreX status and start video generation!"*
 
 Antigravity will instantly detect the bridge and report:
 > *"Connected! I can generate images and videos on Google Flow now — just ask."*

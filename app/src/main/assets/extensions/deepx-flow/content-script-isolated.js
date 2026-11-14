@@ -3,7 +3,7 @@
 
   window.__deepxIsolatedLoaded = true;
 
-  console.log("%c[DeepX Flow]%c Isolated-world UI controller & knowledge engine loaded.", "color:#00e5ff;font-weight:bold;", "color:inherit;");
+  console.log("%c[CoreX Flow]%c Isolated-world UI controller & knowledge engine loaded.", "color:#00e5ff;font-weight:bold;", "color:inherit;");
 
   // Persistent Keep-Alive Port to keep Service Worker active 24/7 in Manifest V3
   let keepAlivePort = null;
@@ -99,7 +99,7 @@
           .replace(/\s*[–—\-]\s*Google Flow.*$/i, "")
           .trim();
         const pName = titleClean && !["google flow", "flow", "home", "projects", "new project"].includes(titleClean.toLowerCase()) ? titleClean : null;
-        console.log("%c[DeepX Isolated]%c Project ID detected:", "color:#00e5ff;font-weight:bold;", "color:#00e676;", pId || "None", pName ? `(${pName})` : "");
+        console.log("%c[CoreX Isolated]%c Project ID detected:", "color:#00e5ff;font-weight:bold;", "color:#00e676;", pId || "None", pName ? `(${pName})` : "");
         chrome.runtime.sendMessage({
           type: "PROJECT_CHANGED",
           projectId: pId,

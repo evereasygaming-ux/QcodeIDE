@@ -20,5 +20,5 @@ Based on the consistent appearance memory and object matting principles from `pq
    - Controlled character action with minimal motion blur (`crisp 60fps shutter speed aesthetics, minimal motion blur, sharp foreground separation`).
    - 360-degree turntable rotation or steady frontal camera tracking.
 
-4. **DeepX Integration**:
+4. **CoreX Integration**:
    - Double-lock the protagonist reference card (`@protagonist_name`) to guarantee facial and costume consistency while isolating against solid chroma backgrounds for post-production VFX in Premiere, CapCut, or DaVinci Resolve.

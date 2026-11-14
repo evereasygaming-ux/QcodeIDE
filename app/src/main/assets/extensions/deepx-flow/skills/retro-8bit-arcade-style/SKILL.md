@@ -23,5 +23,5 @@ Based on the prompt engineering methodologies from `mughaldev0/8-bit-retro-intro
    - Warm 8-bit NES/SNES color palette (rich primary reds, golden yellows, cobalt blues).
    - CRT glow with subtle chromatic aberration and phosphor bloom.
 
-4. **Integration with DeepX Protagonist Locking**:
+4. **Integration with CoreX Protagonist Locking**:
    - Bind `@protagonist_name` as a pixelated hero sprite (e.g. `@tesla_roadster in 16-bit pixel art style speeding down neon cyber-highway with pixel tire smoke`).

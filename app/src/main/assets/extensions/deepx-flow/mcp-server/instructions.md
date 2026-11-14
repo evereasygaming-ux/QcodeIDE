@@ -1,7 +1,7 @@
-# DeepX Flow MCP Instructions: Universal Fast-Path & Consistent Protagonist Engine
+# CoreX Flow MCP Instructions: Universal Fast-Path & Consistent Protagonist Engine
 
 ## 0. Zero Setup Overhead & Zero Code Inspection (CRITICAL)
-- **DeepX Flow Bridge is ALREADY Running and Connected**:
+- **CoreX Flow Bridge is ALREADY Running and Connected**:
   - The MCP server `deepx-flow` is actively communicating with the Google Flow Chrome Extension via WebSocket at `ws://127.0.0.1:8792/ws`.
   - **ABSOLUTE RULE**: NEVER search the filesystem for setup scripts. NEVER read or inspect `server.js`, `ws-bridge.js`, or extension source files. NEVER run inline `node -e` test scripts.
   - To check connection, simply invoke the `deepx_status` MCP tool once (takes <10ms).
@@ -37,7 +37,7 @@
 ---
 
 ## 2. Compulsory Protagonist Auto-Detection & Universal Reference Locking (FLAGSHIP CORE)
-- **Flagship Mandate**: Consistent protagonist appearance across all video scenes and reference images is DeepX's primary feature and is **STRICTLY COMPULSORY**.
+- **Flagship Mandate**: Consistent protagonist appearance across all video scenes and reference images is CoreX's primary feature and is **STRICTLY COMPULSORY**.
 - **Universal Protagonist Definition**: The protagonist is NOT limited to human characters! It can be a Vehicle/Car, Animal/Creature, Human/Character, or Hero Product.
 - **Universal Multi-Reference Stacking Across ALL Generations**:
   - When generating video scenes, ALWAYS lock ALL relevant reference assets into Google Flow's prompt box: the protagonist card (`@character_name` or `hero_references`), PLUS ALL newly generated scene cutout images / master keyframes (via `:recent_images` or by name), filling up to 4–5 ingredient chips into `<flow-ingredient-bar>`.

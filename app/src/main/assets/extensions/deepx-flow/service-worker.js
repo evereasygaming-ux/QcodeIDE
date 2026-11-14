@@ -1,10 +1,10 @@
-// DeepX Antigravity Flow Bridge Service Worker
+// CoreX Antigravity Flow Bridge Service Worker
 // High-performance bidirectional bridge connecting Antigravity agents to Google Flow
 
 // Automatically open the full studio Side Panel when clicking the extension icon
 if (chrome.sidePanel?.setPanelBehavior) {
   chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch((err) => {
-    console.warn("[DeepX] setPanelBehavior warning:", err);
+    console.warn("[CoreX] setPanelBehavior warning:", err);
   });
 }
 
@@ -18,7 +18,7 @@ chrome.action?.onClicked?.addListener(async (tab) => {
       }
     }
   } catch (err) {
-    console.warn("[DeepX] Failed to open side panel on action click:", err);
+    console.warn("[CoreX] Failed to open side panel on action click:", err);
   }
 });
 
@@ -101,7 +101,7 @@ async function findFlowTab() {
     // 4. Fall back to first available Flow tab
     return flowTabs[0].id;
   } catch (err) {
-    console.warn("[DeepX] findFlowTab error:", err);
+    console.warn("[CoreX] findFlowTab error:", err);
     return null;
   }
 }
@@ -111,7 +111,7 @@ async function ensureFlowTab() {
   let tabId = await findFlowTab();
   if (tabId) return tabId;
 
-  console.log("[DeepX Canvas] No Google Flow tab open. Automatically launching flow.google.com in Chrome...");
+  console.log("[CoreX Canvas] No Google Flow tab open. Automatically launching flow.google.com in Chrome...");
   try {
     const wins = await chrome.windows.getAll({ populate: false });
     const normalWin = wins?.find(w => w.type === "normal") || wins?.[0];
@@ -138,7 +138,7 @@ async function ensureFlowTab() {
       return tabId;
     }
   } catch (err) {
-    console.error("[DeepX Canvas] ensureFlowTab failed to auto-open tab:", err);
+    console.error("[CoreX Canvas] ensureFlowTab failed to auto-open tab:", err);
   }
   return null;
 }
@@ -154,7 +154,7 @@ async function ensureContentScriptsInjected(tabId) {
     });
 
     if (!isAlive) {
-      console.log("[DeepX] Dynamically injecting content scripts into tab " + tabId);
+      console.log("[CoreX] Dynamically injecting content scripts into tab " + tabId);
       await chrome.scripting.executeScript({
         target: { tabId },
         files: ["content-script-main.js"],
@@ -169,7 +169,7 @@ async function ensureContentScriptsInjected(tabId) {
       await new Promise(r => setTimeout(r, 300));
     }
   } catch (err) {
-    console.warn("[DeepX] Script injection warning:", err);
+    console.warn("[CoreX] Script injection warning:", err);
   }
 }
 
@@ -287,7 +287,7 @@ async function extractFlowTabContext(tabId) {
       url = pageInfo[0].result.url;
     }
   } catch (e) {
-    console.warn("[DeepX] Direct DOM check warning:", e);
+    console.warn("[CoreX] Direct DOM check warning:", e);
   }
 
   // 2. Also try content script context if token or deeper project info is needed
@@ -414,7 +414,7 @@ async function attachDebugger(tabId) {
       attachedDebuggerTabs.add(tabId);
       return true;
     } else {
-      console.warn("[DeepX Debugger] Attach warning:", msg);
+      console.warn("[CoreX Debugger] Attach warning:", msg);
       return false;
     }
   }
@@ -520,7 +520,7 @@ async function nativeClick(tabId, x, y) {
       modifiers: 0
     });
   } catch (err) {
-    console.warn("[DeepX Debugger] nativeClick sendCommand error, falling back to script click:", err);
+    console.warn("[CoreX Debugger] nativeClick sendCommand error, falling back to script click:", err);
     await chrome.scripting.executeScript({
       target: { tabId },
       func: (x, y) => {
@@ -776,7 +776,7 @@ async function configureFlowSettingsFast(tabId, config = {}) {
     },
     args: [isVideo, targetRatio, targetDuration, targetCount, targetModel]
   }).catch(err => {
-    console.warn("[DeepX Fast] Error configuring Flow settings:", err);
+    console.warn("[CoreX Fast] Error configuring Flow settings:", err);
   });
 }
 
@@ -786,7 +786,7 @@ async function configureFlowSettingsFast(tabId, config = {}) {
 async function attachLibraryAssetInTab(tabId, targetName) {
   if (!targetName) return { success: false, reason: "No asset name provided" };
   const cleanName = targetName.replace(/^@/, "").trim();
-  console.log(`[DeepX Asset] Attaching reference card for '${cleanName}'...`);
+  console.log(`[CoreX Asset] Attaching reference card for '${cleanName}'...`);
 
   return await chrome.scripting.executeScript({
     target: { tabId },
@@ -943,7 +943,7 @@ async function ensureOnProjectCanvas(tabId) {
 
   // Case A: Stranded on character editor, character list, or edit page
   if (curUrl.includes("/character") || curUrl.includes("/edit/") || curUrl.includes("/studio")) {
-    console.log(`[DeepX Canvas] Auto-recovering tab from sub-route (${curUrl}) to project canvas for project '${pId}'...`);
+    console.log(`[CoreX Canvas] Auto-recovering tab from sub-route (${curUrl}) to project canvas for project '${pId}'...`);
     await chrome.scripting.executeScript({
       target: { tabId },
       func: () => {
@@ -968,7 +968,7 @@ async function ensureOnProjectCanvas(tabId) {
   // Case B: Stranded on home/gallery/explore or URL has no project canvas
   const isHomeOrNoProject = !curUrl.includes("/project/") && !curUrl.includes("/projects/");
   if (isHomeOrNoProject) {
-    console.log("[DeepX Canvas] Tab is on Flow dashboard. Auto-navigating into project canvas...");
+    console.log("[CoreX Canvas] Tab is on Flow dashboard. Auto-navigating into project canvas...");
     // 1. If we have a known valid project ID, try opening it directly first
     if (pId && pId !== "default") {
       try {
@@ -1006,7 +1006,7 @@ async function ensureOnProjectCanvas(tabId) {
       }
     }).then(r => r?.[0]?.result).catch(() => ({ success: false }));
 
-    console.log("[DeepX Canvas] Auto-canvas navigation attempt:", entered);
+    console.log("[CoreX Canvas] Auto-canvas navigation attempt:", entered);
   }
 
   // Poll for canvas prompt box or ingredient bar to become interactive (up to 8s)
@@ -1315,7 +1315,7 @@ async function handleAutoChainVideoScene(payload) {
   await ensureOnProjectCanvas(tabId);
 
   // 1. Analyze latest video tile on canvas
-  console.log("[DeepX AutoChain] Analyzing latest video tile on canvas...");
+  console.log("[CoreX AutoChain] Analyzing latest video tile on canvas...");
   const videoInfo = await chrome.scripting.executeScript({
     target: { tabId },
     func: async () => {
@@ -1331,12 +1331,12 @@ async function handleAutoChainVideoScene(payload) {
   let frameUploadedName = null;
   if (videoInfo?.videoSrc) {
     try {
-      console.log("[DeepX AutoChain] Extracting terminal frame via canvas in memory...");
+      console.log("[CoreX AutoChain] Extracting terminal frame via canvas in memory...");
       const frameDataUrl = await extractLastFrameFromVideoUrl(videoInfo.videoSrc);
       if (frameDataUrl) {
         const timestamp = Date.now();
         const fileName = `continuity_frame_${timestamp}.jpg`;
-        console.log(`[DeepX AutoChain] Rapid DataTransfer uploading ${fileName}...`);
+        console.log(`[CoreX AutoChain] Rapid DataTransfer uploading ${fileName}...`);
         await handleUploadImage({
           dataUrl: frameDataUrl,
           fileName: fileName,
@@ -1345,7 +1345,7 @@ async function handleAutoChainVideoScene(payload) {
         frameUploadedName = fileName;
       }
     } catch (err) {
-      console.warn("[DeepX AutoChain] Frame extraction warning:", err);
+      console.warn("[CoreX AutoChain] Frame extraction warning:", err);
     }
   }
 
@@ -1383,12 +1383,12 @@ async function handleAutoChainVideoScene(payload) {
   }
 
   if (targetsToAttach.length > 0) {
-    console.log("[DeepX AutoChain] Batch attaching references:", targetsToAttach);
+    console.log("[CoreX AutoChain] Batch attaching references:", targetsToAttach);
     await attachLibraryAssetsBatch(tabId, targetsToAttach);
   }
 
   // 5. Fast fill and submit prompt
-  console.log("[DeepX AutoChain] Injecting next scene prompt and submitting...");
+  console.log("[CoreX AutoChain] Injecting next scene prompt and submitting...");
   const dispatchRes = await fastFillAndSubmitPrompt(tabId, nextPrompt, { mode: "video" });
 
   return {
@@ -1467,14 +1467,14 @@ async function handleAutonomousStoryboardPipeline(payload, progressCallback) {
     ? (String(model || "").includes("Banana") || String(model || "").toLowerCase().includes("imagen") ? model : "🍌 Nano Banana 2.1")
     : model;
 
-  console.log(`[DeepX Autopilot] Starting autonomous execution of ${scenes.length} scene(s) [Mode: ${isImageMode ? "image" : "video"}]...`);
+  console.log(`[CoreX Autopilot] Starting autonomous execution of ${scenes.length} scene(s) [Mode: ${isImageMode ? "image" : "video"}]...`);
   const results = [];
 
   for (let i = 0; i < scenes.length; i++) {
     const scene = scenes[i];
     const promptText = scene.prompt || scene;
     const sceneRefs = scene.references || scene.reference_assets || [];
-    console.log(`[DeepX Autopilot] === Executing Scene ${i + 1}/${scenes.length} ===`);
+    console.log(`[CoreX Autopilot] === Executing Scene ${i + 1}/${scenes.length} ===`);
 
     progressCallback?.({
       type: "AUTOPILOT_PROGRESS",
@@ -1508,7 +1508,7 @@ async function handleAutonomousStoryboardPipeline(payload, progressCallback) {
           count
         });
       } catch (err) {
-        console.warn(`[DeepX Autopilot] Scene ${i + 1} initial generation warning:`, err.message);
+        console.warn(`[CoreX Autopilot] Scene ${i + 1} initial generation warning:`, err.message);
         progressCallback?.({
           type: "AUTOPILOT_PROGRESS",
           index: i,
@@ -1577,7 +1577,7 @@ async function handleAutonomousStoryboardPipeline(payload, progressCallback) {
               continuityFrameName = fileName;
             }
           } catch (err) {
-            console.warn("[DeepX Autopilot] Terminal frame grab warning:", err);
+            console.warn("[CoreX Autopilot] Terminal frame grab warning:", err);
           }
         }
       }
@@ -1663,7 +1663,7 @@ async function handleAutonomousStoryboardPipeline(payload, progressCallback) {
         }).then(r => r?.[0]?.result);
 
         if (checkRes?.isFailed) {
-          console.warn(`[DeepX Autopilot] Video tile generation failed for Scene ${i + 1}. Remodifying prompt and re-submitting...`);
+          console.warn(`[CoreX Autopilot] Video tile generation failed for Scene ${i + 1}. Remodifying prompt and re-submitting...`);
           progressCallback?.({
             type: "AUTOPILOT_PROGRESS",
             index: i,
@@ -1789,14 +1789,14 @@ async function fastFillAndSubmitPrompt(tabId, prompt, config = {}) {
         const regChars = await getRegisteredCharacterNames(tabId);
         if (regChars && regChars.length > 0) {
           targetsToAttach = [regChars[0]];
-          console.log("[DeepX Compulsory] Auto-locking project character into ingredient bar:", regChars[0]);
+          console.log("[CoreX Compulsory] Auto-locking project character into ingredient bar:", regChars[0]);
         }
       } catch (_) {}
     }
 
     hasReferencesToAttach = targetsToAttach.length > 0;
     if (hasReferencesToAttach) {
-      console.log("[DeepX Compulsory] Auto-locking authentic references into ingredient bar:", targetsToAttach);
+      console.log("[CoreX Compulsory] Auto-locking authentic references into ingredient bar:", targetsToAttach);
       await attachLibraryAssetsBatch(tabId, targetsToAttach, false, prompt);
 
       // Global Mandatory Reference Verification:
@@ -1810,7 +1810,7 @@ async function fastFillAndSubmitPrompt(tabId, prompt, config = {}) {
       });
       const activeChipsCount = chipVerification?.[0]?.result || 0;
       if (activeChipsCount === 0) {
-        console.warn("[DeepX Compulsory] Prompt box has 0 chips! Retrying authentic attachment...");
+        console.warn("[CoreX Compulsory] Prompt box has 0 chips! Retrying authentic attachment...");
         await new Promise(r => setTimeout(r, 100));
         await attachLibraryAssetsBatch(tabId, targetsToAttach, false, prompt);
       }
@@ -1830,7 +1830,7 @@ async function fastFillAndSubmitPrompt(tabId, prompt, config = {}) {
       const pBox = document.querySelector("flow-prompt-box, flow-base-prompt-box");
       const currentChips = pBox ? pBox.querySelectorAll("flow-ingredient-chip").length : 0;
       if (compulsoryRef && currentChips === 0) {
-        console.warn("[DeepX] Note: Specified reference chip not in library; proceeding with direct real-time prompt generation on Flow canvas.");
+        console.warn("[CoreX] Note: Specified reference chip not in library; proceeding with direct real-time prompt generation on Flow canvas.");
       }
 
       const box = document.querySelector("div.ProseMirror, flow-rich-text-editor div[role='textbox'], div[contenteditable='true']");
@@ -1924,7 +1924,7 @@ async function fastFillAndSubmitPrompt(tabId, prompt, config = {}) {
 
   if (!verified) {
     if (!config._isRetry) {
-      console.warn(`[DeepX Self-Healing] Prompt submission not verified for "${prompt.slice(0, 40)}...". Remodifying prompt and retrying...`);
+      console.warn(`[CoreX Self-Healing] Prompt submission not verified for "${prompt.slice(0, 40)}...". Remodifying prompt and retrying...`);
       const remodified = remodifyPromptForSafety(prompt);
       return await fastFillAndSubmitPrompt(tabId, remodified, { ...config, _isRetry: true });
     }
@@ -1956,7 +1956,7 @@ async function handleGenerateVideo(payload) {
 
   // Default Primary High-Speed Path: AnyAI Native Chrome Debugger Automation Engine
   if (!payload.useDirectApi) {
-    console.log("[DeepX Fast] Executing prompt via AnyAI native debugger pipeline...");
+    console.log("[CoreX Fast] Executing prompt via AnyAI native debugger pipeline...");
     const refTargets = [];
     if (Array.isArray(payload.referenceAssets)) refTargets.push(...payload.referenceAssets);
     if (Array.isArray(payload.heroReferences)) refTargets.push(...payload.heroReferences);
@@ -1969,7 +1969,7 @@ async function handleGenerateVideo(payload) {
         const regChars = await getRegisteredCharacterNames(tabId);
         if (regChars && regChars.length > 0) {
           refTargets.push(regChars[0]);
-          console.log("[DeepX Fast] Auto-anchoring registered project character to video prompt:", regChars[0]);
+          console.log("[CoreX Fast] Auto-anchoring registered project character to video prompt:", regChars[0]);
         }
       } catch (_) {}
     }
@@ -1991,7 +1991,7 @@ async function handleGenerateVideo(payload) {
     });
 
     const durationMs = Date.now() - startTime;
-    console.log(`[DeepX Fast] AnyAI process completed in ${durationMs}ms!`);
+    console.log(`[CoreX Fast] AnyAI process completed in ${durationMs}ms!`);
 
     return {
       status: "dispatched",
@@ -2086,7 +2086,7 @@ async function handleGenerateVideo(payload) {
         };
       }
     } catch (apiErr) {
-      console.warn("[DeepX] Direct API failed, accelerating via AnyAI native debugger:", apiErr);
+      console.warn("[CoreX] Direct API failed, accelerating via AnyAI native debugger:", apiErr);
     }
   }
 
@@ -2133,7 +2133,7 @@ async function handleGenerateImage(payload) {
 
   // Primary High-Speed Path: AnyAI Native UI Automation Engine
   if (!useDirectApi) {
-    console.log("[DeepX Fast] Executing image prompt via AnyAI native UI automation pipeline...");
+    console.log("[CoreX Fast] Executing image prompt via AnyAI native UI automation pipeline...");
     await fastFillAndSubmitPrompt(tabId, prompt, {
       mode: "image",
       model,
@@ -2142,13 +2142,13 @@ async function handleGenerateImage(payload) {
     });
 
     const durationMs = Date.now() - startTime;
-    console.log(`[DeepX Fast] Image prompt executed in ${durationMs}ms!`);
+    console.log(`[CoreX Fast] Image prompt executed in ${durationMs}ms!`);
 
     if (shouldWait) {
-      console.log("[DeepX Fast] Waiting for image render tile to reach 100% completion...");
+      console.log("[CoreX Fast] Waiting for image render tile to reach 100% completion...");
       const renderRes = await pollLatestTileUntilReady(tabId, 120000);
       const totalTimeMs = Date.now() - startTime;
-      console.log(`[DeepX Fast] Image render completed in ${totalTimeMs}ms!`, renderRes);
+      console.log(`[CoreX Fast] Image render completed in ${totalTimeMs}ms!`, renderRes);
       return {
         status: "succeeded",
         via: "ANYAI_NATIVE_DEBUGGER",
@@ -2269,12 +2269,12 @@ async function handleGenerateImage(payload) {
         }]
       };
     } catch (e) {
-      console.warn("[DeepX] Direct image API post failed, falling back to AnyAI debugger:", e);
+      console.warn("[CoreX] Direct image API post failed, falling back to AnyAI debugger:", e);
     }
   }
 
   // Fallback to AnyAI Native Chrome Debugger Automation Engine
-  console.log("[DeepX] Executing image generation via AnyAI native debugger pipeline...");
+  console.log("[CoreX] Executing image generation via AnyAI native debugger pipeline...");
   await fastFillAndSubmitPrompt(tabId, prompt, {
     mode: "image",
     model,
@@ -2283,7 +2283,7 @@ async function handleGenerateImage(payload) {
   });
 
   const durationMs = Date.now() - startTime;
-  console.log(`[DeepX Fast] Image prompt executed in ${durationMs}ms!`);
+  console.log(`[CoreX Fast] Image prompt executed in ${durationMs}ms!`);
 
   return {
     status: "dispatched",
@@ -2387,7 +2387,7 @@ async function handleUploadImage(payload) {
 
       if (injectRes?.[0]?.result?.success) {
         const elapsedMs = Date.now() - startTime;
-        console.log(`[DeepX Fast] DataTransfer upload finished in ${elapsedMs}ms.`);
+        console.log(`[CoreX Fast] DataTransfer upload finished in ${elapsedMs}ms.`);
         return {
           success: true,
           fileName,
@@ -2396,7 +2396,7 @@ async function handleUploadImage(payload) {
         };
       }
     } catch (err) {
-      console.warn("[DeepX Fast] DataTransfer upload error, falling back to CDP:", err);
+      console.warn("[CoreX Fast] DataTransfer upload error, falling back to CDP:", err);
     }
   }
 
@@ -2475,7 +2475,7 @@ async function handleUploadImage(payload) {
         }).catch(() => {});
 
         const elapsedMs = Date.now() - startTime;
-        console.log(`[DeepX Fast] Rapid CDP upload finished in ${elapsedMs}ms.`);
+        console.log(`[CoreX Fast] Rapid CDP upload finished in ${elapsedMs}ms.`);
         return {
           success: true,
           filePath,
@@ -2486,7 +2486,7 @@ async function handleUploadImage(payload) {
       }
     }
   } catch (err) {
-      console.warn("[DeepX Fast] Rapid CDP upload fallback:", err);
+      console.warn("[CoreX Fast] Rapid CDP upload fallback:", err);
     }
   }
 
@@ -2756,7 +2756,7 @@ async function handleUploadCharacter(payload) {
     // Double-check tab remains interactive and on project canvas
     await ensureOnProjectCanvas(tabId);
 
-    console.log(`[DeepX] Protagonist character / vehicle '${cleanName}' registered in project ${projectId} (${uploadRes?.mode || 'fast_datatransfer'}).`);
+    console.log(`[CoreX] Protagonist character / vehicle '${cleanName}' registered in project ${projectId} (${uploadRes?.mode || 'fast_datatransfer'}).`);
 
     return {
       success: true,
@@ -2768,7 +2768,7 @@ async function handleUploadCharacter(payload) {
       status: "character_created_and_saved"
     };
   } catch (err) {
-    console.error("[DeepX handleUploadCharacter error]", err);
+    console.error("[CoreX handleUploadCharacter error]", err);
     throw new Error(`[handleUploadCharacter failed] ${err.message}`);
   }
 }
@@ -2793,7 +2793,7 @@ async function handleGenerateCharacter(payload) {
   if (!projectId) throw new Error("Could not determine Google Flow project ID.");
 
   if (!curUrl.includes(`/project/${projectId}/character`)) {
-    console.log(`[DeepX Character] Navigating to Google Flow Character Studio for project '${projectId}'...`);
+    console.log(`[CoreX Character] Navigating to Google Flow Character Studio for project '${projectId}'...`);
     await chrome.tabs.update(tabId, { url: `https://flow.google.com/project/${projectId}/character` });
     await new Promise(r => setTimeout(r, 2500));
   }
@@ -2875,7 +2875,7 @@ async function handleGenerateCharacter(payload) {
     await nativeDispatchKey(tabId, "Enter", "Enter", 13).catch(() => {});
   }
 
-  console.log(`[DeepX Character] Prompt submitted for '${characterName}'. Waiting for character candidate images to fully render...`);
+  console.log(`[CoreX Character] Prompt submitted for '${characterName}'. Waiting for character candidate images to fully render...`);
 
   // 5. Wait for generation to complete and character candidate images to fully render
   let editorReady = false;
@@ -2925,7 +2925,7 @@ async function handleGenerateCharacter(payload) {
     if (res?.readyIndices && res.readyIndices.length > 0) {
       readyCandidateIndex = res.readyIndices[0];
       editorReady = true;
-      console.log(`[DeepX Character Studio] ${res.readyIndices.length}/${res.totalCandidates} character candidates fully rendered! Selecting candidate #${readyCandidateIndex}...`);
+      console.log(`[CoreX Character Studio] ${res.readyIndices.length}/${res.totalCandidates} character candidates fully rendered! Selecting candidate #${readyCandidateIndex}...`);
       break;
     }
   }
@@ -3014,7 +3014,7 @@ async function handleGenerateCharacter(payload) {
   const targetCanvasUrl = projectId && projectId !== "default"
     ? `https://flow.google.com/project/${projectId}`
     : "https://flow.google.com";
-  console.log(`[DeepX Character Studio] Generated character '${characterName}'. Returning to project canvas: ${targetCanvasUrl}...`);
+  console.log(`[CoreX Character Studio] Generated character '${characterName}'. Returning to project canvas: ${targetCanvasUrl}...`);
   await chrome.tabs.update(tabId, { url: targetCanvasUrl });
   await new Promise(r => setTimeout(r, 1200));
   await ensureOnProjectCanvas(tabId);
@@ -3173,7 +3173,7 @@ async function pollLatestTileUntilReady(tabId, timeoutMs = 180000) {
     }
     if (info?.percent && info.percent !== lastPercent) {
       lastPercent = info.percent;
-      console.log(`[DeepX Poll] Render progress: ${lastPercent}%`);
+      console.log(`[CoreX Poll] Render progress: ${lastPercent}%`);
     }
     await new Promise(r => setTimeout(r, 1200));
   }
@@ -3314,7 +3314,7 @@ async function handleBatchGenerate(payload, progressCallback) {
     });
     if (allMentions.length > 0) {
       batchHeroReferences = Array.from(new Set(allMentions));
-      console.log("[DeepX Batch] Discovered hero references across batch prompts:", batchHeroReferences);
+      console.log("[CoreX Batch] Discovered hero references across batch prompts:", batchHeroReferences);
     }
   }
 
@@ -3326,7 +3326,7 @@ async function handleBatchGenerate(payload, progressCallback) {
         const registered = await getRegisteredCharacterNames(flowTab);
         if (registered && registered.length > 0) {
           batchHeroReferences = [registered[0]];
-          console.log("[DeepX Batch] Auto-inheriting project library character:", batchHeroReferences);
+          console.log("[CoreX Batch] Auto-inheriting project library character:", batchHeroReferences);
         }
       }
     } catch (_) {}
@@ -3461,7 +3461,7 @@ async function handleBatchGenerate(payload, progressCallback) {
     // Focus Google Flow tab so the user visibly watches the live canvas execution
     await chrome.tabs.update(tabId, { active: true }).catch(() => {});
 
-    console.log(`[DeepX Rapid] Dispatching ${prompts.length} prompt(s) back-to-back into Google Flow in real time...`);
+    console.log(`[CoreX Rapid] Dispatching ${prompts.length} prompt(s) back-to-back into Google Flow in real time...`);
     const dispatchedList = [];
 
     for (let i = 0; i < prompts.length; i++) {
@@ -3515,7 +3515,7 @@ async function handleBatchGenerate(payload, progressCallback) {
         }
 
         const elapsedMs = Date.now() - promptStart;
-        console.log(`[DeepX Rapid] Prompt ${i + 1}/${prompts.length} dispatched into Flow in ${elapsedMs}ms!`);
+        console.log(`[CoreX Rapid] Prompt ${i + 1}/${prompts.length} dispatched into Flow in ${elapsedMs}ms!`);
 
         const sceneRecord = {
           index: i,
@@ -3540,7 +3540,7 @@ async function handleBatchGenerate(payload, progressCallback) {
           sceneRecord
         });
       } catch (err) {
-        console.error(`[DeepX Rapid] Error dispatching prompt ${i + 1}:`, err);
+        console.error(`[CoreX Rapid] Error dispatching prompt ${i + 1}:`, err);
         batchState.results[i] = { index: i, success: false, error: err.message };
         batchState.failed++;
 
@@ -3639,7 +3639,7 @@ async function handleBatchGenerate(payload, progressCallback) {
     }
 
     // Optional: wait for parallel tile completion if requested
-    console.log("[DeepX Rapid] Monitoring parallel tiles for completion...");
+    console.log("[CoreX Rapid] Monitoring parallel tiles for completion...");
     for (let i = 0; i < dispatchedList.length; i++) {
       try {
         const tileRes = await pollLatestTileUntilReady(tabId, 180000);
@@ -3651,7 +3651,7 @@ async function handleBatchGenerate(payload, progressCallback) {
           await chrome.downloads.download({ url, filename, saveAs: false });
         }
       } catch (e) {
-        console.warn(`[DeepX Rapid] Tile monitor warning for scene ${i + 1}:`, e);
+        console.warn(`[CoreX Rapid] Tile monitor warning for scene ${i + 1}:`, e);
       }
     }
 
@@ -3751,19 +3751,19 @@ async function handleBatchGenerate(payload, progressCallback) {
   };
 }
 
-// WebSocket Connection to DeepX Antigravity Server
+// WebSocket Connection to CoreX Antigravity Server
 async function connectToAntigravityServer(force = false) {
   if (force) {
     isMcpManuallyDisconnected = false;
     chrome.storage.local.set({ isMcpManuallyDisconnected: false });
   } else if (isMcpManuallyDisconnected) {
-    console.log("[DeepX Flow] MCP is manually disconnected. Skipping auto-connect.");
+    console.log("[CoreX Flow] MCP is manually disconnected. Skipping auto-connect.");
     return;
   }
 
   // CRITICAL: Do NOT auto-connect to MCP bridge if the extension is locked in this Chrome profile
   if (!isExtensionUnlocked && !force) {
-    console.log("[DeepX Flow] Extension is LOCKED in this profile. Skipping auto-connect to MCP bridge.");
+    console.log("[CoreX Flow] Extension is LOCKED in this profile. Skipping auto-connect to MCP bridge.");
     return;
   }
 
@@ -3772,7 +3772,7 @@ async function connectToAntigravityServer(force = false) {
   }
 
   const targetUrl = await getTargetWsUrl();
-  console.log(`[DeepX Flow] Connecting to ${targetUrl}...`);
+  console.log(`[CoreX Flow] Connecting to ${targetUrl}...`);
 
   chrome.runtime.sendMessage({
     type: "MCP_CONNECTION_STATE_CHANGED",
@@ -3791,7 +3791,7 @@ async function connectToAntigravityServer(force = false) {
 
   ws.onopen = async () => {
     activeConnectedHost = targetUrl;
-    console.log(`%c[DeepX Flow]%c Connected to ${targetUrl}!`, "color:#00e5ff;font-weight:bold;", "color:inherit;");
+    console.log(`%c[CoreX Flow]%c Connected to ${targetUrl}!`, "color:#00e5ff;font-weight:bold;", "color:inherit;");
     chrome.storage.local.set({ deepxConnected: true, connectedHost: targetUrl });
 
     // Collect initial profile and tab status
@@ -3899,14 +3899,14 @@ async function connectToAntigravityServer(force = false) {
                   if (ctx.url) pageUrl = ctx.url;
                 }
               } catch (e) {
-                console.warn("[DeepX] extractFlowTabContext error:", e);
+                console.warn("[CoreX] extractFlowTabContext error:", e);
               }
             }
 
             // Account switch detection
             if (accountInfo?.email) {
               if (lastKnownAccountEmail && accountInfo.email !== lastKnownAccountEmail) {
-                console.log(`[DeepX] Detected account switch: ${lastKnownAccountEmail} -> ${accountInfo.email}`);
+                console.log(`[CoreX] Detected account switch: ${lastKnownAccountEmail} -> ${accountInfo.email}`);
                 token = null;
                 globalCapturedToken = null;
                 chrome.storage.local.remove(["deepxAuthToken"]);
@@ -3926,13 +3926,13 @@ async function connectToAntigravityServer(force = false) {
 
             if (isMcpManuallyDisconnected) {
               connectionState = "disconnected";
-              stateReason = "DeepX MCP Bridge is manually disconnected. Click Connect MCP in the extension to reconnect.";
+              stateReason = "CoreX MCP Bridge is manually disconnected. Click Connect MCP in the extension to reconnect.";
             } else if (!isExtensionUnlocked) {
               connectionState = "locked";
-              stateReason = "DeepX Extension is LOCKED in this profile. Unlock the extension to use.";
+              stateReason = "CoreX Extension is LOCKED in this profile. Unlock the extension to use.";
             } else if (isExtensionEnabledByUser === false) {
               connectionState = "standby";
-              stateReason = "DeepX Extension is manually turned OFF. Click Turn ON to resume.";
+              stateReason = "CoreX Extension is manually turned OFF. Click Turn ON to resume.";
             } else if (!tabId) {
               connectionState = "tab_not_found";
               stateReason = "No Google Flow tab open. Open https://flow.google.com in Chrome.";
@@ -3991,7 +3991,7 @@ async function connectToAntigravityServer(force = false) {
               throw new Error("Could not connect to or launch Google Flow tab in Chrome.");
             }
             if (isExtensionEnabledByUser === false) {
-              throw new Error("DeepX Extension is paused. Please click Turn ON in the extension to resume.");
+              throw new Error("CoreX Extension is paused. Please click Turn ON in the extension to resume.");
             }
             result = await handleGenerateVideo(payload);
             break;
@@ -4002,7 +4002,7 @@ async function connectToAntigravityServer(force = false) {
               throw new Error("Could not connect to or launch Google Flow tab in Chrome.");
             }
             if (isExtensionEnabledByUser === false) {
-              throw new Error("DeepX Extension is paused. Please click Turn ON in the extension to resume.");
+              throw new Error("CoreX Extension is paused. Please click Turn ON in the extension to resume.");
             }
             result = await handleGenerateImage(payload);
             break;
@@ -4013,7 +4013,7 @@ async function connectToAntigravityServer(force = false) {
               throw new Error("Could not connect to or launch Google Flow tab in Chrome.");
             }
             if (isExtensionEnabledByUser === false) {
-              throw new Error("DeepX Extension is paused. Please click Turn ON in the extension to resume.");
+              throw new Error("CoreX Extension is paused. Please click Turn ON in the extension to resume.");
             }
             result = await handleBatchGenerate(payload, (progress) => {
               // Send live progress event
@@ -4027,7 +4027,7 @@ async function connectToAntigravityServer(force = false) {
               throw new Error("Could not connect to or launch Google Flow tab in Chrome.");
             }
             if (isExtensionEnabledByUser === false) {
-              throw new Error("DeepX Extension is paused. Please click Turn ON in the extension to resume.");
+              throw new Error("CoreX Extension is paused. Please click Turn ON in the extension to resume.");
             }
             result = await handleBatchGenerate({
               ...payload,
@@ -4286,16 +4286,16 @@ async function connectToAntigravityServer(force = false) {
             break;
           }
           default:
-            throw new Error("Unknown DeepX command: " + command);
+            throw new Error("Unknown CoreX command: " + command);
         }
 
         ws.send(JSON.stringify({ id, success: true, result }));
       } catch (err) {
-        console.error("[DeepX Error]", err);
+        console.error("[CoreX Error]", err);
         ws.send(JSON.stringify({ id, success: false, error: `${err.message}\n${err.stack || ""}` }));
       }
     } catch (parseErr) {
-      console.error("[DeepX Flow] Malformed message:", parseErr);
+      console.error("[CoreX Flow] Malformed message:", parseErr);
     }
   };
 
@@ -4326,7 +4326,7 @@ async function connectToAntigravityServer(force = false) {
 function scheduleReconnect() {
   if (reconnectTimer) clearTimeout(reconnectTimer);
   if (isMcpManuallyDisconnected) {
-    console.log("[DeepX Flow] MCP manually disconnected, skipping reconnect schedule.");
+    console.log("[CoreX Flow] MCP manually disconnected, skipping reconnect schedule.");
     return;
   }
   reconnectTimer = setTimeout(() => connectToAntigravityServer(false), 2000);
@@ -4353,7 +4353,7 @@ async function disconnectFromAntigravityServer() {
       ws.onerror = null;
       ws.close(1000, "Manually disconnected by user");
     } catch (e) {
-      console.warn("[DeepX Flow] Error closing WebSocket:", e);
+      console.warn("[CoreX Flow] Error closing WebSocket:", e);
     }
     ws = null;
   }
@@ -4364,7 +4364,7 @@ async function disconnectFromAntigravityServer() {
     connecting: false,
     manuallyDisconnected: true
   }).catch(() => {});
-  console.log("[DeepX Flow] MCP WebSocket disconnected manually.");
+  console.log("[CoreX Flow] MCP WebSocket disconnected manually.");
   return { success: true, connected: false, manuallyDisconnected: true };
 }
 
@@ -4430,7 +4430,7 @@ chrome.storage.local.get({
 
 // Initialize lock state upon installation/load (Do NOT open tab automatically)
 chrome.runtime.onInstalled.addListener(async (details) => {
-  console.log("[DeepX] Extension installed/loaded, reason:", details.reason);
+  console.log("[CoreX] Extension installed/loaded, reason:", details.reason);
   const data = await chrome.storage.local.get(["extensionUnlocked"]);
   if (typeof data.extensionUnlocked !== "boolean") {
     await chrome.storage.local.set({ extensionUnlocked: false });
@@ -4446,20 +4446,20 @@ chrome.storage.onChanged.addListener((changes, area) => {
   if (area === "local") {
     if (changes.extensionUnlocked) {
       isExtensionUnlocked = !!changes.extensionUnlocked.newValue;
-      console.log("[DeepX] extensionUnlocked changed to:", isExtensionUnlocked);
+      console.log("[CoreX] extensionUnlocked changed to:", isExtensionUnlocked);
       updateBadge();
       if (isExtensionUnlocked && !isMcpManuallyDisconnected) {
         connectToAntigravityServer(true);
       } else if (!isExtensionUnlocked && ws) {
         try {
-          console.log("[DeepX] Extension locked - disconnecting MCP WebSocket.");
+          console.log("[CoreX] Extension locked - disconnecting MCP WebSocket.");
           ws.close();
         } catch {}
       }
     }
     if (changes.isMcpManuallyDisconnected !== undefined) {
       isMcpManuallyDisconnected = !!changes.isMcpManuallyDisconnected.newValue;
-      console.log("[DeepX] isMcpManuallyDisconnected changed to:", isMcpManuallyDisconnected);
+      console.log("[CoreX] isMcpManuallyDisconnected changed to:", isMcpManuallyDisconnected);
       if (isMcpManuallyDisconnected && ws) {
         try {
           ws.close(1000, "Manually disconnected via storage");
@@ -4471,7 +4471,7 @@ chrome.storage.onChanged.addListener((changes, area) => {
 });
 
 function isEffectiveActive() {
-  // DeepX is active only when unlocked AND enabled by the user
+  // CoreX is active only when unlocked AND enabled by the user
   return isExtensionUnlocked && isExtensionEnabledByUser !== false;
 }
 
@@ -4664,7 +4664,7 @@ async function scanOpenYouTubeTabsForSubscription() {
 
         const status = results?.[0]?.result;
         if (status?.isSubscribed === true) {
-          console.log("[DeepX] Auto-detected confirmed subscription to @dipeshkyd in tab ID:", tab.id);
+          console.log("[CoreX] Auto-detected confirmed subscription to @dipeshkyd in tab ID:", tab.id);
           isExtensionUnlocked = true;
           await chrome.storage.local.set({
             extensionUnlocked: true,
@@ -4680,7 +4680,7 @@ async function scanOpenYouTubeTabsForSubscription() {
           return true;
         } else if (status?.isExplicitUnsubscribed === true) {
           if (isExtensionUnlocked) {
-            console.log("[DeepX] Auto-detected explicit unsubscribed status in open tab. Relocking.");
+            console.log("[CoreX] Auto-detected explicit unsubscribed status in open tab. Relocking.");
             isExtensionUnlocked = false;
             await chrome.storage.local.set({
               extensionUnlocked: false,
@@ -4699,7 +4699,7 @@ async function scanOpenYouTubeTabsForSubscription() {
       }
     }
   } catch (e) {
-    console.warn("[DeepX] scanOpenYouTubeTabs error:", e);
+    console.warn("[CoreX] scanOpenYouTubeTabs error:", e);
   }
   return false;
 }
@@ -4735,7 +4735,7 @@ async function updateActiveTabState() {
       // Real-time project ID extraction directly from tab URL (fast & 100% reliable)
       const detectedProjectId = extractProjectId(currentActiveTabUrl);
       if (detectedProjectId && detectedProjectId !== lastKnownProjectId) {
-        console.log(`[DeepX] Project ID updated from Tab URL: ${lastKnownProjectId} -> ${detectedProjectId}`);
+        console.log(`[CoreX] Project ID updated from Tab URL: ${lastKnownProjectId} -> ${detectedProjectId}`);
         lastKnownProjectId = detectedProjectId;
         chrome.storage.local.set({ lastKnownProjectId: detectedProjectId });
         chrome.runtime.sendMessage({
@@ -4799,7 +4799,7 @@ chrome.storage.local.get({ isMcpManuallyDisconnected: false }, (res) => {
   if (!isMcpManuallyDisconnected) {
     connectToAntigravityServer(false);
   } else {
-    console.log("[DeepX Flow] MCP manually disconnected by user, skipping startup auto-connect.");
+    console.log("[CoreX Flow] MCP manually disconnected by user, skipping startup auto-connect.");
   }
 });
 
@@ -4842,12 +4842,12 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     const newProjectName = msg.projectName || null;
     let changed = false;
     if (newProjectId && newProjectId !== lastKnownProjectId) {
-      console.log(`[DeepX] Project ID updated via content script: ${lastKnownProjectId} -> ${newProjectId}`);
+      console.log(`[CoreX] Project ID updated via content script: ${lastKnownProjectId} -> ${newProjectId}`);
       lastKnownProjectId = newProjectId;
       changed = true;
     }
     if (newProjectName && newProjectName !== lastKnownProjectName) {
-      console.log(`[DeepX] Project Name updated: ${lastKnownProjectName} -> ${newProjectName}`);
+      console.log(`[CoreX] Project Name updated: ${lastKnownProjectName} -> ${newProjectName}`);
       lastKnownProjectName = newProjectName;
       changed = true;
     }
@@ -4911,13 +4911,13 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.type === "TOKEN_CAPTURED" && msg.token) {
     globalCapturedToken = msg.token;
     chrome.storage.local.set({ deepxAuthToken: msg.token });
-    console.log("[DeepX] Auth token captured from session.");
+    console.log("[CoreX] Auth token captured from session.");
     return false;
   }
 
   if (msg.type === "ACCOUNT_CHANGED" && msg.account) {
     if (lastKnownAccountEmail && msg.account.email && msg.account.email !== lastKnownAccountEmail) {
-      console.log(`[DeepX] Account switch detected: ${lastKnownAccountEmail} -> ${msg.account.email}`);
+      console.log(`[CoreX] Account switch detected: ${lastKnownAccountEmail} -> ${msg.account.email}`);
       globalCapturedToken = null;
       chrome.storage.local.remove(["deepxAuthToken"]);
     }
@@ -5060,7 +5060,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
         if (isExtensionEnabledByUser === false) {
           connectionState = "standby";
-          stateReason = "DeepX Extension is manually turned OFF. Click Turn ON to resume.";
+          stateReason = "CoreX Extension is manually turned OFF. Click Turn ON to resume.";
         } else if (!tabId) {
           connectionState = "tab_not_found";
           stateReason = "No Google Flow tab open. Open https://flow.google.com in Chrome.";
@@ -5102,7 +5102,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
           activeBatchesCount: activeBatches.size
         });
       } catch (err) {
-        console.error("[DeepX] GET_EXTENSION_STATUS error:", err);
+        console.error("[CoreX] GET_EXTENSION_STATUS error:", err);
         sendResponse({
           wsConnected: ws?.readyState === WebSocket.OPEN,
           mcpConnecting: ws?.readyState === WebSocket.CONNECTING,
@@ -5340,7 +5340,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   // Handle real-time YouTube subscription confirmation
   if (msg.type === "YOUTUBE_SUBSCRIBE_CONFIRMED") {
     (async () => {
-      console.log("[DeepX] Real-time YouTube subscription confirmed for", msg.channel || "@dipeshkyd");
+      console.log("[CoreX] Real-time YouTube subscription confirmed for", msg.channel || "@dipeshkyd");
       isExtensionUnlocked = true;
       await chrome.storage.local.set({
         extensionUnlocked: true,
@@ -5361,7 +5361,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   // Handle real-time YouTube unsubscription confirmation or lock command
   if (msg.type === "YOUTUBE_UNSUBSCRIBED_CONFIRMED" || msg.type === "LOCK_EXTENSION") {
     (async () => {
-      console.log("[DeepX] Real-time YouTube unsubscribed status confirmed. Locking extension.");
+      console.log("[CoreX] Real-time YouTube unsubscribed status confirmed. Locking extension.");
       isExtensionUnlocked = false;
       await chrome.storage.local.set({
         extensionUnlocked: false,

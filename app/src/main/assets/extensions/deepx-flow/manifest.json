@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "DeepX - Antigravity Flow Bridge",
-  "short_name": "DeepX Flow",
+  "name": "CoreX - Antigravity Flow Bridge",
+  "short_name": "CoreX Flow",
   "version": "1.2.1",
   "description": "Unified high-performance zero-latency bridge connecting Antigravity Coding Agents directly to Google Flow (Veo Omni, Veo 3.1 & Imagen 3) with rapid parallel dispatch, multi-ingredient stacking, ultra-fast DataTransfer uploads, and mobile Kiwi Browser zero-crash engine.",
   "icons": {
@@ -11,7 +11,7 @@
     "128": "icons/icon128.png"
   },
   "action": {
-    "default_title": "DeepX Flow Studio",
+    "default_title": "CoreX Flow Studio",
     "default_popup": "popup.html"
   },
   "side_panel": {

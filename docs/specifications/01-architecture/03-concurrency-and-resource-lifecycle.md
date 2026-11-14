@@ -156,9 +156,9 @@ first use:
 | Extension `WebView` (page/tab) | the tab that shows it | leaving that tab — `onDispose` destroys the `WebView` — or the extension being uninstalled or updated |
 | SCM background host | a project opens | project change or uninstall; it is persistent by design and is not trimmed under pressure (see §7) |
 | Native plugin (`DexClassLoader`) | the page that uses it | that page's dispose, or eviction from `LoadedPlugins` under pressure |
-| DeepX bridge | app start, while the extension switch is on | switching the extension off, which also removes the agent's MCP entry |
+| CoreX bridge | app start, while the extension switch is on | switching the extension off, which also removes the agent's MCP entry |
 
-The DeepX bridge is the deliberate exception to "only while its panel is open": it is a loopback
+The CoreX bridge is the deliberate exception to "only while its panel is open": it is a loopback
 `ServerSocket`, not a process, and the extension keeps its connection while the user works
 elsewhere. Its cost is a socket and a few threads, and stopping it would break the `deepx_status`
 tool the agent is promised.

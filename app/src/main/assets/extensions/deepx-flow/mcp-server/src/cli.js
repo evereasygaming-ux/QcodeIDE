@@ -1,4 +1,4 @@
-// DeepX CLI Tool
+// CoreX CLI Tool
 import { program } from "commander";
 import { WebSocket } from "ws";
 
@@ -6,23 +6,23 @@ const VERSION = "1.0.0";
 
 program
   .name("deepx-auto")
-  .description("DeepX CLI for Google Flow automation & Antigravity bridge")
+  .description("CoreX CLI for Google Flow automation & Antigravity bridge")
   .version(VERSION);
 
 program
   .command("status")
-  .description("Check DeepX bridge and Google Flow session connection")
+  .description("Check CoreX bridge and Google Flow session connection")
   .action(async () => {
     const wsUrl = "ws://127.0.0.1:8792/ws";
-    console.log(`Connecting to DeepX bridge at ${wsUrl}...`);
+    console.log(`Connecting to CoreX bridge at ${wsUrl}...`);
 
     let done = false;
     const ws = new WebSocket(wsUrl);
 
     const timer = setTimeout(() => {
       if (!done) {
-        console.log("NOT CONNECTED: DeepX bridge is not running on port 8792.");
-        console.log("DeepX MCP server will be launched automatically by Antigravity via mcp_config.json.");
+        console.log("NOT CONNECTED: CoreX bridge is not running on port 8792.");
+        console.log("CoreX MCP server will be launched automatically by Antigravity via mcp_config.json.");
         process.exit(1);
       }
     }, 3000);
@@ -40,9 +40,9 @@ program
 
           console.log("\nRAW DATA:", JSON.stringify(data, null, 2));
           console.log("\n==========================================");
-          console.log("        DeepX Flow Bridge Status          ");
+          console.log("        CoreX Flow Bridge Status          ");
           console.log("==========================================");
-          console.log(`DeepX Bridge:     RUNNING (Port 8792)`);
+          console.log(`CoreX Bridge:     RUNNING (Port 8792)`);
           console.log(`Extension:        ${data.extensionConnected ? "CONNECTED ✅" : "NOT CONNECTED ❌"}`);
 
           if (data.flowTab) {
@@ -67,7 +67,7 @@ program
           } else if (data.flowTab?.stateReason) {
             console.log(`Action needed: ${data.flowTab.stateReason}`);
           } else if (!data.extensionConnected) {
-            console.log("Action needed: Load the DeepX extension in Chrome and open https://flow.google.com");
+            console.log("Action needed: Load the CoreX extension in Chrome and open https://flow.google.com");
           }
 
           ws.close();
@@ -83,7 +83,7 @@ program
     ws.on("error", () => {
       if (!done) {
         clearTimeout(timer);
-        console.log("NOT CONNECTED: DeepX bridge is not reachable.");
+        console.log("NOT CONNECTED: CoreX bridge is not reachable.");
         process.exit(1);
       }
     });

@@ -1,4 +1,4 @@
-// youtube-detector.js - Real-time YouTube Subscription Detector for DeepX Flow Bridge
+// youtube-detector.js - Real-time YouTube Subscription Detector for CoreX Flow Bridge
 (() => {
   const TARGET_CHANNEL_HANDLE = "@dipeshkyd";
   const TARGET_CHANNEL_ID = "ucyf1kp1w4xvnkhagmehx1w";
@@ -183,7 +183,7 @@
   function notifySubscribed() {
     if (hasReportedUnlock) return;
     hasReportedUnlock = true;
-    console.log('[DeepX] Confirmed subscription to @dipeshkyd! Unlocking extension...');
+    console.log('[CoreX] Confirmed subscription to @dipeshkyd! Unlocking extension...');
 
     // 1. Notify background service worker
     try {
@@ -193,7 +193,7 @@
         url: window.location.href
       }, () => {});
     } catch (e) {
-      console.warn('[DeepX] Message send warning:', e);
+      console.warn('[CoreX] Message send warning:', e);
     }
 
     // 2. Direct local storage update
@@ -204,7 +204,7 @@
         unlockedAt: Date.now()
       });
     } catch (e) {
-      console.warn('[DeepX] Storage set warning:', e);
+      console.warn('[CoreX] Storage set warning:', e);
     }
 
     // 3. Show floating confirmation banner on YouTube page
@@ -215,7 +215,7 @@
     hasReportedUnlock = false;
     chrome.storage.local.get(['extensionUnlocked'], (res) => {
       if (res?.extensionUnlocked) {
-        console.log('[DeepX] Explicit unsubscribed status verified on @dipeshkyd! Relocking extension...');
+        console.log('[CoreX] Explicit unsubscribed status verified on @dipeshkyd! Relocking extension...');
         chrome.storage.local.set({
           extensionUnlocked: false,
           unlockedAt: null
@@ -276,7 +276,7 @@
         </div>
         <div>
           <div style="font-weight: 700; font-size: 13px; color: #ffffff; letter-spacing: 0.3px;">
-            DeepX Flow Bridge Unlocked 🔓
+            CoreX Flow Bridge Unlocked 🔓
           </div>
           <div style="font-size: 11px; color: #aaaaaa; margin-top: 2px;">
             Subscribed to <strong>@dipeshkyd</strong>! Full AI generation is permanently enabled.

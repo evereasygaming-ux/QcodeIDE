@@ -1,4 +1,4 @@
-// DeepX WebSocket Bridge Server
+// CoreX WebSocket Bridge Server
 import { createServer } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { randomUUID } from "crypto";
@@ -89,7 +89,7 @@ export class DeepXWsBridge {
               };
             }
             if (res.flowTabOpen) {
-              console.error(`[DeepX Bridge] Active Flow Session Bound: ${res.account?.email || "User"} (Project: ${res.projectName || res.projectId || "Active"})`);
+              console.error(`[CoreX Bridge] Active Flow Session Bound: ${res.account?.email || "User"} (Project: ${res.projectName || res.projectId || "Active"})`);
             }
           }
         },
@@ -171,7 +171,7 @@ export class DeepXWsBridge {
               if (probe.ok) {
                 const data = await probe.json();
                 if (data.status === "ok") {
-                  console.error(`[DeepX Bridge] Port ${this.port} is already active. Operating in proxy mode.`);
+                  console.error(`[CoreX Bridge] Port ${this.port} is already active. Operating in proxy mode.`);
                   this.isProxy = true;
                   resolve();
                   return;
@@ -181,16 +181,16 @@ export class DeepXWsBridge {
               // Not a deepx bridge or request failed
             }
           }
-          console.error(`[DeepX Bridge] Server error:`, err);
+          console.error(`[CoreX Bridge] Server error:`, err);
           reject(err);
         });
 
         this.httpServer.listen(this.port, () => {
-          console.error(`[DeepX Bridge] Listening on http://127.0.0.1:${this.port} & ws://127.0.0.1:${this.port}/ws`);
+          console.error(`[CoreX Bridge] Listening on http://127.0.0.1:${this.port} & ws://127.0.0.1:${this.port}/ws`);
           this.wss = new WebSocketServer({ server: this.httpServer, path: "/ws" });
 
           this.wss.on("error", (err) => {
-            console.error("[DeepX Bridge] WebSocketServer error:", err);
+            console.error("[CoreX Bridge] WebSocketServer error:", err);
           });
 
           if (!this.zombieCleanerInterval) {
@@ -213,11 +213,11 @@ export class DeepXWsBridge {
 
           this.wss.on("connection", (ws, req) => {
             if (this.isManuallyDisconnected) {
-              console.error(`[DeepX Bridge] Rejecting connection from ${req.socket.remoteAddress} because bridge is manually disconnected.`);
+              console.error(`[CoreX Bridge] Rejecting connection from ${req.socket.remoteAddress} because bridge is manually disconnected.`);
               try { ws.close(1008, "Bridge is manually disconnected"); } catch {}
               return;
             }
-            console.error(`[DeepX Bridge] Client connected from ${req.socket.remoteAddress}`);
+            console.error(`[CoreX Bridge] Client connected from ${req.socket.remoteAddress}`);
             this.extensionClients.add(ws);
             setTimeout(() => this.probeSocketContext(ws), 200);
 
@@ -226,7 +226,7 @@ export class DeepXWsBridge {
                 const msg = JSON.parse(raw.toString("utf8"));
                 await this.handleMessage(msg, ws);
               } catch (err) {
-                console.error("[DeepX Bridge] Invalid JSON from client:", err);
+                console.error("[CoreX Bridge] Invalid JSON from client:", err);
               }
             });
 
@@ -248,11 +248,11 @@ export class DeepXWsBridge {
                   ready: !!best.ready
                 };
               }
-              console.error(`[DeepX Bridge] Extension socket closed. Active connected profiles: ${this.clients.size}`);
+              console.error(`[CoreX Bridge] Extension socket closed. Active connected profiles: ${this.clients.size}`);
             });
 
             ws.on("error", (err) => {
-              console.error("[DeepX Bridge] Client connection error:", err);
+              console.error("[CoreX Bridge] Client connection error:", err);
             });
           });
 
@@ -294,7 +294,7 @@ export class DeepXWsBridge {
         projectId: best?.projectId || msg.projectId,
         ready: best?.ready ?? msg.ready
       };
-      console.error(`[DeepX Bridge] Registered profile client: ${msg.client} v${msg.version} (Account: ${msg.account?.email || "unknown"}, flowOpen: ${!!msg.flowTabOpen}, ready: ${!!msg.ready})`);
+      console.error(`[CoreX Bridge] Registered profile client: ${msg.client} v${msg.version} (Account: ${msg.account?.email || "unknown"}, flowOpen: ${!!msg.flowTabOpen}, ready: ${!!msg.ready})`);
       this.probeSocketContext(ws);
       return;
     }
@@ -309,7 +309,7 @@ export class DeepXWsBridge {
       if (!this.extensionClient) {
         this.extensionInfo = null;
       }
-      console.error("[DeepX Bridge] Client disconnected manually via CLIENT_DISCONNECT.");
+      console.error("[CoreX Bridge] Client disconnected manually via CLIENT_DISCONNECT.");
       return;
     }
 
@@ -422,7 +422,7 @@ export class DeepXWsBridge {
         }
         return data.result;
       } catch (err) {
-        console.error(`[DeepX Bridge] Proxy command failed (${err.message}). Resetting proxy mode to reclaim port.`);
+        console.error(`[CoreX Bridge] Proxy command failed (${err.message}). Resetting proxy mode to reclaim port.`);
         this.isProxy = false;
         try {
           await this.start();
@@ -440,7 +440,7 @@ export class DeepXWsBridge {
 
     if (!this.isConnected()) {
       throw new Error(
-        "DeepX Chrome Extension is not connected. Please ensure Chrome is running with the DeepX extension loaded and a Google Flow tab (https://flow.google.com) is open."
+        "CoreX Chrome Extension is not connected. Please ensure Chrome is running with the CoreX extension loaded and a Google Flow tab (https://flow.google.com) is open."
       );
     }
 
@@ -465,7 +465,7 @@ export class DeepXWsBridge {
         const timer = setTimeout(() => {
           this.pendingCommands.delete(id);
           this.progressListeners.delete(id);
-          reject(new Error(`DeepX command '${command}' timed out after ${timeout / 1000}s`));
+          reject(new Error(`CoreX command '${command}' timed out after ${timeout / 1000}s`));
         }, timeout);
 
         this.pendingCommands.set(id, { resolve, reject, timer });
@@ -505,7 +505,7 @@ export class DeepXWsBridge {
       if (command === "status" && result && (result.flowTabOpen === false || result.connectionState === "locked" || result.isUnlocked === false) && this.clients.size > 1) {
         for (const [altSocket, altData] of this.clients.entries()) {
           if (altSocket !== targetSocket && altSocket.readyState === WebSocket.OPEN) {
-            console.error(`[DeepX Bridge] Status not ready on profile (${result.account?.email || "unknown"}, locked: ${result.connectionState === "locked"}); probing alternative profile (${altData.account?.email || "alt"})...`);
+            console.error(`[CoreX Bridge] Status not ready on profile (${result.account?.email || "unknown"}, locked: ${result.connectionState === "locked"}); probing alternative profile (${altData.account?.email || "alt"})...`);
             try {
               const altResult = await executeOnSocket(altSocket, 8000);
               if (altResult && typeof altResult === "object") {
@@ -518,7 +518,7 @@ export class DeepXWsBridge {
                 if (altResult.connectionState) altData.connectionState = altResult.connectionState;
               }
               if (altResult && altResult.flowTabOpen && altResult.connectionState !== "locked" && altResult.isUnlocked !== false) {
-                console.error(`[DeepX Bridge] Found active Flow tab on unlocked alternative profile (${altResult.account?.email})! Switching primary client.`);
+                console.error(`[CoreX Bridge] Found active Flow tab on unlocked alternative profile (${altResult.account?.email})! Switching primary client.`);
                 this.extensionClient = altSocket;
                 return altResult;
               }
@@ -533,7 +533,7 @@ export class DeepXWsBridge {
       if ((errMsg.includes("No Google Flow tab") || errMsg.includes("tab_not_found") || errMsg.includes("LOCKED") || errMsg.includes("locked")) && this.clients.size > 1) {
         for (const [altSocket, altData] of this.clients.entries()) {
           if (altSocket !== targetSocket && altSocket.readyState === WebSocket.OPEN) {
-            console.error(`[DeepX Bridge] Primary client failed (${errMsg}); failing over command '${command}' to alt profile (${altData.account?.email || "alt"})...`);
+            console.error(`[CoreX Bridge] Primary client failed (${errMsg}); failing over command '${command}' to alt profile (${altData.account?.email || "alt"})...`);
             try {
               const failoverResult = await executeOnSocket(altSocket, timeoutMs);
               if (failoverResult && typeof failoverResult === "object") {
@@ -544,7 +544,7 @@ export class DeepXWsBridge {
               this.extensionClient = altSocket;
               return failoverResult;
             } catch (failoverErr) {
-              console.error("[DeepX Bridge] Failover client also failed:", failoverErr.message);
+              console.error("[CoreX Bridge] Failover client also failed:", failoverErr.message);
             }
           }
         }

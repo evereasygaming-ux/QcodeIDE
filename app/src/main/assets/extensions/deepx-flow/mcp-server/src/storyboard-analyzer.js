@@ -1,4 +1,4 @@
-// DeepX Storyboard Architect & Intelligent Script Breakdown Engine
+// CoreX Storyboard Architect & Intelligent Script Breakdown Engine
 // Analyzes raw inputs (prompts, Hindi/multilingual scripts, stories, bullet points)
 // Automatically isolates protagonist entities (Vehicles, Animals, Characters, Products)
 // Supports dynamic Named Entity Recognition (NER) for arbitrary character names in English, Hindi, and multilingual scripts

@@ -37,9 +37,9 @@ Choose the voice engine with `--tts-provider gemini|elevenlabs|edge|auto`
 (default `auto`: Gemini → ElevenLabs → Edge). For Odia, Edge has no voice, so
 use Gemini or ElevenLabs.
 
-## DeepX Flow (recommended)
+## CoreX Flow (recommended)
 
-Use Google Flow through **DeepX** for the visuals, then this tool adds voice and
+Use Google Flow through **CoreX** for the visuals, then this tool adds voice and
 renders the MP4 on device. Flow uses the signed-in QCODE Browser session and its
 own credits.
 
@@ -176,7 +176,7 @@ write 4 English image prompts, write 4 Hindi narration lines, set
 ## Notes
 
 - The default image provider is Pollinations. Set `"imageProvider": "flow"` to
-  use DeepX/Google Flow; the host must run `~/deepx-cdp-forward.sh` first.
+  use CoreX/Google Flow; the host must run `~/deepx-cdp-forward.sh` first.
 - Use natural TTS only. Odia needs `GEMINI_API_KEY` or `ELEVENLABS_API_KEY`;
   Edge cannot speak Odia.
 - Flow generation is driven by a real trusted click in the QCODE Browser because

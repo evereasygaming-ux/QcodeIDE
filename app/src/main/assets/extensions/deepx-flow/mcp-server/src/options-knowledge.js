@@ -1,4 +1,4 @@
-// DeepX Knowledge Base for Google Flow (Veo 3.1 & Imagen 3)
+// CoreX Knowledge Base for Google Flow (Veo 3.1 & Imagen 3)
 
 export const FLOW_OPTIONS = {
   videoModels: [
@@ -96,7 +96,7 @@ export const FLOW_OPTIONS = {
 };
 
 export function getDeepXKnowledgeMarkdown() {
-  return `# DeepX Knowledge Base: Google Flow (Veo 3.1 & Imagen 3)
+  return `# CoreX Knowledge Base: Google Flow (Veo 3.1 & Imagen 3)
 
 ## Available Video Models
 - **veo-quality** (Veo 3.1 Quality): Highest fidelity, director-grade cinematic output. Supports 5s & 8s durations in 16:9 and 9:16.
@@ -115,14 +115,14 @@ export function getDeepXKnowledgeMarkdown() {
 6. **imageToImage**: Reference image blending -> images.
 
 ## Character Generation & Studio (@mentions)
-DeepX directly automates Google Flow's native Character Studio (\`/project/<id>/character\`):
+CoreX directly automates Google Flow's native Character Studio (\`/project/<id>/character\`):
 - **deepx_generate_character**: Takes \`character_name\` and \`prompt\` to generate character candidate cards in Flow's Character Studio using \`🍌 Nano Banana 2.1\` or \`Imagen 3\`, assign the official character handle (e.g. \`rohan_student\`), and save the character into the project library.
 - **deepx_upload_character**: Uploads a local image file and registers it as a named character.
-- **Reference in Prompts**: Once saved, reference characters using \`@character_name\` in subsequent image and video prompts (e.g. \`"@rohan_student studying at night with desk lamp"\`). DeepX automatically binds the character asset during generation.
-- **Safe Mode Routing**: When generating character images or portraits, always use \`mode: "textToImage"\` and image models (\`🍌 Nano Banana 2.1\` or \`imagen-3\`). DeepX guards against accidental video generation.
+- **Reference in Prompts**: Once saved, reference characters using \`@character_name\` in subsequent image and video prompts (e.g. \`"@rohan_student studying at night with desk lamp"\`). CoreX automatically binds the character asset during generation.
+- **Safe Mode Routing**: When generating character images or portraits, always use \`mode: "textToImage"\` and image models (\`🍌 Nano Banana 2.1\` or \`imagen-3\`). CoreX guards against accidental video generation.
 
 ## Storytelling Concatenation (isConcat)
-When \`isConcat: true\` is used during \`deepx_batch_generate\`, DeepX automatically captures the exact ending frame of video \`N\` and supplies it as the \`startImageId\` for video \`N+1\`, ensuring seamless continuity across scenes.
+When \`isConcat: true\` is used during \`deepx_batch_generate\`, CoreX automatically captures the exact ending frame of video \`N\` and supplies it as the \`startImageId\` for video \`N+1\`, ensuring seamless continuity across scenes.
 
 ## Master Creative Director & Script Breakdown Protocol
 When a user pastes ANY raw input (rough prompt, full story, bullet points, Hindi / multilingual script, or commercial brief):

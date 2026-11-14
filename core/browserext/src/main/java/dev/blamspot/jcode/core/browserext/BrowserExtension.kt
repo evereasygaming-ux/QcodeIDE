@@ -12,14 +12,14 @@ data class BrowserExtension(
     val source: BrowserExtensionSource,
 )
 
-/** Extensions shipped inside the APK. DeepX is the first bundled extension. */
+/** Extensions shipped inside the APK. CoreX is the first bundled extension. */
 object BundledBrowserExtensions {
     const val DEEPX_FLOW_ID = "deepx-flow"
     const val DEEPX_FLOW_DIR = "extensions/deepx-flow"
 
     val deepxFlow = BrowserExtension(
         id = DEEPX_FLOW_ID,
-        name = "DeepX Flow",
+        name = "CoreX Flow",
         version = "",
         assetDir = DEEPX_FLOW_DIR,
         source = BrowserExtensionSource.BUNDLED,

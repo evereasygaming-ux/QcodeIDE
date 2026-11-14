@@ -1,4 +1,4 @@
-// DeepX Flow Native Asset Upload Interceptor (bypasses OS file dialogs)
+// CoreX Flow Native Asset Upload Interceptor (bypasses OS file dialogs)
 (() => {
   let fileInputTarget = null;
   const originalInputClick = HTMLInputElement.prototype.click;
@@ -15,7 +15,7 @@
     if (this.type === "file") {
       fileInputTarget = this;
       if (isUploadActive()) {
-        console.log("[DeepX Upload] Suppressed native OS file dialog for automated in-memory injection.");
+        console.log("[CoreX Upload] Suppressed native OS file dialog for automated in-memory injection.");
         return;
       }
     }
@@ -44,9 +44,9 @@
         dataTransfer.items.add(file);
         target.files = dataTransfer.files;
         target.dispatchEvent(new Event("change", { bubbles: true }));
-        console.log(`[DeepX Upload] Injected file '${filename}' directly into Google Flow file input!`);
+        console.log(`[CoreX Upload] Injected file '${filename}' directly into Google Flow file input!`);
       } catch (err) {
-        console.error("[DeepX Upload] Failed to inject file data:", err);
+        console.error("[CoreX Upload] Failed to inject file data:", err);
       } finally {
         fileInputTarget = null;
         if (document.documentElement) {
@@ -56,5 +56,5 @@
     }
   });
 
-  console.log("[DeepX Upload] Native file upload interceptor active in Google Flow.");
+  console.log("[CoreX Upload] Native file upload interceptor active in Google Flow.");
 })();

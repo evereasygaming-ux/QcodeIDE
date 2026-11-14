@@ -2156,7 +2156,7 @@ private fun QCodeShell(
     onEditorLanguageAction: (EditorLanguageAction, String, Int) -> Unit,
     workspaceManager: WorkspaceManager,
     snackbarHostState: SnackbarHostState,
-    /** The bundled-browser manager panel, composed where the DeepX runtime's state lives. */
+    /** The bundled-browser manager panel, composed where the CoreX runtime's state lives. */
     browserPanel: @Composable (Modifier) -> Unit,
     openFolderLauncher: ActivityResultLauncher<Uri?>,
     breadcrumb: List<WorkspaceCrumb>,

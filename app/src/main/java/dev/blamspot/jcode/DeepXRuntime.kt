@@ -117,7 +117,7 @@ class DeepXRuntime(
             }
             _state.value = State.Starting
             val port = bridge.start().getOrElse {
-                _state.value = State.Failed(it.message ?: "Could not start the DeepX bridge")
+                _state.value = State.Failed(it.message ?: "Could not start the CoreX bridge")
                 return@withContext Result.failure(it)
             }
             install(port).fold(
@@ -127,7 +127,7 @@ class DeepXRuntime(
                 },
                 onFailure = {
                     bridge.stop()
-                    _state.value = State.Failed(it.message ?: "Could not install the DeepX MCP server")
+                    _state.value = State.Failed(it.message ?: "Could not install the CoreX MCP server")
                     Result.failure(it)
                 },
             )

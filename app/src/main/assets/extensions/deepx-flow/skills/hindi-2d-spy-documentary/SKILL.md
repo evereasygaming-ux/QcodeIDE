@@ -246,4 +246,4 @@ When this skill is invoked:
    - Build Disney-Pixar + Anime 2D Character Sheet upfront with ethnicity safeguards and uniform details.
    - Pre-count sentences and announce total scene count.
    - Sequentially deliver Scene Breakdown in batches of 5 with strict 20–30 word Story Lines and running progress tracker.
-   - Attach reference cards (`@character_handle`) and dispatch renders to Google Flow via DeepX Flow Bridge.
+   - Attach reference cards (`@character_handle`) and dispatch renders to Google Flow via CoreX Flow Bridge.

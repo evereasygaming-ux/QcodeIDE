@@ -1,7 +1,7 @@
-// DeepX Popup Controller
-const ANTIGRAVITY_CONNECT_PROMPT = `Connect to DeepX Flow Bridge MCP server (deepx-flow). Verify connection status via deepx_status tool. When ready: true, declare that you are connected and standing by to generate images and videos with 100% fidelity to my scripts and data.`;
+// CoreX Popup Controller
+const ANTIGRAVITY_CONNECT_PROMPT = `Connect to CoreX Flow Bridge MCP server (deepx-flow). Verify connection status via deepx_status tool. When ready: true, declare that you are connected and standing by to generate images and videos with 100% fidelity to my scripts and data.`;
 
-const ANTIGRAVITY_DISCONNECT_PROMPT = `Disconnect from DeepX Flow Bridge MCP. Pause all automated generation dispatching, halt any active jobs, and enter offline standby mode until I tell you to reconnect.`;
+const ANTIGRAVITY_DISCONNECT_PROMPT = `Disconnect from CoreX Flow Bridge MCP. Pause all automated generation dispatching, halt any active jobs, and enter offline standby mode until I tell you to reconnect.`;
 
 async function copyTextToClipboard(text, successMsg) {
   try {
@@ -17,12 +17,12 @@ async function copyTextToClipboard(text, successMsg) {
   showToast(successMsg);
 }
 
-const MASTER_ANTIGRAVITY_PROMPT = `Set up DeepX Flow Bridge on my machine so you (Antigravity) can generate images and videos through my own logged-in Google Flow session (no API cost).
+const MASTER_ANTIGRAVITY_PROMPT = `Set up CoreX Flow Bridge on my machine so you (Antigravity) can generate images and videos through my own logged-in Google Flow session (no API cost).
 
 This is safe to run even if it's already set up — check each step first and skip anything already done. Never force or reinstall something that's already working.
 
 1. Check Node.js: Run \`node --version\`. Ensure v20 or higher is installed.
-2. Verify the DeepX MCP server is configured in my user-level Antigravity config (~/.gemini/config/mcp_config.json):
+2. Verify the CoreX MCP server is configured in my user-level Antigravity config (~/.gemini/config/mcp_config.json):
    Ensure the following entry exists in "mcpServers":
    {
      "deepx-flow": {
@@ -31,13 +31,13 @@ This is safe to run even if it's already set up — check each step first and sk
      }
    }
 3. Check the connection:
-   Verify the DeepX bridge is running on ws://127.0.0.1:8792/ws and Google Flow (https://flow.google.com or https://labs.google/fx/tools/flow) is open, logged in, and kept visible.
+   Verify the CoreX bridge is running on ws://127.0.0.1:8792/ws and Google Flow (https://flow.google.com or https://labs.google/fx/tools/flow) is open, logged in, and kept visible.
    When connected, say so out loud in this exact spirit:
    "Connected! I can generate images and videos on Google Flow now — just ask."
 
 4. Core Architecture: Brain vs. Hands Principle (CRITICAL):
    - You (Antigravity) are the WHOLE BRAIN and Creative Director.
-   - The DeepX Extension is ONLY the HANDS and execution bridge.
+   - The CoreX Extension is ONLY the HANDS and execution bridge.
    - NEVER jump straight to generating or uploading videos without deeply analyzing my concept, reading our whole conversation history, and understanding the store/story narrative.
    - Give yourself time to think, analyze visual themes, and plan continuity before touching generation.
 
@@ -51,7 +51,7 @@ This is safe to run even if it's already set up — check each step first and sk
      5. Model (Veo 3.1 Quality, Veo 3.1 Lite, Veo Omni, Imagen 3)
      6. Visual Style & Aesthetic (Camera motion, lighting, character tags @character)
    - Step 3 (Storyboard & Scene Review): Present the planned prompts (#001_name, #002_name, isConcat chaining) for my confirmation.
-   - Step 4 (Final Step Execution): ONLY after I confirm, invoke the DeepX MCP tools to render on Google Flow in real time.`;
+   - Step 4 (Final Step Execution): ONLY after I confirm, invoke the CoreX MCP tools to render on Google Flow in real time.`;
 
 document.addEventListener("DOMContentLoaded", () => {
   const connectionBadge = document.getElementById("connectionBadge");
@@ -118,7 +118,7 @@ document.addEventListener("DOMContentLoaded", () => {
         btnSubscribeUnlock.innerHTML = '<span class="green-tick-pill-icon">✔</span> <span>Subscribed & Unlocked 🔓</span>';
       }
       if (lockFooterNote) {
-        lockFooterNote.textContent = "✅ Real-time verified! Enjoy DeepX Flow Bridge.";
+        lockFooterNote.textContent = "✅ Real-time verified! Enjoy CoreX Flow Bridge.";
       }
       if (sponsorBadge) sponsorBadge.classList.add("visible");
       setTimeout(() => {
@@ -152,7 +152,7 @@ document.addEventListener("DOMContentLoaded", () => {
       chrome.runtime.sendMessage({ type: "AUTO_CHECK_SUBSCRIPTION" }, (res) => {
         if (res?.isUnlocked) {
           setLockUI(true);
-          showToast("🎉 Verified! DeepX Flow Bridge Unlocked!");
+          showToast("🎉 Verified! CoreX Flow Bridge Unlocked!");
           resolve(true);
           return;
         }
@@ -338,7 +338,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 chrome.storage.local.set({ extensionUnlocked: true, subscribedChannel: "@dipeshkyd", unlockedAt: Date.now() });
                 chrome.runtime.sendMessage({ type: "YOUTUBE_SUBSCRIBE_CONFIRMED" });
                 setLockUI(true);
-                showToast("🎉 Verified! DeepX Flow Bridge Unlocked!");
+                showToast("🎉 Verified! CoreX Flow Bridge Unlocked!");
                 break;
               } else if (status?.isExplicitUnsubscribed === true) {
                 chrome.storage.local.set({ extensionUnlocked: false, unlockedAt: null });
@@ -382,7 +382,7 @@ document.addEventListener("DOMContentLoaded", () => {
       chrome.storage.local.set({ extensionUnlocked: true, subscribedChannel: "@dipeshkyd", unlockedAt: Date.now() });
       chrome.runtime.sendMessage({ type: "YOUTUBE_SUBSCRIBE_CONFIRMED" });
       setLockUI(true);
-      showToast("🎉 Verified! DeepX Flow Bridge Unlocked!");
+      showToast("🎉 Verified! CoreX Flow Bridge Unlocked!");
     });
   }
 
@@ -432,7 +432,7 @@ document.addEventListener("DOMContentLoaded", () => {
             clearInterval(checker);
             isCheckingRealtime = false;
             setLockUI(true);
-            showToast("🎉 Subscribed & Unlocked! Welcome to DeepX Flow Bridge!");
+            showToast("🎉 Subscribed & Unlocked! Welcome to CoreX Flow Bridge!");
             updateStatus();
           } else if (checks % 3 === 0) {
             triggerAutoCheck();
@@ -468,13 +468,13 @@ document.addEventListener("DOMContentLoaded", () => {
         powerStatusText.style.color = "var(--success)";
         btnTogglePower.textContent = "Turn OFF";
         btnTogglePower.className = "btn-power btn-power-on";
-        powerHintText.textContent = "Manual Power Control: DeepX stays ON until you manually turn it OFF.";
+        powerHintText.textContent = "Manual Power Control: CoreX stays ON until you manually turn it OFF.";
       } else {
         powerStatusText.textContent = "OFF (Paused)";
         powerStatusText.style.color = "#b0bec5";
         btnTogglePower.textContent = "Turn ON";
         btnTogglePower.className = "btn-power btn-power-off";
-        powerHintText.textContent = "DeepX is OFF. Click Turn ON to activate.";
+        powerHintText.textContent = "CoreX is OFF. Click Turn ON to activate.";
       }
     }
   }
@@ -484,7 +484,7 @@ document.addEventListener("DOMContentLoaded", () => {
     btnTogglePower.addEventListener("click", () => {
       const targetState = !currentPowerEnabled;
       setPowerUI(targetState);
-      showToast(targetState ? "DeepX Extension turned ON" : "DeepX Extension turned OFF");
+      showToast(targetState ? "CoreX Extension turned ON" : "CoreX Extension turned OFF");
       chrome.runtime.sendMessage({ type: "SET_EXTENSION_ACTIVE", active: targetState }, () => {
         updateStatus();
       });

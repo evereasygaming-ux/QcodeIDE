@@ -4,7 +4,7 @@
   if (window.__deepxMainLoaded) return;
   window.__deepxMainLoaded = true;
 
-  console.log("%c[DeepX Flow]%c Main-world acceleration & UI knowledge engine loaded.", "color:#00e5ff;font-weight:bold;", "color:inherit;");
+  console.log("%c[CoreX Flow]%c Main-world acceleration & UI knowledge engine loaded.", "color:#00e5ff;font-weight:bold;", "color:inherit;");
 
   let capturedAuthToken = null;
   let capturedProjectId = null;
@@ -50,7 +50,7 @@
       lastKnownProjectId = newId || null;
       lastKnownProjectName = currentName || lastKnownProjectName;
       capturedProjectId = newId || null;
-      console.log("%c[DeepX Flow]%c Active Project updated:", "color:#00e5ff;font-weight:bold;", "color:#00e676;", newId || "None", currentName ? `(${currentName})` : "");
+      console.log("%c[CoreX Flow]%c Active Project updated:", "color:#00e5ff;font-weight:bold;", "color:#00e676;", newId || "None", currentName ? `(${currentName})` : "");
       window.postMessage({
         type: "DEEPX_PROJECT_CHANGED",
         projectId: newId || null,
@@ -132,9 +132,9 @@
     if (acc.email !== lastKnownAccountEmail) {
       lastKnownAccountEmail = acc.email;
       if (acc.email) {
-        console.log("%c[DeepX Flow]%c Logged-in Google Account detected:", "color:#00e5ff;font-weight:bold;", "color:#00e676;", acc.email);
+        console.log("%c[CoreX Flow]%c Logged-in Google Account detected:", "color:#00e5ff;font-weight:bold;", "color:#00e676;", acc.email);
       } else {
-        console.log("%c[DeepX Flow]%c User signed out / No active Google Account.", "color:#00e5ff;font-weight:bold;", "color:#ff5252;");
+        console.log("%c[CoreX Flow]%c User signed out / No active Google Account.", "color:#00e5ff;font-weight:bold;", "color:#ff5252;");
       }
       window.postMessage({ type: "DEEPX_ACCOUNT_CHANGED", account: acc }, "*");
     }
@@ -334,7 +334,7 @@
 
       return await grecaptcha.enterprise.execute(siteKey, { action });
     } catch (err) {
-      console.warn("[DeepX] Error executing enterprise reCAPTCHA:", err);
+      console.warn("[CoreX] Error executing enterprise reCAPTCHA:", err);
       return null;
     }
   }
@@ -400,7 +400,7 @@
         activeFileInput.files = dt.files;
         activeFileInput.dispatchEvent(new Event("change", { bubbles: true }));
       } catch (err) {
-        console.error("[DeepX] File injection error:", err);
+        console.error("[CoreX] File injection error:", err);
       } finally {
         activeFileInput = null;
       }
@@ -451,7 +451,7 @@
           break;
         }
         default:
-          throw new Error("Unknown DeepX action: " + action);
+          throw new Error("Unknown CoreX action: " + action);
       }
 
       window.postMessage({ type: "DEEPX_MAIN_RESPONSE", id, result }, "*");

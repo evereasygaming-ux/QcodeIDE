@@ -244,7 +244,7 @@ private fun BridgeStatus(label: String, ready: Boolean) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(text = label, style = MaterialTheme.typography.labelLarge)
                 Text(
-                    text = "Native bridge · MCP server deepx-flow",
+                    text = "CoreX bridge · MCP server deepx-flow",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
