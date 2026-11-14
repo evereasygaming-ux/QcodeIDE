@@ -50,11 +50,13 @@ These fill the gap Material 3 leaves: `colorScheme` has `error` but no success/w
 
 | `id` | Name | Dark | Light |
 |---|---|---|---|
+| `corex` | CoreX | Matte black `#0B0B0E`, primary `#FF4D2E` | Warm paper, primary `#D93A1F` |
+| `terminal` | Terminal | Flat ANSI `#1A1A1A`, primary `#61AFEF` | Flat ANSI `#FAFAFA`, primary `#4078F2` |
 | `catppuccin` | Catppuccin | Mocha, primary `#89B4FA` | Latte, primary `#1E66F5` |
-| `dracula` | Dracula | Classic, primary `#BD93F9` | Soft variant, primary `#7C4DD6` |
-| `midnight` | Midnight OLED | True black `#000000`, primary `#82AAFF` | Primary `#2E7DE9` |
+| `pierre-dark` | Pierre Dark | Near-black `#0A0A0A`, primary `#009FFF` | White, primary `#0072D6` |
+| `night-owl` | Night Owl | Deep navy `#011627`, primary `#82AAFF` | Near-white, primary `#4876D6` |
 
-`ThemeBundleRegistry.default` is `catppuccin`; `byId(id)` falls back to the default for an unknown
+`ThemeBundleRegistry.default` is `corex`; `byId(id)` falls back to the default for an unknown
 id.
 
 ### 2.2 Theme mode

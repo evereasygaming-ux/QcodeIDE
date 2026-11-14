@@ -27,10 +27,10 @@
                 android:startY="2000"
                 android:type="linear">
                 <item
-                    android:color="#188EF7"
+                    android:color="#FF4D2E"
                     android:offset="0" />
                 <item
-                    android:color="#0869FF"
+                    android:color="#FF6829"
                     android:offset="1" />
             </gradient>
         </aapt:attr>
@@ -44,10 +44,10 @@
                 android:startY="2050"
                 android:type="linear">
                 <item
-                    android:color="#17B9E0"
+                    android:color="#FF8A2E"
                     android:offset="0" />
                 <item
-                    android:color="#08C8D6"
+                    android:color="#FFB03C"
                     android:offset="1" />
             </gradient>
         </aapt:attr>
@@ -63,13 +63,13 @@
                 android:startY="1250"
                 android:type="linear">
                 <item
-                    android:color="#006DFF"
+                    android:color="#FF7427"
                     android:offset="0" />
                 <item
-                    android:color="#078AF7"
+                    android:color="#FF5A2C"
                     android:offset="0.48" />
                 <item
-                    android:color="#0CD1D7"
+                    android:color="#FF9E34"
                     android:offset="1" />
             </gradient>
         </aapt:attr>

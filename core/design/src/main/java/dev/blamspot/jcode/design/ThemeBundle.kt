@@ -34,13 +34,14 @@ data class ThemeBundle(
 
 object ThemeBundleRegistry {
     val builtIns: List<ThemeBundle> = listOf(
+        corexBundle,
         terminalBundle,
         catppuccinBundle,
         pierreDarkBundle,
         nightOwlBundle,
     )
 
-    val default: ThemeBundle get() = terminalBundle
+    val default: ThemeBundle get() = corexBundle
 
     fun byId(id: String?): ThemeBundle = builtIns.firstOrNull { it.id == id } ?: default
 }
@@ -311,5 +312,120 @@ private val nightOwlBundle = ThemeBundle(
         success = Color(0xFF08916A), onSuccess = Color(0xFFFFFFFF),
         warning = Color(0xFFDAAA01), onWarning = Color(0xFF403F53),
         info = Color(0xFF0C969B), onInfo = Color(0xFFFFFFFF),
+    ),
+)
+
+// CoreX — the default. A matte-black canvas with a single red-orange accent and warm syntax hues;
+// surfaces step up in small increments so drawers, sheets and the editor chrome read as machined
+// layers rather than flat blocks. No gradients and no bitmaps: the accent carries the identity.
+private val corexAnsiNormalDark = listOf(
+    Color(0xFF1A1A20), Color(0xFFFF5A48), Color(0xFF9BC98A), Color(0xFFE0B062),
+    Color(0xFF7C9CFF), Color(0xFFD08CFF), Color(0xFF5FD0C8), Color(0xFFE6E1DC),
+)
+private val corexAnsiBrightDark = listOf(
+    Color(0xFF4A4A56), Color(0xFFFF7B66), Color(0xFFB5E0A4), Color(0xFFF2C87A),
+    Color(0xFF9BB8FF), Color(0xFFE3A6FF), Color(0xFF86E0D8), Color(0xFFFFFFFF),
+)
+private val corexAnsiNormalLight = listOf(
+    Color(0xFF1A1A1F), Color(0xFFC0341B), Color(0xFF4F7A34), Color(0xFF9C6A13),
+    Color(0xFF3B5BA5), Color(0xFF8E4470), Color(0xFF1C7A8C), Color(0xFF8A817C),
+)
+private val corexAnsiBrightLight = listOf(
+    Color(0xFF5C5350), Color(0xFFE0553C), Color(0xFF6B9A4A), Color(0xFFC08A2A),
+    Color(0xFF5A78C0), Color(0xFFB45C90), Color(0xFF3E9AA8), Color(0xFFFFFFFF),
+)
+
+private val corexBundle = ThemeBundle(
+    id = "corex",
+    name = "CoreX",
+    description = "Matte black canvas with a red-orange accent.",
+    author = "CoreX",
+    dark = darkColorScheme(
+        primary = Color(0xFFFF4D2E),
+        onPrimary = Color(0xFF1A0A06),
+        primaryContainer = Color(0xFF3B1710),
+        onPrimaryContainer = Color(0xFFFFD9CE),
+        secondary = Color(0xFFFF7A45),
+        onSecondary = Color(0xFF1A0A06),
+        tertiary = Color(0xFFFFB347),
+        onTertiary = Color(0xFF1A0A06),
+        background = Color(0xFF0B0B0E),
+        onBackground = Color(0xFFEDEDF0),
+        surface = Color(0xFF131317),
+        onSurface = Color(0xFFEDEDF0),
+        surfaceVariant = Color(0xFF1D1D24),
+        onSurfaceVariant = Color(0xFF9C9CA8),
+        error = Color(0xFFFF5C5C),
+        onError = Color(0xFF1A0A06),
+    ),
+    light = lightColorScheme(
+        primary = Color(0xFFD93A1F),
+        onPrimary = Color(0xFFFFFFFF),
+        primaryContainer = Color(0xFFFFDCD4),
+        onPrimaryContainer = Color(0xFF3B1710),
+        secondary = Color(0xFFC25A2A),
+        onSecondary = Color(0xFFFFFFFF),
+        tertiary = Color(0xFF9C6A13),
+        onTertiary = Color(0xFFFFFFFF),
+        background = Color(0xFFFAF7F5),
+        onBackground = Color(0xFF1A1A1F),
+        surface = Color(0xFFF2EDEA),
+        onSurface = Color(0xFF1A1A1F),
+        surfaceVariant = Color(0xFFE6DFDB),
+        onSurfaceVariant = Color(0xFF5C5350),
+    ),
+    darkSemantic = QCodeSemanticColors(
+        success = Color(0xFF8FBF7A), onSuccess = Color(0xFF101008),
+        warning = Color(0xFFE8B45A), onWarning = Color(0xFF1A1204),
+        info = Color(0xFF5FB8C9), onInfo = Color(0xFF06141A),
+    ),
+    lightSemantic = QCodeSemanticColors(
+        success = Color(0xFF3F7A34), onSuccess = Color(0xFFFFFFFF),
+        warning = Color(0xFFB07A12), onWarning = Color(0xFF1A1204),
+        info = Color(0xFF1C7A8C), onInfo = Color(0xFFFFFFFF),
+    ),
+    darkSyntax = SyntaxPalette(
+        keyword = Color(0xFFFF6B4A),
+        type = Color(0xFFFFB86B),
+        string = Color(0xFFD7B36A),
+        comment = Color(0xFF6B6B78),
+        number = Color(0xFFFF9F6B),
+        function = Color(0xFFFFC078),
+        variable = Color(0xFFE6E1DC),
+        constant = Color(0xFFFF8A5C),
+        property = Color(0xFFFFB4A2),
+        operator = Color(0xFFC8C8D0),
+        annotation = Color(0xFFFFB347),
+    ),
+    lightSyntax = SyntaxPalette(
+        keyword = Color(0xFFC0341B),
+        type = Color(0xFF9C6A13),
+        string = Color(0xFF6B7A2A),
+        comment = Color(0xFF8A817C),
+        number = Color(0xFFB0541E),
+        function = Color(0xFFA34A16),
+        variable = Color(0xFF1A1A1F),
+        constant = Color(0xFFB0442E),
+        property = Color(0xFFA05A2C),
+        operator = Color(0xFF5C5350),
+        annotation = Color(0xFF9C6A13),
+    ),
+    darkAnsi = AnsiPalette(
+        normal = corexAnsiNormalDark,
+        bright = corexAnsiBrightDark,
+        foreground = Color(0xFFE6E1DC),
+        background = Color(0xFF0B0B0E),
+        cursor = Color(0xFFFF4D2E),
+        selection = Color(0x64FF4D2E),
+        selectionHandle = Color(0xFFFF4D2E),
+    ),
+    lightAnsi = AnsiPalette(
+        normal = corexAnsiNormalLight,
+        bright = corexAnsiBrightLight,
+        foreground = Color(0xFF1A1A1F),
+        background = Color(0xFFFAF7F5),
+        cursor = Color(0xFFD93A1F),
+        selection = Color(0x64D93A1F),
+        selectionHandle = Color(0xFFD93A1F),
     ),
 )
