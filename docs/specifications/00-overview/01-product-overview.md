@@ -21,7 +21,7 @@ real projects entirely on-device, with no companion app and no root.
 | Platform | Android 13+ (`minSdk` / `targetSdk` 33, `compileSdk` 36) |
 | ABI | `arm64-v8a` only, every variant — the APK installs on nothing else |
 | Language | Kotlin + Jetpack Compose, with C, C++ and Rust for performance-critical subsystems |
-| Licence | MIT |
+| Licence | GPL-3.0 (upstream MIT preserved in `LICENSE-UPSTREAM-MIT`) |
 | Distribution | Outside the Play Store |
 
 The distinguishing claim is the second half of the sentence: the IDE is a real Android app, and the

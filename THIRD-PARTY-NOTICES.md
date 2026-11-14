@@ -163,8 +163,10 @@ are © 2026 blamspotdev (Janrick Samorin) and licensed under the MIT License (se
 ## 6. Bundled browser extension
 
 `app/src/main/assets/extensions/deepx-flow/` (and the `deepx/` MCP server asset it
-installs) carries the **DeepX Flow bridge** — Manifest V3 pages, a Node MCP server
-and the skills that ship with it. Its upstream does not declare a license, so it
+installs) carries the **CoreX Flow bridge** — Manifest V3 pages, a Node MCP server
+and the skills that ship with it. (The extension is based on the upstream DeepX Flow
+project and keeps that project's `deepx-flow` id and `deepx_*` tool names so existing
+agent configurations continue to work.) Its upstream does not declare a license, so it
 is **not** covered by this repository's license and must not be redistributed in a
 public build until the Licensor obtains permission from its authors or replaces it
 with a clean-room implementation. Private builds are unaffected; see `plan.md`'s

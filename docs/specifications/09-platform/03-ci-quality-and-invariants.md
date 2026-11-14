@@ -225,7 +225,7 @@ From `CONTRIBUTING.md`:
 3. Keep changes focused; match the surrounding style; the module rule is strict.
 4. Open the PR against `main` with a description of the change and how it was verified.
 
-Contributions are under the **MIT License**. Suspected security vulnerabilities go to the Licensor
+Contributions are under the **GNU GPL v3.0**. Suspected security vulnerabilities go to the Licensor
 privately, not to a public issue.
 
 Repository conventions worth knowing:

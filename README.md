@@ -110,7 +110,8 @@ verified `.jext` packages.
 
 ## License
 
-Licensed under the [MIT License](LICENSE). © 2026 blamspotdev (Janrick Samorin).
-You're free to use, modify, and redistribute it under the MIT terms. Contributions
+Licensed under the [GNU General Public License v3.0](LICENSE). © 2026 blamspotdev (Janrick Samorin).
+The original upstream project is MIT-licensed; that text is preserved in
+[`LICENSE-UPSTREAM-MIT`](LICENSE-UPSTREAM-MIT). Contributions
 are covered by [`CONTRIBUTING.md`](CONTRIBUTING.md); third-party components and their
 licenses are listed in [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md).

@@ -14,10 +14,10 @@ Contributions are welcome — bug reports, fixes, and pull requests.
 
 ## License of contributions
 
-QCode is licensed under the **MIT License** (see [`LICENSE`](LICENSE)). By submitting a
-contribution (a pull request, patch, or any change intentionally submitted for inclusion in the
-Work), you agree it is provided under the **same MIT terms** and that you have the right to
-submit it. If your employer holds rights to your work,
+QCode is licensed under the **GNU General Public License v3.0** (see [`LICENSE`](LICENSE)). By
+submitting a contribution (a pull request, patch, or any change intentionally submitted for
+inclusion in the Work), you agree it is provided under the **same GPL-3.0 terms** and that you
+have the right to submit it. If your employer holds rights to your work,
 make sure you have permission to contribute.
 
 ## Reporting issues
