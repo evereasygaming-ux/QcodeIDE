@@ -1,7 +1,6 @@
 package dev.blamspot.jcode.workbench
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -29,10 +28,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -293,7 +288,12 @@ internal fun WorkbenchTopBar(
                     color = MaterialTheme.colorScheme.primary.copy(alpha = 0.16f),
                 ) {
                     Box(contentAlignment = Alignment.Center) {
-                        CorexMark(modifier = Modifier.size(15.dp))
+                        Text(
+                            text = "Q",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold,
+                        )
                     }
                 }
                 if (showWordmark) {
@@ -555,30 +555,3 @@ private fun WorkbenchBreadcrumbRibbon(
         }
     }
 }
-
-/** The launcher mark at chip size: an orange diamond threaded by a cream X. */
-@Composable
-private fun CorexMark(modifier: Modifier = Modifier) {
-    val diamond = MaterialTheme.colorScheme.primary
-    Canvas(modifier = modifier) {
-        val w = size.width
-        val h = size.height
-        val cx = w / 2f
-        val cy = h / 2f
-        val shape = Path().apply {
-            moveTo(cx, 0f)
-            lineTo(w, cy)
-            lineTo(cx, h)
-            lineTo(0f, cy)
-            close()
-        }
-        drawPath(shape, diamond)
-        val inset = w * 0.24f
-        val stroke = w * 0.16f
-        drawLine(CorexCream, Offset(inset, inset), Offset(w - inset, h - inset), stroke, StrokeCap.Round)
-        drawLine(CorexCream, Offset(w - inset, inset), Offset(inset, h - inset), stroke, StrokeCap.Round)
-    }
-}
-
-/** The brand's cream, which is not a semantic theme colour: the mark keeps its colour in every theme. */
-private val CorexCream = Color(0xFFF4F0EC)
