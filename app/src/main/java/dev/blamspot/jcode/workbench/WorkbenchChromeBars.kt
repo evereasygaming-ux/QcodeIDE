@@ -1,15 +1,21 @@
 package dev.blamspot.jcode.workbench
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -23,8 +29,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import dev.blamspot.jcode.MainViewModel
 import dev.blamspot.jcode.design.CompactContextMenu
 import dev.blamspot.jcode.design.ContextAction
@@ -177,27 +189,38 @@ internal fun WorkspaceHeader(
             }
         }
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .horizontalScroll(rememberScrollState()),
-            horizontalArrangement = Arrangement.spacedBy(Space.s),
+        // The tool dock: a compact tile grid instead of a scrolling row of labels. Every destination
+        // is visible at once, and the selected one reads as a filled, bordered card.
+        val tools = WorkbenchTool.entries
+            .filter {
+                it.available &&
+                    (it != WorkbenchTool.DbManager || dbManagerAvailable) &&
+                    (it != WorkbenchTool.Scm || scmAvailable) &&
+                    (it != WorkbenchTool.VmManager || vmManagerAvailable)
+            }
+        val columns = 4
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(Space.s),
         ) {
-            // "DB Managers", "SCM" and "VM" only show once a matching client extension is installed.
-            WorkbenchTool.entries
-                .filter {
-                    it.available &&
-                        (it != WorkbenchTool.DbManager || dbManagerAvailable) &&
-                        (it != WorkbenchTool.Scm || scmAvailable) &&
-                        (it != WorkbenchTool.VmManager || vmManagerAvailable)
+            tools.chunked(columns).forEach { rowTools ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(Space.s),
+                ) {
+                    rowTools.forEach { tool ->
+                        SidebarToolTile(
+                            tool = tool,
+                            selected = selectedTool == tool,
+                            onClick = { onSelectTool(tool) },
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                    repeat(columns - rowTools.size) {
+                        Box(modifier = Modifier.weight(1f))
+                    }
                 }
-                .forEach { tool ->
-                    SidebarToolButton(
-                        tool = tool,
-                        selected = selectedTool == tool,
-                        onClick = { onSelectTool(tool) },
-                    )
-                }
+            }
         }
     }
 }
@@ -226,16 +249,29 @@ internal fun WorkbenchTopBar(
     onOpenTerminalSession: (String) -> Unit,
     onSave: () -> Unit,
 ) {
-    // Single row: navigation + title + quick actions. Per-file metrics (cursor, language, distro)
-    // live in the bottom status bar, so this header no longer carries a redundant second chip row.
+    // The command deck: a floating card of brand, a palette search field and the quick actions, with
+    // a breadcrumb ribbon under it. It deliberately does not repeat a title the active tab shows.
     Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surfaceVariant,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = Space.sm, vertical = Space.xs),
+        shape = RoundedCornerShape(Radius.sheet),
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.28f),
+        ),
     ) {
+        BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+        // Phones get the monogram alone; the wordmark only appears where it does not crowd the
+        // palette field out of the row.
+        val showWordmark = maxWidth >= 420.dp
+        Column(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = Space.ms, vertical = Space.s),
+                .height(52.dp)
+                .padding(horizontal = Space.sm, vertical = Space.xs),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Space.s),
         ) {
@@ -246,38 +282,67 @@ internal fun WorkbenchTopBar(
                 active = leftSidebarExpanded,
             )
 
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(Space.hairline),
+            // Brand chip: the launcher mark in miniature, then the wordmark.
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Space.xs),
             ) {
-                val heading = activeTab?.title ?: selectedProject?.name ?: "QCODE IDE"
-                Text(
-                    text = heading,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    fontWeight = FontWeight.SemiBold,
-                )
-                Text(
-                    // Where the thing above *is*, which means everything up to it and not it again.
-                    // The trail ended with the same name the heading was already showing — "Device
-                    // sandbox" over "Default Workspace / waverepo / Device sandbox" — so the line
-                    // with the least room on it spent its last third repeating the line above.
-                    //
-                    // Only the last one is dropped, and only when it matches. A project that happens
-                    // to share its name with the tab open in it is still a real step on the way
-                    // there, and taking it out would leave a path that goes somewhere else.
-                    text = listOfNotNull(
-                        workspace?.name,
-                        selectedProject?.name,
-                        activeTab?.title,
-                    ).let { if (it.lastOrNull() == heading) it.dropLast(1) else it }
-                        .joinToString(" / ")
-                        .ifBlank { "Editor workspace" },
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                Surface(
+                    modifier = Modifier.size(24.dp),
+                    shape = RoundedCornerShape(Radius.lg),
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.16f),
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        CorexMark(modifier = Modifier.size(15.dp))
+                    }
+                }
+                if (showWordmark) {
+                    Text(
+                        text = "QCODE",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontWeight = FontWeight.SemiBold,
+                        letterSpacing = 1.4.sp,
+                        maxLines = 1,
+                    )
+                }
+            }
+
+            // The palette's front door: one tap anywhere on this field opens it. The hint disappears
+            // before the field gets too narrow to carry it, rather than being crushed to an ellipsis.
+            val palette = LocalCommandPaletteLauncher.current
+            BoxWithConstraints(modifier = Modifier.weight(1f)) {
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(34.dp)
+                        .clip(RoundedCornerShape(Radius.pill))
+                        .clickable { palette.onOpen() },
+                    shape = RoundedCornerShape(Radius.pill),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.42f),
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = Space.ms),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(Space.s),
+                    ) {
+                        Icon(
+                            painter = jcIcon(QCodeIcon.Search),
+                            contentDescription = null,
+                            modifier = Modifier.size(IconSize.sm),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        if (maxWidth > 150.dp) {
+                            Text(
+                                text = "Search files and commands",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                    }
+                }
             }
 
             if (activeTab?.editorState != null) {
@@ -421,5 +486,97 @@ internal fun WorkbenchTopBar(
                 )
             }
         }
+        WorkbenchBreadcrumbRibbon(
+            workspace = workspace,
+            selectedProject = selectedProject,
+            activeTab = activeTab,
+        )
+        }
+        }
     }
 }
+
+/**
+ * The thin path ribbon under the command deck: workspace › project › file, with the repeated tail
+ * folded away. It scrolls horizontally instead of ellipsizing, so a deep path never loses its root.
+ */
+@Composable
+private fun WorkbenchBreadcrumbRibbon(
+    workspace: Workspace?,
+    selectedProject: Project?,
+    activeTab: EditorTab?,
+) {
+    val raw = listOfNotNull(workspace?.name, selectedProject?.name, activeTab?.title)
+    val parts = raw.filterIndexed { index, value -> index == 0 || value != raw[index - 1] }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(24.dp)
+            .horizontalScroll(rememberScrollState())
+            .padding(horizontal = Space.md),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Space.xs),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(5.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.primary),
+        )
+        if (parts.isEmpty()) {
+            Text(
+                text = "Editor workspace",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        } else {
+            parts.forEachIndexed { index, part ->
+                if (index > 0) {
+                    Icon(
+                        painter = jcIcon(QCodeIcon.ChevronRight),
+                        contentDescription = null,
+                        modifier = Modifier.size(10.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f),
+                    )
+                }
+                Text(
+                    text = part,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = if (index == parts.lastIndex) {
+                        MaterialTheme.colorScheme.onSurface
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                    maxLines = 1,
+                )
+            }
+        }
+    }
+}
+
+/** The launcher mark at chip size: an orange diamond threaded by a cream X. */
+@Composable
+private fun CorexMark(modifier: Modifier = Modifier) {
+    val diamond = MaterialTheme.colorScheme.primary
+    Canvas(modifier = modifier) {
+        val w = size.width
+        val h = size.height
+        val cx = w / 2f
+        val cy = h / 2f
+        val shape = Path().apply {
+            moveTo(cx, 0f)
+            lineTo(w, cy)
+            lineTo(cx, h)
+            lineTo(0f, cy)
+            close()
+        }
+        drawPath(shape, diamond)
+        val inset = w * 0.24f
+        val stroke = w * 0.16f
+        drawLine(CorexCream, Offset(inset, inset), Offset(w - inset, h - inset), stroke, StrokeCap.Round)
+        drawLine(CorexCream, Offset(w - inset, inset), Offset(inset, h - inset), stroke, StrokeCap.Round)
+    }
+}
+
+/** The brand's cream, which is not a semantic theme colour: the mark keeps its colour in every theme. */
+private val CorexCream = Color(0xFFF4F0EC)

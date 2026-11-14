@@ -6,6 +6,7 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
@@ -18,9 +19,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -63,6 +64,7 @@ import dev.blamspot.jcode.design.LocalChromeControls
 import dev.blamspot.jcode.design.LocalEditorTabColors
 import dev.blamspot.jcode.design.LocalTabMaxSize
 import dev.blamspot.jcode.design.MiddleEllipsisText
+import dev.blamspot.jcode.design.Radius
 import dev.blamspot.jcode.design.Space
 import dev.blamspot.jcode.design.TabColorDialog
 import dev.blamspot.jcode.design.tabColorToHex
@@ -184,14 +186,15 @@ private fun TabStrip(
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface,
+        color = MaterialTheme.colorScheme.background,
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .horizontalScroll(rememberScrollState())
-                .height(36.dp),
-            horizontalArrangement = Arrangement.spacedBy(Space.none),
+                .height(44.dp)
+                .padding(horizontal = Space.s),
+            horizontalArrangement = Arrangement.spacedBy(Space.xs),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             group.tabs.forEach { tab ->
@@ -203,15 +206,22 @@ private fun TabStrip(
                 )
             }
 
-            // Open file button
+            // Open file button: a small round control, matching the card shape of the tabs.
             JcTooltip("Open file") {
-                IconButton(
-                    onClick = onOpenFile,
+                Box(
                     modifier = Modifier
-                        .width(36.dp)
-                        .height(36.dp),
+                        .size(30.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
+                        .clickable(onClick = onOpenFile),
+                    contentAlignment = Alignment.Center,
                 ) {
-                    Text("+", style = MaterialTheme.typography.labelMedium)
+                    Icon(
+                        painter = jcIcon(QCodeIcon.Add),
+                        contentDescription = "Open file",
+                        modifier = Modifier.size(14.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
             }
         }
@@ -235,19 +245,35 @@ private fun TabItem(
     val tabColors = LocalEditorTabColors.current
     val accent = if (tab.isPage) null else tabColors.colorFor(tab.filePath.path)
     Box {
+        val tabShape = RoundedCornerShape(Radius.xl)
         Row(
             modifier = Modifier
                 // Long-press always offers Close, so the tab stays closeable even when the "×" is
                 // hidden (pinned tab, or the avoid-accidental-close setting).
+                .clip(tabShape)
                 .combinedClickable(onClick = onSelected, onLongClick = { menuOpen = true })
                 .background(
-                    if (isActive) MaterialTheme.colorScheme.surfaceVariant
-                    else MaterialTheme.colorScheme.surface
+                    if (isActive) {
+                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.92f)
+                    } else {
+                        MaterialTheme.colorScheme.background
+                    }
+                )
+                .then(
+                    if (isActive) {
+                        Modifier.border(
+                            1.dp,
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.22f),
+                            tabShape,
+                        )
+                    } else {
+                        Modifier
+                    },
                 )
                 // Tab-color accent: a thin bar along the top edge (Settings → Tabs → Tab coloring).
-                .drawBehind { accent?.let { drawRect(it, size = Size(size.width, 3.dp.toPx())) } }
-                .height(36.dp)
-                .padding(horizontal = Space.md),
+                .drawBehind { accent?.let { drawRect(it, size = Size(size.width, 2.dp.toPx())) } }
+                .height(32.dp)
+                .padding(horizontal = Space.sm),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Space.s),
         ) {

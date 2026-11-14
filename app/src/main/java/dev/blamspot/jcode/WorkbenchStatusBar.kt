@@ -1,6 +1,9 @@
 package dev.blamspot.jcode
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.foundation.layout.Arrangement
@@ -11,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -27,6 +31,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -37,6 +42,7 @@ import dev.blamspot.jcode.core.buffer.EditTx
 import dev.blamspot.jcode.core.distro.DistroEnvironmentState
 import dev.blamspot.jcode.design.IconSize
 import dev.blamspot.jcode.design.QCodeIcon
+import dev.blamspot.jcode.design.Radius
 import dev.blamspot.jcode.design.Space
 import dev.blamspot.jcode.design.jcIcon
 import dev.blamspot.jcode.core.lsp.LspModule
@@ -92,21 +98,22 @@ internal fun WorkbenchStatusBar(
 ) {
     // Collected here (not hoisted into QCodeShell): the caret/snapshot flows emit on every
     // keystroke and caret move, so reading them in this bottomBar scope keeps a keystroke from
-    // recomposing the whole workbench body — only this 20dp status row invalidates.
+    // recomposing the whole workbench body — only this 28dp status strip invalidates.
     val metrics = rememberEditorMetrics(activeTab)
     val branch = rememberGitBranch(selectedProject)
     val issueCount by LspModule.diagnosticsBus.totalCount.collectAsStateWithLifecycle()
     Surface(
         modifier = Modifier.navigationBarsPadding(),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.75f),
+        color = MaterialTheme.colorScheme.background,
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(20.dp)
+                .height(28.dp)
+                .horizontalScroll(rememberScrollState())
                 .padding(horizontal = Space.sm),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(Space.ms),
+            horizontalArrangement = Arrangement.spacedBy(Space.xs),
         ) {
             if (branch != null) StatusCell("branch: $branch")
             StatusCell(
@@ -196,7 +203,11 @@ private fun StatusCell(
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Space.xs),
-        modifier = if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier,
+        modifier = Modifier
+            .clip(RoundedCornerShape(Radius.md))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+            .padding(horizontal = Space.s, vertical = 2.dp),
     ) {
         if (icon != null) {
             Icon(

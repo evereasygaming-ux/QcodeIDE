@@ -67,12 +67,13 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -101,7 +102,6 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
@@ -390,6 +390,7 @@ import dev.blamspot.jcode.core.debug.DebugState
 import dev.blamspot.jcode.workbench.LocalTerminalTapConfig
 import dev.blamspot.jcode.workbench.TerminalExtraKeysTarget
 import dev.blamspot.jcode.workbench.WorkbenchExtraKeysBar
+import dev.blamspot.jcode.workbench.WorkbenchBottomDock
 import dev.blamspot.jcode.workbench.WorkbenchSnackbarHost
 import dev.blamspot.jcode.workbench.BottomStatusBarSlot
 import dev.blamspot.jcode.workbench.RightPanelSelection
@@ -3506,8 +3507,8 @@ private fun QCodeShell(
 
     val drawerContent: @Composable () -> Unit = {
         ModalDrawerSheet(
-            modifier = Modifier.width(332.dp),
-            drawerContainerColor = MaterialTheme.colorScheme.surface,
+            modifier = Modifier.width(320.dp),
+            drawerContainerColor = MaterialTheme.colorScheme.background,
         ) {
             WorkspacePanel(
                 selectedTool = selectedTool,
@@ -3589,6 +3590,25 @@ private fun QCodeShell(
                 },
             bottomBar = {
                 Column {
+                    if (usesModalWorkspace) {
+                        WorkbenchBottomDock(
+                            selectedTool = selectedTool,
+                            // The console sheet covers the workspace, so the dock cannot be tapped
+                            // while it is open; the flag still lights the door that opened it.
+                            consoleVisible = rightSidebarVisible && !rightSidebarDocked,
+                            onOpenTool = { tool ->
+                                selectedTool = tool
+                                if (rightSidebarVisible && !rightSidebarDocked) {
+                                    rightSidebarVisible = false
+                                }
+                                scope.launch { compactDrawerState.open() }
+                            },
+                            onOpenConsole = {
+                                selectRightPanelTab(RightPanelTab.Terminal)
+                                rightSidebarVisible = !rightSidebarVisible
+                            },
+                        )
+                    }
                     // Sits above the status bar so Scaffold's innerPadding reserves space for it and
                     // the editor/terminal content shrinks instead of being covered while typing.
                     WorkbenchExtraKeysBar()
@@ -4214,8 +4234,8 @@ private fun QCodeShell(
         if (usesModalWorkspace && !rightSidebarDocked) {
             AnimatedVisibility(
                 visible = rightSidebarVisible,
-                enter = fadeIn() + slideInHorizontally(initialOffsetX = { it }),
-                exit = fadeOut() + slideOutHorizontally(targetOffsetX = { it }),
+                enter = fadeIn() + slideInVertically(initialOffsetY = { it }),
+                exit = fadeOut() + slideOutVertically(targetOffsetY = { it }),
             ) {
                 Box(modifier = Modifier.fillMaxSize()) {
                     Box(
@@ -4224,14 +4244,39 @@ private fun QCodeShell(
                             .background(Color.Black.copy(alpha = 0.36f))
                             .clickable { rightSidebarVisible = false },
                     )
+                    // The console sheet: the same tools as the right drawer, but it rises from the
+                    // bottom like a mobile console instead of sliding in from the edge like a desktop
+                    // split pane. The workspace stays visible above it, so output reads in context.
                     Column(
                         modifier = Modifier
-                            .align(Alignment.CenterEnd)
-                            .fillMaxHeight()
+                            .align(Alignment.BottomCenter)
                             .fillMaxWidth()
-                            .statusBarsPadding()
+                            .fillMaxHeight(0.74f)
+                            .clip(
+                                RoundedCornerShape(
+                                    topStart = Radius.sheet,
+                                    topEnd = Radius.sheet,
+                                ),
+                            )
+                            .background(MaterialTheme.colorScheme.surface)
                             .navigationBarsPadding(),
                     ) {
+                        // Grab handle: the sheet's own affordance, even though the scrim closes it.
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = Space.sm, bottom = Space.xs),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(width = 40.dp, height = 4.dp)
+                                    .clip(RoundedCornerShape(Radius.pill))
+                                    .background(
+                                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f),
+                                    ),
+                            )
+                        }
                         WorkbenchRightSidebar(
                             selected = rightPanelSelection.clampedTo(portraitRightSidebarTabs),
                             vsixExtensions = vsixExtensions,
@@ -4376,10 +4421,20 @@ private fun WorkspacePanel(
 ) {
     val context = LocalContext.current
 
-    Surface(
-        modifier = modifier,
-        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.96f),
+    Box(
+        modifier = modifier
+            .background(MaterialTheme.colorScheme.background)
+            .padding(Space.s),
     ) {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            shape = RoundedCornerShape(Radius.sheet),
+            color = MaterialTheme.colorScheme.surface,
+            border = BorderStroke(
+                1.dp,
+                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.32f),
+            ),
+        ) {
         Column(modifier = Modifier.fillMaxSize()) {
             // breadcrumb depth tells us whether we're inside a User Workspace (a container of
             // projects) vs the Default Workspace (single open project, no roster).
@@ -4566,6 +4621,7 @@ private fun WorkspacePanel(
                 }
             }
         }
+        }
     }
 }
 
@@ -4605,8 +4661,15 @@ private fun EditorWorkspace(
 ) {
     val chrome = LocalChromeControls.current
     Surface(
-        modifier = modifier.fillMaxHeight(),
+        modifier = modifier
+            .fillMaxHeight()
+            .padding(start = Space.xs, end = Space.xs, top = Space.xs),
+        shape = RoundedCornerShape(topStart = Radius.sheet, topEnd = Radius.sheet),
         color = MaterialTheme.colorScheme.background,
+        border = BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f),
+        ),
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -4641,7 +4704,6 @@ private fun EditorWorkspace(
                         onOpenTerminalSession = onOpenTerminalSession,
                         onSave = onSave,
                     )
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.28f))
                 }
             }
 
@@ -4846,33 +4908,62 @@ private fun EditorRecents(actions: EditorEmptyActions, modifier: Modifier = Modi
     Box(modifier = modifier, contentAlignment = Alignment.TopCenter) {
         Column(
             modifier = Modifier
-                .widthIn(max = 460.dp)
+                .widthIn(max = 520.dp)
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
-                .padding(Space.xxl),
-            verticalArrangement = Arrangement.spacedBy(Space.md),
+                .padding(horizontal = Space.xxl, vertical = Space.xxxl),
+            verticalArrangement = Arrangement.spacedBy(Space.xl),
         ) {
             EditorStartHeader()
-            Column(verticalArrangement = Arrangement.spacedBy(Space.s)) {
-                StartSectionLabel("Start")
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.sm), verticalArrangement = Arrangement.spacedBy(Space.sm)) {
-                    WorkbenchActionButton(text = "New Folder", onClick = actions.onNewProject, active = true)
-                    WorkbenchActionButton(text = "Open Folder", onClick = actions.onOpenFolder)
+            Column(verticalArrangement = Arrangement.spacedBy(Space.sm)) {
+                StartSectionLabel("QUICK START")
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(Space.sm),
+                    verticalArrangement = Arrangement.spacedBy(Space.sm),
+                ) {
+                    StartActionTile(
+                        label = "New folder",
+                        icon = QCodeIcon.NewFolder,
+                        onClick = actions.onNewProject,
+                        primary = true,
+                        modifier = Modifier.width(152.dp),
+                    )
+                    StartActionTile(
+                        label = "Open folder",
+                        icon = QCodeIcon.OpenFolder,
+                        onClick = actions.onOpenFolder,
+                        modifier = Modifier.width(152.dp),
+                    )
                     actions.startActions.forEach { action ->
-                        WorkbenchActionButton(text = action.label, onClick = { actions.onAction(action) })
+                        StartActionTile(
+                            label = action.label,
+                            icon = if (action.id == "clone") QCodeIcon.Scm else QCodeIcon.Code,
+                            onClick = { actions.onAction(action) },
+                            modifier = Modifier.width(152.dp),
+                        )
                     }
                 }
             }
-            if (actions.recents.isEmpty()) {
-                // No "open or create a folder to get started": that is the row of buttons directly above.
-                Text(
-                    text = "No recent projects yet.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            } else {
-                Column(verticalArrangement = Arrangement.spacedBy(Space.s)) {
-                    StartSectionLabel("Recent")
+            Column(verticalArrangement = Arrangement.spacedBy(Space.sm)) {
+                StartSectionLabel("RECENT")
+                if (actions.recents.isEmpty()) {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(Radius.xxl),
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.12f),
+                        border = BorderStroke(
+                            1.dp,
+                            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f),
+                        ),
+                    ) {
+                        Text(
+                            text = "No recent projects yet. Create a folder, or open one from storage.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(Space.md),
+                        )
+                    }
+                } else {
                     actions.recents.forEach { recent ->
                         RecentRow(
                             recent = recent,
@@ -4887,23 +4978,14 @@ private fun EditorRecents(actions: EditorEmptyActions, modifier: Modifier = Modi
 }
 
 /**
- * Identity line for the cold-start screen: the app's mark, its name, and its version.
- *
- * It replaces an "Open a project" title that sat on top of a row of buttons already saying exactly
- * that - including one labelled "Open Folder" - under a copy of the same folder icon those buttons
- * and every recent row use. This is the only screen the app gets to itself, so it says which build
- * you are in instead of repeating the controls below it.
- *
- * The mark is the launcher icon's foreground layer alone, without the tile a launcher masks it
- * into: on a page this is a logo, not an app entry in a grid. Both it and the name come from the
- * installed icon rather than a fixed resource, so each build answers for itself - debug draws the
- * whole mark hollow and says "QCode (debug)", beta hollows out the J. The version is otherwise
- * only reachable through Settings > Updates.
+ * The launchpad hero: the app's own mark, its name, the build number, and one line about what this
+ * workspace is. The mark is the launcher icon's foreground layer alone, without the tile a launcher
+ * masks it into: on a page this is a logo, not an app entry in a grid.
  */
 @Composable
 private fun EditorStartHeader() {
     val context = LocalContext.current
-    val markSize = 64.dp
+    val markSize = 84.dp
     val markPx = with(LocalDensity.current) { markSize.roundToPx() }
     val mark = remember(context, markPx) {
         runCatching {
@@ -4919,37 +5001,115 @@ private fun EditorStartHeader() {
         runCatching { context.packageManager.getApplicationLabel(context.applicationInfo).toString() }
             .getOrNull().orEmpty().ifEmpty { "QCODE IDE" }
     }
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Space.xxs),
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(Space.xxs),
     ) {
-        // Drawn at the full adaptive-icon canvas size, which is deliberately larger than the mark:
-        // the layer is 108dp with the mark across its middle, and that margin is also the gap to
-        // the name beside it.
-        if (mark != null) Image(
-            bitmap = mark,
-            contentDescription = null,
-            modifier = Modifier.size(markSize),
-        )
-        Column {
-            Text(label, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-            Text(
-                text = "Version ${BuildConfig.VERSION_NAME}",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+        Box(
+            modifier = Modifier
+                .padding(bottom = Space.xs)
+                .size(108.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(96.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)),
             )
+            if (mark != null) {
+                Image(
+                    bitmap = mark,
+                    contentDescription = null,
+                    modifier = Modifier.size(markSize),
+                )
+            }
         }
+        Text(
+            text = label,
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 0.4.sp,
+        )
+        Text(
+            text = "Version ${BuildConfig.VERSION_NAME}",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Text(
+            text = "Code, agents, and Linux in one pocket workspace.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(top = Space.xs),
+        )
     }
 }
 
-/** Start-screen section heading. "Start" and "Recent" are the same kind of thing, so they read alike. */
+/** Start-screen section heading. "QUICK START" and "RECENT" are the same kind of thing. */
 @Composable
 private fun StartSectionLabel(text: String) {
     Text(
         text = text,
         style = MaterialTheme.typography.labelMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
+        fontWeight = FontWeight.SemiBold,
+        letterSpacing = 1.2.sp,
     )
+}
+
+/** A launchpad quick action: an icon and a label in a card that matches the recent-project rows. */
+@Composable
+private fun StartActionTile(
+    label: String,
+    icon: QCodeIcon,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    primary: Boolean = false,
+) {
+    val container = if (primary) {
+        MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)
+    } else {
+        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.20f)
+    }
+    val content = if (primary) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+    Surface(
+        modifier = modifier
+            .clip(RoundedCornerShape(Radius.xxl))
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(Radius.xxl),
+        color = container,
+        border = BorderStroke(
+            1.dp,
+            if (primary) {
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)
+            } else {
+                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.30f)
+            },
+        ),
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = Space.md, vertical = Space.md),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Space.sm),
+        ) {
+            Icon(
+                painter = jcIcon(icon),
+                contentDescription = null,
+                modifier = Modifier.size(18.dp),
+                tint = content,
+            )
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelMedium,
+                color = content,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
 }
 
 @Composable
@@ -4958,14 +5118,19 @@ private fun RecentRow(recent: RecentEntity, onOpen: () -> Unit, onExport: () -> 
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(Radius.lg))
+            .clip(RoundedCornerShape(Radius.xxl))
             .clickable(onClick = onOpen),
+        shape = RoundedCornerShape(Radius.xxl),
         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.16f),
+        border = BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.22f),
+        ),
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = Space.sm, top = Space.s, bottom = Space.s),
+                .padding(start = Space.md, end = Space.s, top = Space.ms, bottom = Space.ms),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Space.sm),
         ) {
@@ -5019,6 +5184,13 @@ private fun RecentRow(recent: RecentEntity, onOpen: () -> Unit, onExport: () -> 
                     )
                 }
             }
+            // The row itself is the target; the chevron says so now that the card has an outline.
+            Icon(
+                painter = jcIcon(QCodeIcon.ChevronRight),
+                contentDescription = null,
+                modifier = Modifier.size(IconSize.sm),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f),
+            )
         }
     }
 }
@@ -5101,21 +5273,20 @@ private fun WorkbenchRightSidebar(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(40.dp)
-                    .padding(end = Space.xs),
+                    .height(48.dp)
+                    .padding(horizontal = Space.sm),
                 horizontalArrangement = Arrangement.spacedBy(Space.xs),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 // Tabs scroll within their own weighted area so the trailing actions below stay
-                // pinned to the right edge — no scrolling to reach "Hide". Butted together with no
-                // gap, because a tab strip's tabs share edges; the gap is what made these read as
-                // buttons that happened to be in a row.
+                // pinned to the right edge — no scrolling to reach "Hide". The pills are separated
+                // by a small gap now that each one is a rounded card rather than a butted tab.
                 Row(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxHeight()
                         .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(Space.none),
+                    horizontalArrangement = Arrangement.spacedBy(Space.xs),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     val devMode = LocalDeveloperSetting.current.enabled
@@ -5253,18 +5424,19 @@ private fun RightPanelTabItem(
     /** An extension's shipped icon, drawn in place of [icon] once it has decoded. */
     iconFile: java.io.File? = null,
 ) {
-    // Flat, like the editor's tab strip, the terminal's and the DevTools pane switcher. This was the
-    // last row of rounded pills in the workbench, and it sits directly above one of the flat ones —
-    // two ways of drawing "pick one of these", a few pixels apart.
+    // CoreX calls this a "deck" of tools rather than a copy of a desktop tab bar: every entry is a
+    // rounded pill with its own glyph, and the selected one is filled with the accent instead of
+    // being marked by a hairline underline.
     val tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
     Row(
         modifier = Modifier
+            .height(32.dp)
+            .clip(RoundedCornerShape(Radius.pill))
             .clickable(onClick = onClick)
             .background(
-                if (selected) MaterialTheme.colorScheme.surfaceVariant else Color.Transparent,
+                if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f) else Color.Transparent,
             )
-            .fillMaxHeight()
-            .padding(horizontal = Space.md),
+            .padding(horizontal = Space.ms),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Space.s),
     ) {
@@ -5283,11 +5455,16 @@ private fun RightPanelTabItem(
             Icon(
                 painter = jcIcon(icon),
                 contentDescription = null,
-                modifier = Modifier.size(IconSize.md),
+                modifier = Modifier.size(IconSize.sm),
                 tint = tint,
             )
         }
-        Text(text = label, style = MaterialTheme.typography.labelMedium, color = tint)
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            color = tint,
+            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+        )
     }
 }
 

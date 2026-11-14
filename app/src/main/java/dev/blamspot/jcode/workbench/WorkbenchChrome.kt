@@ -5,11 +5,13 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -29,6 +31,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.blamspot.jcode.design.IconSize
 import dev.blamspot.jcode.design.JcTooltip
@@ -192,6 +195,65 @@ internal fun SidebarToolButton(
                 style = MaterialTheme.typography.labelMedium,
                 color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
+            )
+        }
+    }
+}
+
+/**
+ * One destination in the left panel's tool dock: a square-ish card with the glyph above its label.
+ * The grid reads as a launcher rather than a desktop toolbar, which is the point of the CoreX
+ * workbench layout.
+ */
+@Composable
+internal fun SidebarToolTile(
+    tool: WorkbenchTool,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val content = if (selected) {
+        MaterialTheme.colorScheme.primary
+    } else {
+        MaterialTheme.colorScheme.onSurfaceVariant
+    }
+    Surface(
+        modifier = modifier
+            .clip(RoundedCornerShape(Radius.xxl))
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(Radius.xxl),
+        color = if (selected) {
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
+        } else {
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.16f)
+        },
+        border = BorderStroke(
+            1.dp,
+            if (selected) {
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.36f)
+            } else {
+                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.22f)
+            },
+        ),
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = Space.xxs, vertical = Space.xs),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(Space.xxs),
+        ) {
+            Icon(
+                painter = jcIcon(tool.icon),
+                contentDescription = tool.label,
+                modifier = Modifier.size(IconSize.sm),
+                tint = content,
+            )
+            Text(
+                text = tool.compactLabel,
+                style = MaterialTheme.typography.labelSmall,
+                color = content,
+                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
         }
     }
