@@ -80,10 +80,8 @@ class AgentController(
      * [onExit] reports the process exit code (null when it was killed) so the pane can update.
      */
     private val setupSessionStarter: (
-        command: String,
-        onLine: (String) -> Unit,
-        onExit: (Int?) -> Unit,
-    ) -> AgentSetupSession? = null,
+        (String, (String) -> Unit, (Int?) -> Unit) -> AgentSetupSession?
+    )? = null,
     /** Called with the command that just finished, so a backend can update its setup state. */
     private val onSetupComplete: ((String) -> Unit)? = null,
 ) {
