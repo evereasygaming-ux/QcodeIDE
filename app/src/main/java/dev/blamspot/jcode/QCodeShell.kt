@@ -5744,8 +5744,9 @@ private fun TerminalSidebarContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .horizontalScroll(rememberScrollState())
-                    .height(30.dp),
-                horizontalArrangement = Arrangement.spacedBy(Space.none),
+                    .height(36.dp)
+                    .padding(horizontal = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(2.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 orderedSessionIds.forEach { sessionId ->
@@ -5757,19 +5758,31 @@ private fun TerminalSidebarContent(
                     Box {
                         Row(
                             modifier = Modifier
+                                .clip(RoundedCornerShape(9.dp))
+                                .background(
+                                    if (isActive) MaterialTheme.colorScheme.surfaceVariant
+                                    else Color.Transparent
+                                )
                                 .combinedClickable(
                                     onClick = { onSelectTerminalSession(sessionId) },
                                     onLongClick = { menuForId = sessionId },
                                 )
-                                .background(
-                                    if (isActive) MaterialTheme.colorScheme.surfaceVariant
-                                    else MaterialTheme.colorScheme.surface
-                                )
-                                .height(30.dp)
-                                .padding(horizontal = Space.ms),
+                                .height(28.dp)
+                                .padding(horizontal = 8.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(Space.xs),
                         ) {
+                            if (isActive) {
+                                Box(
+                                    modifier = Modifier
+                                        .width(2.dp)
+                                        .height(12.dp)
+                                        .background(
+                                            MaterialTheme.colorScheme.primary,
+                                            RoundedCornerShape(2.dp),
+                                        ),
+                                )
+                            }
                             // Pinned terminal shows a leading pin instead of a "×" (close via long-press).
                             if (isPinned) {
                                 Icon(
@@ -5859,6 +5872,45 @@ private fun TerminalSidebarContent(
             }
         }
 
+        if (terminalReady && terminalSessionIds.isNotEmpty()) {
+            val activeSession = terminalSessionFor(selectedTerminalSessionId)
+            val busy = activeSession?.foreground != null
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 12.dp, end = 12.dp, top = 4.dp, bottom = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(7.dp),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(6.dp)
+                        .background(
+                            if (busy) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                            CircleShape,
+                        ),
+                )
+                Text(
+                    text = terminalTitleFor(selectedTerminalSessionId)
+                        ?: activeSession?.label
+                        ?: "guest shell",
+                    style = MaterialTheme.typography.labelSmall.copy(fontFamily = FontFamily.Monospace),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f),
+                )
+                Text(
+                    text = if (busy) "RUNNING" else "SHELL",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = if (busy) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f),
+                    letterSpacing = 0.8.sp,
+                )
+            }
+        }
+
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.28f))
 
         if (!terminalReady) {
@@ -5934,7 +5986,18 @@ private fun TerminalSidebarContent(
             val ansiCursor = ansiPalette.cursor.toArgb()
             val ansiSelection = ansiPalette.selection.toArgb()
             val ansiSelectionHandle = ansiPalette.selectionHandle.toArgb()
-            Box(modifier = Modifier.fillMaxSize()) {
+            Surface(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(start = 8.dp, end = 8.dp, top = 4.dp, bottom = 8.dp),
+                shape = RoundedCornerShape(14.dp),
+                color = MaterialTheme.colorScheme.background,
+                border = BorderStroke(
+                    1.dp,
+                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.38f),
+                ),
+            ) {
+            Box(modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(13.dp))) {
                 terminalSessionIds.forEach { sessionId ->
                     val session = terminalSessionFor(sessionId) ?: return@forEach
                     val isActive = sessionId == selectedTerminalSessionId
@@ -6000,6 +6063,7 @@ private fun TerminalSidebarContent(
                         ),
                     )
                 }
+            }
             }
         } else {
             // No sessions - show placeholder
