@@ -209,7 +209,6 @@ import dev.blamspot.jcode.core.distro.SdkCatalogState
 import dev.blamspot.jcode.core.distro.adb.AdbBridgeState
 import dev.blamspot.jcode.core.term.TerminalSessionManager
 import dev.blamspot.jcode.core.term.TerminalView
-import dev.blamspot.jcode.core.term.visibleScreenText
 import dev.blamspot.jcode.design.ChromeControls
 import dev.blamspot.jcode.design.CommandPaletteSetting
 import dev.blamspot.jcode.design.CommandRegistry
@@ -240,7 +239,6 @@ import dev.blamspot.jcode.design.TerminalFontSizeSetting
 import dev.blamspot.jcode.design.LocalEditorWordWrapSetting
 import dev.blamspot.jcode.design.LocalMarkdownPreviewSetting
 import dev.blamspot.jcode.workbench.ExtensionDevState
-import dev.blamspot.jcode.workbench.FloatingConsole
 import dev.blamspot.jcode.workbench.LocalExtensionDevState
 import dev.blamspot.jcode.design.MarkdownPreviewSetting
 import dev.blamspot.jcode.design.ThemeMode
@@ -2596,13 +2594,7 @@ private fun QCodeShell(
     val terminalHasUnseen by remember {
         derivedStateOf { terminalSessionIds.any { it !in seenTerminalIds } }
     }
-    // The floating console: a live mirror of the active terminal that sits above everything else.
-    // Polling the parser's screen is cheap (a native row read) and keeps the mirror honest without
-    // another handshake; the drawer terminal keeps its own scrollback, this only shows the screen.
-    var floatingConsoleExpanded by rememberSaveable { mutableStateOf(false) }
-    var floatingConsoleText by remember { mutableStateOf("") }
     // The real terminal is on screen, so the mirror would only duplicate it.
-    val drawerShowsTerminal = rightSidebarVisible && rightPanelTab == RightPanelTab.Terminal
     val terminalInstances by remember {
         derivedStateOf {
             terminalSessionIds.mapIndexed { index, id ->
@@ -2614,13 +2606,6 @@ private fun QCodeShell(
     // Process-lifetime manager so terminal sessions (native PTY processes) survive Activity
     // recreation/backgrounding instead of being orphaned with the composition.
     val terminalSessionManager = remember(appContext) { TerminalSessionHost.manager(appContext) }
-    LaunchedEffect(selectedTerminalSessionId) {
-        while (true) {
-            val session = terminalSessionManager.getSession(selectedTerminalSessionId)
-            floatingConsoleText = session?.visibleScreenText().orEmpty()
-            delay(800)
-        }
-    }
     // Apply the user's configurable instance limit to the process-lifetime manager.
     val configuredMaxTerminals = LocalPerformanceSettings.current.maxTerminalSessions
     LaunchedEffect(terminalSessionManager, configuredMaxTerminals) {
@@ -4340,34 +4325,6 @@ private fun QCodeShell(
             onDismiss = { commandPaletteVisible = false },
         )
 
-        // The floating console: a small live mirror of the terminal that sits ON TOP of the
-        // workbench — over the modal right sheet and over the in-app browser. Opening the console
-        // sheet used to be the only way to watch a job, and on a phone that sheet covered the
-        // browser the Flow render was happening in. This stays out of the way (a pill) until it
-        // is tapped, and then it is a draggable card that never takes the screen.
-        if (terminalSessionIds.isNotEmpty() && (!drawerShowsTerminal || floatingConsoleExpanded)) {
-            FloatingConsole(
-                label = if (floatingConsoleExpanded) {
-                    terminalTitles[selectedTerminalSessionId]
-                        ?: terminalSessionManager.getSession(selectedTerminalSessionId)?.label
-                        ?: "console"
-                } else {
-                    "console"
-                },
-                text = floatingConsoleText,
-                expanded = floatingConsoleExpanded,
-                onToggleExpanded = { floatingConsoleExpanded = !floatingConsoleExpanded },
-                onOpenInDrawer = {
-                    selectRightPanelTab(RightPanelTab.Terminal)
-                    rightSidebarVisible = true
-                    floatingConsoleExpanded = false
-                },
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(end = 12.dp, bottom = 92.dp),
-            )
-        }
-
         if (goToLineVisible) {
             val goToState = editorGroup.activeTab?.editorState
             if (goToState == null) {
@@ -5734,6 +5691,32 @@ private fun TerminalRunningDialog(
     )
 }
 
+/**
+ * The FLOAT chip: on/off for the floating-console bubble service.
+ *
+ * Amber while the bubble is on so the user always knows an overlay is sitting over other apps;
+ * a tap when it is off either starts the service or — if the "display over other apps" grant is
+ * missing — opens the grant's Settings page (the only way to give it).
+ */
+@Composable
+private fun FloatConsoleChip(bubbleRunning: Boolean, onToggle: () -> Unit) {
+    Text(
+        text = if (bubbleRunning) "FLOAT ●" else "FLOAT",
+        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+        color = if (bubbleRunning) MaterialTheme.colorScheme.primary
+        else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f),
+        letterSpacing = 0.8.sp,
+        modifier = Modifier
+            .clip(RoundedCornerShape(999.dp))
+            .background(
+                if (bubbleRunning) MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
+                else Color.Transparent,
+            )
+            .clickable(onClick = onToggle)
+            .padding(horizontal = 8.dp, vertical = 3.dp),
+    )
+}
+
 @Composable
 private fun TerminalSidebarContent(
     selectedProject: Project?,
@@ -5753,6 +5736,28 @@ private fun TerminalSidebarContent(
 ) {
     Column(modifier = modifier.fillMaxSize()) {
         var menuForId by remember { mutableStateOf<String?>(null) }
+        // The floating-console bubble lives in its own service (see ConsoleBubbleService); this
+        // sidebar only routes the toggle: stop it when on, start it when the overlay grant is
+        // already given, or send the user to the grant when it is not.
+        val context = LocalContext.current
+        val bubbleRunning by ConsoleBubbleService.running.collectAsStateWithLifecycle()
+        fun toggleFloat() {
+            if (bubbleRunning) {
+                ConsoleBubbleService.stop(context)
+            } else if (android.provider.Settings.canDrawOverlays(context)) {
+                ConsoleBubbleService.start(context)
+            } else {
+                // No overlay grant yet: the system Settings page is the only way to give it.
+                runCatching {
+                    context.startActivity(
+                        Intent(
+                            android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                            Uri.parse("package:${context.packageName}"),
+                        ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                    )
+                }
+            }
+        }
         val orderedSessionIds = terminalSessionIds.sortedBy { it !in pinnedTerminalIds }
         // Closing a terminal running a foreground program prompts first (Kill / Close Unbusy / Cancel).
         // "Unbusy" = idle at the prompt (Session.foreground == null). Honors the same confirm-close
@@ -5952,6 +5957,10 @@ private fun TerminalSidebarContent(
                     else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f),
                     letterSpacing = 0.8.sp,
                 )
+                // The floating-console bubble: an on/off chip. On, the terminal console follows
+                // the user onto other apps and the home screen as a draggable <Q/> bubble (a
+                // service overlay), and keeps mirroring the session after the app is closed.
+                FloatConsoleChip(bubbleRunning = bubbleRunning, onToggle = { toggleFloat() })
             }
         }
 
