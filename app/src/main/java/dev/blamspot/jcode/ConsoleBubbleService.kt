@@ -58,6 +58,9 @@ class ConsoleBubbleService : Service() {
         private val _running = MutableStateFlow(false)
         val running: StateFlow<Boolean> = _running
 
+        /** Screen-poll cadence: fast enough to read live output, slow enough to be free. */
+        const val POLL_INTERVAL_MS = 700L
+
         fun start(context: Context) {
             context.startForegroundService(
                 Intent(context, ConsoleBubbleService::class.java).setAction(ACTION_START),
@@ -205,9 +208,9 @@ class ConsoleBubbleService : Service() {
             isHorizontalScrollBarEnabled = false
             addView(
                 scroll,
-                HorizontalScrollView.LayoutParams(
-                    HorizontalScrollView.LayoutParams.WRAP_CONTENT,
-                    HorizontalScrollView.LayoutParams.WRAP_CONTENT,
+                FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.WRAP_CONTENT,
+                    FrameLayout.LayoutParams.WRAP_CONTENT,
                 ),
             )
         }
@@ -391,10 +394,5 @@ class ConsoleBubbleService : Service() {
                 ).build(),
             )
             .build()
-    }
-
-    private companion object {
-        /** Screen-poll cadence: fast enough to read live output, slow enough to be free. */
-        const val POLL_INTERVAL_MS = 700L
     }
 }
