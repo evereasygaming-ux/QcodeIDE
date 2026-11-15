@@ -1,5 +1,5 @@
 // CoreX Popup Controller
-const ANTIGRAVITY_CONNECT_PROMPT = `Connect to CoreX Flow Bridge MCP server (deepx-flow). Verify connection status via deepx_status tool. When ready: true, declare that you are connected and standing by to generate images and videos with 100% fidelity to my scripts and data.`;
+const ANTIGRAVITY_CONNECT_PROMPT = `Connect to the CoreX Flow Bridge MCP server (CoreX). Verify connection status via deepx_status tool. The product is called CoreX; the deepx_* tool names are compatibility ids only, so never call it DeepX. When ready: true, declare that you are connected and standing by to generate images and videos with 100% fidelity to my scripts and data.`;
 
 const ANTIGRAVITY_DISCONNECT_PROMPT = `Disconnect from CoreX Flow Bridge MCP. Pause all automated generation dispatching, halt any active jobs, and enter offline standby mode until I tell you to reconnect.`;
 

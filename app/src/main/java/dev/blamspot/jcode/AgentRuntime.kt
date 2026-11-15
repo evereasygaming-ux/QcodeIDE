@@ -128,7 +128,7 @@ object AgentRuntime {
     private fun resolveDeepxServer(rootfs: File, home: String, script: String): AcpMcpServer? {
         if (!File(rootfs, script.trimStart('/')).isFile) return null
         val node = resolveNode(rootfs, home) ?: return null
-        return AcpMcpServer(name = "deepx-flow", command = node, args = listOf(script))
+        return AcpMcpServer(name = "corex-flow", command = node, args = listOf(script))
     }
 
     private fun resolveNode(rootfs: File, home: String): String? {

@@ -13,7 +13,7 @@ bash ./setup.sh
 ```
 This single script will automatically:
 - ✅ Check Node.js (v20+ supported).
-- ✅ Pre-configure `~/.gemini/config/mcp_config.json` with the standalone `deepx-flow` MCP server.
+- ✅ Pre-configure `~/.gemini/config/mcp_config.json` with the standalone CoreX Flow Bridge MCP server (`deepx-flow` config key).
 - ✅ Install the fully trained `deepx-rapid-flow` skill into `~/.gemini/config/skills/deepx-rapid-flow/`.
 
 ---

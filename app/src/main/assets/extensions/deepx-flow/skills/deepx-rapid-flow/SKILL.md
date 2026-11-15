@@ -59,7 +59,7 @@ This skill governs the high-speed, zero-latency execution pipeline between Antig
    - Call `deepx_status` once to check status (<10ms).
 
 6. **Universal Antigravity Connect & Disconnect Protocol**:
-   - **Connect Prompt**: `"Connect to CoreX Flow Bridge MCP server (deepx-flow) at ws://127.0.0.1:8792/ws. Call deepx_status to verify that Google Flow is attached and ready. Once connected, confirm that you are ready to generate images and videos on Google Flow with 100% user script fidelity."`
+   - **Connect Prompt**: `"Connect to the CoreX Flow Bridge MCP server (CoreX) at ws://127.0.0.1:8792/ws. Call deepx_status to verify that Google Flow is attached and ready. The product is CoreX; deepx_* tool names are compatibility ids only. Once connected, confirm that you are ready to generate images and videos on Google Flow with 100% user script fidelity."`
      - Action: Call `deepx_status` once (<10ms). If `ready: true`, acknowledge connection immediately and confirm readiness to generate with 100% adherence to user script and data.
    - **Disconnect Prompt**: `"Disconnect from CoreX Flow Bridge MCP. Pause all automated generation, stop sending jobs to Google Flow, and stand by in offline mode until I ask you to reconnect."`
      - Action: Acknowledge disconnection immediately, halt all generation dispatching, and enter standby mode without calling any `deepx_*` tools until instructed to reconnect.

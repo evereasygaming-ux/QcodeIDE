@@ -2,7 +2,7 @@
 
 ## 0. Zero Setup Overhead & Universal One-Time Setup (CRITICAL)
 - **CoreX Flow Bridge is ALREADY Configured, Running, and Connected**:
-  - The MCP server `deepx-flow` communicates with the Google Flow Chrome Extension via WebSocket at `ws://127.0.0.1:8792/ws` using `setup.json`.
+  - The CoreX Flow Bridge MCP server (`corex-flow`; `deepx_*` tool names are compatibility ids, not a product name) communicates with the Google Flow Chrome Extension via WebSocket at `ws://127.0.0.1:8792/ws` using `setup.json`.
   - **ONE-TIME CONNECTION CHECK**: Call `deepx_status` at most ONCE per session. Do NOT repeatedly poll `deepx_status` on every turn.
   - **ZERO RAW CONNECTION JSON DUMPS**: Antigravity MUST NEVER dump raw JSON blocks (`{"status":"connected", ...}`) from `deepx_status` into user-facing messages. Simply declare: *"Connected! Google Flow is ready."*
   - **ZERO EVAL_SCRIPT POLLING MANDATE**: Antigravity MUST NEVER invoke `deepx_eval_script` in polling loops or execute manual DOM queries (`document.querySelectorAll('*')`) to inspect generation tiles. Render monitoring is fully automated by the extension bridge. Calling eval scripts in loops degrades speed and freezes chat.
@@ -14,7 +14,7 @@
 
 ## 0.1 Universal Antigravity MCP Connect & Disconnect Protocol (CRITICAL)
 - **Connect Prompt Protocol**:
-  - When the user pastes or triggers the **Connect Prompt** (`"Connect to CoreX Flow Bridge MCP server (deepx-flow)..."`):
+  - When the user pastes or triggers the **Connect Prompt** (`"Connect to the CoreX Flow Bridge MCP server (CoreX)..."`):
     1. Immediately call the `deepx_status` MCP tool once (<10ms).
     2. If `ready: true`, declare immediately in plain text (WITHOUT dumping raw JSON):
        > "Connected! CoreX Flow Bridge MCP is active and Google Flow is ready. I am standing by to generate images and videos with 100% fidelity to your scripts and data — just ask!"
@@ -106,7 +106,7 @@ When given a large-scale or multi-scene task:
 ---
 
 ## 4. CoreX Bridge & MCP Architecture
-- **MCP Server**: `deepx-flow` (binary: `deepx-mcp`), listening on `ws://127.0.0.1:8792/ws`.
+- **MCP Server**: `corex-flow` (binary: `deepx-mcp`; `deepx_*` tool prefix kept for compatibility), listening on `ws://127.0.0.1:8792/ws`.
 - **Chrome Extension**: CoreX Flow Bridge (`deepx-bridge/`), operating on `flow.google.com` or `labs.google/fx/tools/flow`.
 - **Connection Check**: When connection to the extension is first confirmed, declare out loud:
   > "Connected! I can generate images and videos on Google Flow now — just ask."

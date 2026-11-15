@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# DeepX Flow Bridge: 1-Click Universal Installer & AI Skill/Plugin Activator
+# CoreX Flow Bridge: 1-Click Universal Installer & AI Skill/Plugin Activator
 # Works on Linux, macOS, WSL, and Android (Termux)
 # ==============================================================================
 
@@ -15,7 +15,7 @@ TARGET_SKILLS_DIR="$CONFIG_DIR/skills/deepx-rapid-flow"
 PLUGIN_DIR="$CONFIG_DIR/plugins/deepx-flow"
 
 echo "=================================================================="
-echo "  🚀 DeepX Flow Bridge & Antigravity Global Plugin Installer v1.2.0"
+echo "  🚀 CoreX Flow Bridge & Antigravity Global Plugin Installer v1.2.0"
 echo "=================================================================="
 
 # 1. Check Node.js
@@ -55,7 +55,7 @@ mkdir -p "$PLUGIN_DIR/skills"
 cat << 'PLUGIN_EOF' > "$PLUGIN_DIR/plugin.json"
 {
   "name": "deepx-flow",
-  "displayName": "DeepX Google Flow Bridge",
+  "displayName": "CoreX Google Flow Bridge",
   "version": "1.2.1",
   "description": "Ultra-fast zero-latency production engine connecting Antigravity AI agents directly to Google Flow (Veo 3.1 & Imagen 3) for autonomous multi-scene video ads, batch image generation, and character continuity.",
   "keywords": [
@@ -184,7 +184,7 @@ chmod +x "$SCRIPT_DIR/setup.sh" "$MCP_SERVER_DIR/bin/"* 2>/dev/null || true
 
 echo ""
 echo "=================================================================="
-echo "  🎉 Installation Complete! DeepX is Fully Functional."
+echo "  🎉 Installation Complete! CoreX is Fully Functional."
 echo "=================================================================="
 echo "  1. In Chrome or Kiwi Browser:"
 echo "     - Go to chrome://extensions"
@@ -192,5 +192,5 @@ echo "     - Enable 'Developer mode' (top right toggle)"
 echo "     - Click 'Load unpacked' and select this folder:"
 echo "       $SCRIPT_DIR"
 echo "  2. Open https://flow.google.com in Chrome and log in."
-echo "  3. In Antigravity AI, say: 'Check DeepX status and start video generation!'"
+echo "  3. In Antigravity AI, say: 'Check CoreX status and start video generation!'"
 echo "=================================================================="

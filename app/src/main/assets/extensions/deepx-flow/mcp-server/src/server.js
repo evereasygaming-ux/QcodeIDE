@@ -12,10 +12,20 @@ import { analyzeAndBreakdownScript, detectProtagonistEntities } from "./storyboa
 
 const bridge = new DeepXWsBridge(8792);
 
-const server = new McpServer({
-  name: "deepx-flow",
-  version: "1.0.0"
-});
+const server = new McpServer(
+  {
+    name: "corex-flow",
+    version: "1.0.0"
+  },
+  {
+    // This text is what the coding agent sees when it connects. The product is CoreX; the
+    // `deepx_` prefix survives only because tool names are part of the extension ABI.
+    instructions:
+      "You are connected to the CoreX Flow Bridge, which drives Google Flow (Veo and Imagen) " +
+      "through the user's own browser session. Always call this product CoreX, never DeepX. " +
+      "Tool names start with `deepx_` purely for backward compatibility; treat them as CoreX tools.",
+  }
+);
 
 // Helper for standard MCP text response
 function textResponse(text) {

@@ -2,7 +2,7 @@
 
 ## 0. Zero Setup Overhead & Zero Code Inspection (CRITICAL)
 - **CoreX Flow Bridge is ALREADY Running and Connected**:
-  - The MCP server `deepx-flow` is actively communicating with the Google Flow Chrome Extension via WebSocket at `ws://127.0.0.1:8792/ws`.
+  - The CoreX Flow Bridge MCP server (`corex-flow`; `deepx_*` tool names are compatibility ids, not a product name) is actively communicating with the Google Flow Chrome Extension via WebSocket at `ws://127.0.0.1:8792/ws`.
   - **ABSOLUTE RULE**: NEVER search the filesystem for setup scripts. NEVER read or inspect `server.js`, `ws-bridge.js`, or extension source files. NEVER run inline `node -e` test scripts.
   - To check connection, simply invoke the `deepx_status` MCP tool once (takes <10ms).
   - If `ready: true`, immediately confirm: *"Connected! I can generate images and videos on Google Flow now — just ask."*
