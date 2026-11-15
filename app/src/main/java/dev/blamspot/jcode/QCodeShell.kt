@@ -2601,13 +2601,6 @@ private fun QCodeShell(
     // another handshake; the drawer terminal keeps its own scrollback, this only shows the screen.
     var floatingConsoleExpanded by rememberSaveable { mutableStateOf(false) }
     var floatingConsoleText by remember { mutableStateOf("") }
-    LaunchedEffect(selectedTerminalSessionId) {
-        while (true) {
-            val session = terminalSessionManager.getSession(selectedTerminalSessionId)
-            floatingConsoleText = session?.visibleScreenText().orEmpty()
-            delay(800)
-        }
-    }
     // The real terminal is on screen, so the mirror would only duplicate it.
     val drawerShowsTerminal = rightSidebarVisible && rightPanelTab == RightPanelTab.Terminal
     val terminalInstances by remember {
@@ -2621,6 +2614,13 @@ private fun QCodeShell(
     // Process-lifetime manager so terminal sessions (native PTY processes) survive Activity
     // recreation/backgrounding instead of being orphaned with the composition.
     val terminalSessionManager = remember(appContext) { TerminalSessionHost.manager(appContext) }
+    LaunchedEffect(selectedTerminalSessionId) {
+        while (true) {
+            val session = terminalSessionManager.getSession(selectedTerminalSessionId)
+            floatingConsoleText = session?.visibleScreenText().orEmpty()
+            delay(800)
+        }
+    }
     // Apply the user's configurable instance limit to the process-lifetime manager.
     val configuredMaxTerminals = LocalPerformanceSettings.current.maxTerminalSessions
     LaunchedEffect(terminalSessionManager, configuredMaxTerminals) {
