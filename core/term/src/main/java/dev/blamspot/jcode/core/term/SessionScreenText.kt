@@ -11,15 +11,15 @@ package dev.blamspot.jcode.core.term
  * Returns an empty string when the session is gone or its parser is closed.
  */
 fun TerminalSessionManager.Session.visibleScreenText(): String {
-    val parser = parser
-    if (!parser.isOpen) return ""
+    val screen = parser
+    if (!screen.isOpen) return ""
     return runCatching {
-        val buf = IntArray(parser.cols * VtParser.CELL_STRIDE)
+        val buf = IntArray(screen.cols * VtParser.CELL_STRIDE)
         val out = StringBuilder()
-        for (row in 0 until parser.rows) {
-            val filled = parser.readRow(row, buf)
-            val line = StringBuilder(minOf(parser.cols, filled))
-            for (column in 0 until minOf(parser.cols, filled)) {
+        for (row in 0 until screen.rows) {
+            val filled = screen.readRow(row, buf)
+            val line = StringBuilder(minOf(screen.cols, filled))
+            for (column in 0 until minOf(screen.cols, filled)) {
                 val codePoint = buf[column * VtParser.CELL_STRIDE]
                 line.append(if (codePoint == 0 || codePoint == ' '.code) ' ' else codePoint.toChar())
             }

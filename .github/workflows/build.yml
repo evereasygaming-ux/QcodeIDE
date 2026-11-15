@@ -168,6 +168,16 @@ jobs:
           grep -E '^> Task .* FAILED|^FAILURE:|Execution failed for task|^Caused by: ' "$log" | head -4 | while IFS= read -r line; do
             printf '::error::%s\n' "${line//'%'/'%25'}"
           done
+          # Lint writes its findings to a text report next to the build; surface the fatal ones as
+          # annotations too, so a lintVital failure is readable without a session on the run page.
+          for report in \
+            app/build/reports/lint-results-release.txt \
+            app/build/intermediates/lint_vital_text_report/release/lint-results-release.txt; do
+            [ -f "$report" ] || continue
+            grep -E 'Error:|Fatal:' "$report" | head -12 | while IFS= read -r line; do
+              printf '::error::%s\n' "${line//'%'/'%25'}"
+            done
+          done
           {
             echo '## Gradle failure'
             echo
