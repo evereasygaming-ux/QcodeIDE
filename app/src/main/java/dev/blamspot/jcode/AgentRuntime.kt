@@ -75,6 +75,25 @@ object AgentRuntime {
                 AgentKind.CLAUDE to ClaudeAgentBackend(launcher),
                 AgentKind.AGY to agyBackend,
             ),
+            // The install/sign-in command the Agent pane offers has to run in the guest with the
+            // runtime user's environment, not through the stdio launcher (which owns a protocol pipe).
+            setupRunner = { command, onLine ->
+                // timeoutMs 0 = no ceiling: the official installer downloads a ~100 MB binary.
+                val result = distroService.exec(
+                    command = command,
+                    timeoutMs = 0L,
+                    onLine = onLine,
+                )
+                if (!result.succeeded) {
+                    val reason = result.internalError
+                        ?: result.stderr.lineSequence().lastOrNull { it.isNotBlank() }
+                        ?: "exit ${result.exitCode ?: "?"}"
+                    error("Setup failed: $reason")
+                }
+            },
+            // Setup runs through exec(), not the stdio launcher, so the pane's card needs the backend
+            // to notice the requirement itself; a stale auth flag would keep the card after sign-in.
+            onSetupComplete = { agyBackend.resetProcess() },
             scope = scope,
             stores = mapOf(
                 AgentKind.CLAUDE to AgentChatStore(File(storeDir, "chat.json")),

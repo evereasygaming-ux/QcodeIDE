@@ -8,6 +8,7 @@ import dev.blamspot.jcode.core.agent.AgentMessage
 import dev.blamspot.jcode.core.agent.AgentModel
 import dev.blamspot.jcode.core.agent.AgentRequest
 import dev.blamspot.jcode.core.agent.AgentRole
+import dev.blamspot.jcode.core.agent.AgentSetupRequirement
 import dev.blamspot.jcode.core.agent.AgentSavedChat
 import dev.blamspot.jcode.core.agent.AgentToolCall
 import dev.blamspot.jcode.core.agent.AgentToolStatus
@@ -31,6 +32,10 @@ data class AgentUiState(
     val isStreaming: Boolean = false,
     val error: String? = null,
     val pendingApproval: AgentEvent.PermissionRequest? = null,
+    /** Set when the selected backend cannot run until the user installs or signs in to its CLI. */
+    val setupRequirement: AgentSetupRequirement? = null,
+    val setupBusy: Boolean = false,
+    val setupOutput: String? = null,
     val sessionId: String? = null,
     val inputTokens: Long = 0,
     val outputTokens: Long = 0,
@@ -46,6 +51,13 @@ class AgentController(
     private val scope: CoroutineScope,
     private val stores: Map<AgentKind, AgentChatStore> = emptyMap(),
     initialKind: AgentKind = backends.keys.firstOrNull() ?: AgentKind.CLAUDE,
+    /**
+     * Runs a setup command (install / sign-in) in the Linux environment. Null leaves the pane with
+     * nothing but the hint text, which is the right behaviour for a backend that ships no command.
+     */
+    private val setupRunner: (suspend (String, (String) -> Unit) -> Unit)? = null,
+    /** Called after a setup command finishes, so a backend can drop the process it failed to start. */
+    private val onSetupComplete: (() -> Unit)? = null,
 ) {
     init {
         require(backends.isNotEmpty()) { "AgentController needs at least one backend" }
@@ -63,6 +75,7 @@ class AgentController(
         val saved = stores[kind]?.load()
         return AgentUiState(
             kind = kind,
+            setupRequirement = backend.setupRequirement(),
             providers = backends.keys.toList(),
             models = backend.availableModels(),
             model = saved?.model ?: "default",
@@ -152,6 +165,58 @@ class AgentController(
         }
         _state.update { it.copy(pendingApproval = null) }
         persist()
+    }
+
+    /**
+     * Install or sign in to the selected backend's CLI, streaming its output into [AgentUiState.setupOutput].
+     *
+     * The command runs in the Linux environment exactly as written, so an installer that needs a
+     * terminal (the agy sign-in flow prints a link and waits) behaves the way it would in a shell.
+     */
+    fun runSetup() {
+        val state = _state.value
+        val requirement = state.setupRequirement ?: return
+        val command = requirement.installCommand ?: return
+        val runner = setupRunner ?: return
+        if (state.setupBusy) return
+
+        _state.update { it.copy(setupBusy = true, setupOutput = null, error = null) }
+        turn = scope.launch {
+            val lines = mutableListOf<String>()
+            try {
+                runner(command) { line ->
+                    synchronized(lines) { lines += line }
+                    // The tail is what fits on a phone; an installer's last lines are the useful ones.
+                    val tail = synchronized(lines) { lines.takeLast(20) }.joinToString("\n")
+                    _state.update { it.copy(setupOutput = tail) }
+                }
+                onSetupComplete?.invoke()
+                _state.update {
+                    it.copy(setupBusy = false, setupOutput = "Setup finished.")
+                }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (failure: Throwable) {
+                _state.update {
+                    it.copy(
+                        setupBusy = false,
+                        setupOutput = synchronized(lines) { lines.takeLast(20) }.joinToString("\n"),
+                        error = failure.message ?: "Setup failed",
+                    )
+                }
+            }
+        }
+    }
+
+    /** The pane's "I've finished signing in" / dismiss: drop the card and let the next turn try. */
+    fun dismissSetup() {
+        _state.update { it.copy(setupRequirement = null, setupBusy = false, setupOutput = null) }
+    }
+
+    /** Re-read the backend's requirement (e.g. after the environment wizard provisioned the runtime). */
+    fun refreshSetup() {
+        val requirement = backend().setupRequirement()
+        _state.update { it.copy(setupRequirement = requirement) }
     }
 
     /** Start over: drop the feed and the session so the next prompt begins a fresh chat. */

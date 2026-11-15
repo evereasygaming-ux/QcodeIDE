@@ -14,6 +14,9 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.launch
@@ -91,7 +94,50 @@ class AgyAcpBackend(
     @Volatile
     private var promptKey: String? = null
 
+    /** Set when a turn was rejected because the CLI has no credentials; cleared by [clearAuthError]. */
+    private val _authError = MutableStateFlow(false)
+    val authError: StateFlow<Boolean> = _authError.asStateFlow()
+
     override fun availableModels(): List<AgentModel> = modelOptions
+
+    override fun setupRequirement(): AgentSetupRequirement = when {
+        // No credentials yet: the CLI exists (or is about to be installed), so the next thing it
+        // needs is a sign-in. `agy` prints the authorization link on stdout and waits.
+        _authError.value -> AgentSetupRequirement(
+            title = "Sign in to Antigravity",
+            detail = "One sign-in per Linux environment. QCODE opens a terminal running " +
+                "\"agy\", which prints a link — open it, approve, and the CLI stores the session " +
+                "for every chat after this.",
+            installCommand = "AGY=\"$HOME/.local/bin/agy\"; " +
+                "[ -x \"\$AGY\" ] || AGY=\$(command -v agy 2>/dev/null); " +
+                "[ -n \"\$AGY\" ] || { echo 'agy CLI not found — install it first' >&2; exit 127; }; " +
+                "exec \"\$AGY\"",
+            installLabel = "Sign in",
+            hint = "A terminal opens with the agy CLI. Approve the link it prints, then return here.",
+        )
+
+        else -> AgentSetupRequirement(
+            title = "Antigravity is not installed",
+            detail = "The Agent panel drives Google's agy CLI inside the Linux environment. " +
+                "QCODE can install it for you: it downloads the official installer and puts the " +
+                "binary in ~/.local/bin.",
+            installCommand = AGY_INSTALL_COMMAND,
+            installLabel = "Install agy",
+            hint = "Installs the official CLI into the Linux environment (~100 MB download).",
+        )
+    }
+
+    /**
+     * The pane ran the install/sign-in command.
+     *
+     * The next turn must start a fresh `agy` process, so drop any half-started one now. Credentials
+     * live in the CLI's own config (outside the process), so a cleared requirement is a reasonable
+     * optimistic read; if the sign-in did not take, the next turn raises the card again.
+     */
+    fun resetProcess() {
+        closeProcessLocked()
+        _authError.value = false
+    }
 
     override fun resolvePermission(requestId: String, allow: Boolean) {
         val info = approvals.remove(requestId) ?: return
@@ -559,9 +605,9 @@ class AgyAcpBackend(
         val code = (error?.get("code") as? JsonPrimitive)?.content?.toLongOrNull() ?: 0L
         val message = error?.acpStr("message").orEmpty().ifBlank { "Antigravity request failed" }
         return if (code == AUTH_REQUIRED) {
-            AgentRpcException(
-                "Antigravity authentication required. Sign in with the agy CLI inside the Linux environment.",
-            )
+            // The pane turns this into the sign-in card, so the message only has to name the cause.
+            _authError.value = true
+            AgentRpcException("Antigravity authentication required.")
         } else {
             AgentRpcException(message)
         }
@@ -607,6 +653,10 @@ class AgyAcpBackend(
         const val STDERR_TAIL_CHARS = 600
         const val PROCESS_EXIT_METHOD = "\$/process_exit"
         const val PROMPT_RESULT_METHOD = "\$/prompt_result"
+
+        /** Official Antigravity CLI installer; lands the binary at ~/.local/bin/agy. */
+        const val AGY_INSTALL_COMMAND =
+            "curl -fsSL https://antigravity.google/cli/install.sh | bash"
 
         val DEFAULT_MODELS = listOf(
             AgentModel("default", "Default"),

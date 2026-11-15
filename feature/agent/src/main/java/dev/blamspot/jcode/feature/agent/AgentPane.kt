@@ -1,5 +1,6 @@
 package dev.blamspot.jcode.feature.agent
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -43,6 +44,7 @@ import dev.blamspot.jcode.core.agent.AgentEvent
 import dev.blamspot.jcode.core.agent.AgentKind
 import dev.blamspot.jcode.core.agent.AgentMessage
 import dev.blamspot.jcode.core.agent.AgentModel
+import dev.blamspot.jcode.core.agent.AgentSetupRequirement
 import dev.blamspot.jcode.core.agent.AgentRole
 import dev.blamspot.jcode.core.agent.AgentToolCall
 import dev.blamspot.jcode.core.agent.AgentToolStatus
@@ -60,6 +62,8 @@ fun AgentPane(controller: AgentController, modifier: Modifier = Modifier) {
         onSelectKind = controller::selectKind,
         onNewChat = controller::clearChat,
         modifier = modifier,
+        onRunSetup = controller::runSetup,
+        onDismissSetup = controller::dismissSetup,
     )
 }
 
@@ -73,6 +77,8 @@ fun AgentPane(
     onSelectKind: (AgentKind) -> Unit,
     onNewChat: () -> Unit,
     modifier: Modifier = Modifier,
+    onRunSetup: (() -> Unit)? = null,
+    onDismissSetup: (() -> Unit)? = null,
 ) {
     val listState = rememberLazyListState()
     LaunchedEffect(state.messages.size, state.messages.lastOrNull()?.text, state.messages.lastOrNull()?.thinking) {
@@ -116,6 +122,19 @@ fun AgentPane(
         }
 
         state.pendingApproval?.let { approval -> ApprovalCard(approval, onApprove) }
+
+        // A backend that cannot run yet says so here, with the button that fixes it, rather than
+        // letting every prompt fail with a protocol error the user cannot act on.
+        state.setupRequirement?.let { requirement ->
+            SetupCard(
+                requirement = requirement,
+                busy = state.setupBusy,
+                output = state.setupOutput,
+                canRun = onRunSetup != null && requirement.installCommand != null,
+                onRun = onRunSetup ?: {},
+                onDismiss = onDismissSetup ?: {},
+            )
+        }
 
         AgentComposer(
             streaming = state.isStreaming,
@@ -212,6 +231,86 @@ private fun ModelPicker(
                         expanded = false
                     },
                 )
+            }
+        }
+    }
+}
+
+/**
+ * The "this backend cannot run yet" card: what is missing, the command that fixes it, and the
+ * terminal output while it runs. Kept distinct from an error — nothing failed, the CLI is absent.
+ */
+@Composable
+private fun SetupCard(
+    requirement: AgentSetupRequirement,
+    busy: Boolean,
+    output: String?,
+    canRun: Boolean,
+    onRun: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        shape = RoundedCornerShape(14.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)),
+    ) {
+        Column(
+            modifier = Modifier.padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = requirement.title,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.weight(1f),
+                )
+                if (busy) {
+                    Text(
+                        text = "Working…",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+            Text(
+                text = requirement.detail,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            requirement.hint?.let { hint ->
+                Text(
+                    text = hint,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            output?.takeIf { it.isNotBlank() }?.let { log ->
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(10.dp),
+                    color = MaterialTheme.colorScheme.background,
+                ) {
+                    Text(
+                        text = log,
+                        style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.padding(10.dp),
+                    )
+                }
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (canRun) {
+                    Button(onClick = onRun, enabled = !busy) {
+                        Text(if (busy) "Running…" else requirement.installLabel)
+                    }
+                }
+                if (!busy) {
+                    TextButton(onClick = onDismiss) { Text(if (canRun) "Dismiss" else "Close") }
+                }
             }
         }
     }

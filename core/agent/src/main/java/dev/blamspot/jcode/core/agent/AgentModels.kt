@@ -103,4 +103,28 @@ interface AgentBackend {
 
     /** Release all resources; the backend must not be used afterwards. */
     fun close()
+
+    /**
+     * What the user has to do before this backend can serve a turn, or null when nothing is needed.
+     *
+     * A CLI that is not installed, or is installed but not signed in, cannot start a chat: the pane
+     * asks for a prompt and then reports a failure from deep inside the protocol. Surfacing the
+     * missing prerequisite here lets the pane offer to fix it instead of explaining an error.
+     */
+    fun setupRequirement(): AgentSetupRequirement? = null
 }
+
+/**
+ * A prerequisite the user must satisfy before [AgentBackend.stream] can work.
+ *
+ * [installCommand] is run inside the Linux environment by the pane; it is null when the fix is
+ * something the user has to do themselves (e.g. an interactive sign-in), in which case [hint] says
+ * what to run. [refreshCommand] re-checks the requirement after an install.
+ */
+data class AgentSetupRequirement(
+    val title: String,
+    val detail: String,
+    val installCommand: String? = null,
+    val installLabel: String = "Install",
+    val hint: String? = null,
+)

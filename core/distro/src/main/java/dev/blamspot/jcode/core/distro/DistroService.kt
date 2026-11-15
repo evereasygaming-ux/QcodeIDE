@@ -2017,7 +2017,14 @@ class DistroService(
                 }
             })
 
-            val completed = process.waitFor(timeoutMs, TimeUnit.MILLISECONDS)
+            // A non-positive timeout means "run to completion": installers and first-time downloads
+            // (the agy CLI, toolchain bootstraps) have no honest upper bound.
+            val completed = if (timeoutMs > 0) {
+                process.waitFor(timeoutMs, TimeUnit.MILLISECONDS)
+            } else {
+                process.waitFor()
+                true
+            }
 
             if (!completed) {
                 process.destroyForcibly()

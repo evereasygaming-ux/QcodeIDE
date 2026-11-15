@@ -1142,16 +1142,45 @@ private val ExtensionActivation.blurb: String
         ExtensionActivation.Manual -> "Disabled — this extension's features stay off until you switch modes."
     }
 
+/**
+ * The store label shown in place of an extension's publisher.
+ *
+ * The bundled dev packs and the marketplace index both carry the upstream author ("jcode"), which is
+ * not a name this app ships under any more. Anything published by that upstream identity is presented
+ * as QCODE's own catalogue; third-party authors (a real name, a URL, an e-mail) keep their own credit.
+ */
+private val QCODE_PUBLISHER = "QCODE"
+
+private fun isUpstreamPublisher(name: String): Boolean = name.isBlank() ||
+    name.equals("jcode", ignoreCase = true) ||
+    name.equals("qcode", ignoreCase = true) ||
+    name.equals("qcode ide", ignoreCase = true) ||
+    name.equals("blamspot", ignoreCase = true) ||
+    name.contains("j-code", ignoreCase = true) ||
+    name.contains("qcode", ignoreCase = true)
+
+private fun displayAuthor(primary: String, others: List<String>): Pair<String, List<String>> {
+    val kept = others.filterNot(::isUpstreamPublisher)
+    return if (isUpstreamPublisher(primary)) {
+        QCODE_PUBLISHER to kept
+    } else {
+        primary to kept
+    }
+}
+
 /** Compact author line for list rows: "by X", "by X, Y", or "by X +N" when the co-author list is long. */
 private fun authorLabel(primary: String, others: List<String>): String {
-    if (others.isEmpty()) return "by $primary"
-    val inline = (listOf(primary) + others).joinToString(", ")
-    return if (others.size <= 2 && inline.length <= 28) "by $inline" else "by $primary +${others.size}"
+    val (lead, rest) = displayAuthor(primary, others)
+    if (rest.isEmpty()) return "by $lead"
+    val inline = (listOf(lead) + rest).joinToString(", ")
+    return if (rest.size <= 2 && inline.length <= 28) "by $inline" else "by $lead +${rest.size}"
 }
 
 /** Full author line for the detail page: "by X" plus a clearly-labelled co-author list. */
-private fun authorDetail(primary: String, others: List<String>): String =
-    if (others.isEmpty()) "by $primary" else "by $primary · with ${others.joinToString(", ")}"
+private fun authorDetail(primary: String, others: List<String>): String {
+    val (lead, rest) = displayAuthor(primary, others)
+    return if (rest.isEmpty()) "by $lead" else "by $lead · with ${rest.joinToString(", ")}"
+}
 
 private fun entrySubtitle(entry: MarketplaceEntry): String = buildString {
     append(entry.type.name.lowercase())
