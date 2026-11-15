@@ -1054,7 +1054,9 @@ private fun StorageAccessCard(
     ) {
         Text(
             text = "Lets QCODE IDE migrate projects created by older versions from the shared /QCODE IDE " +
-                "folder. Projects now live in app storage — browse them via the \"QCODE IDE Projects\" " +
+                "folder, and share your phone storage with the Linux environment — the guest mounts it " +
+                "at /sdcard, so agents and the terminal can read and write files outside the workspace. " +
+                "Projects now live in app storage — browse them via the \"QCODE IDE Projects\" " +
                 "entry in your Files app, or export them from the workspace menu.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,

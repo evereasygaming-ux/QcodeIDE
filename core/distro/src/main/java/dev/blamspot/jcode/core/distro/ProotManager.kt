@@ -1,6 +1,7 @@
 package dev.blamspot.jcode.core.distro
 
 import android.content.Context
+import android.os.Environment
 import java.io.File
 import java.io.FileOutputStream
 
@@ -42,6 +43,11 @@ class ProotManager(private val context: Context) {
                 // any tool that creates temp files (e.g. .NET/MSBuild fails GetTempPath with ENOENT).
                 "TMPDIR" to "/tmp",
                 "PATH" to "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+                // Where the phone's own storage is mounted inside the guest (see the shared-storage
+                // bind in buildProotCommand). Tools and agents that look for "the user's files" use
+                // these names, exactly like Termux does.
+                "EXTERNAL_STORAGE" to "/storage/emulated/0",
+                "ANDROID_STORAGE" to "/storage/emulated/0",
             )
             val mergedEnv = defaultEnv + env
             val envExports = mergedEnv.toSortedMap().entries.joinToString("; ") { (key, value) ->
@@ -325,6 +331,41 @@ class ProotManager(private val context: Context) {
     }
     
     /**
+     * Binds that expose the phone's shared storage inside the guest, or null when the app cannot
+     * read it (the user grants "All files access" from the setup deck or Android Settings).
+     *
+     * The guest-side directories are created here instead of being left to proot: a bind target
+     * proot cannot create aborts the entire spawn, which would take the terminal down with it.
+     */
+    private fun sharedStorageBinds(rootfsPath: File): List<String>? {
+        if (!hasAllFilesAccess()) return null
+        if (Environment.getExternalStorageState() != Environment.MEDIA_MOUNTED) return null
+        val hostRoot = runCatching { Environment.getExternalStorageRootDirectory().absolutePath }
+            .getOrNull()
+            ?: return null
+        // A bind whose host path cannot be read makes proot abort the whole spawn, so the shared
+        // volume is only bound when it is actually reachable.
+        val hostDir = File(hostRoot)
+        if (!hostDir.isDirectory || !hostDir.canRead()) return null
+        val guestSdcard = File(rootfsPath, "sdcard")
+        val guestStorage = File(rootfsPath, "storage/emulated/0")
+        if (!guestSdcard.isDirectory && !guestSdcard.mkdirs()) return null
+        if (!guestStorage.isDirectory && !guestStorage.mkdirs()) return null
+        return listOf(
+            "-b", "$hostRoot:/sdcard",
+            "-b", "$hostRoot:/storage/emulated/0",
+        )
+    }
+
+    /**
+     * Whether the user granted the app "All files access" (MANAGE_EXTERNAL_STORAGE). It is a
+     * system-settings toggle rather than a runtime permission, so it is read from the platform.
+     */
+    private fun hasAllFilesAccess(): Boolean = runCatching {
+        Environment.isExternalStorageManager()
+    }.getOrDefault(false)
+
+    /**
      * Build a proot command line for spawning a shell or running a command.
      */
     fun buildProotCommand(
@@ -429,6 +470,15 @@ class ProotManager(private val context: Context) {
         if (sourcesDir.exists() || sourcesDir.mkdirs()) {
             args.addAll(listOf("-b", "${sourcesDir.absolutePath}:${WorkspaceHostPaths.SOURCES_GUEST}"))
         }
+
+        // The phone's shared storage (Downloads, DCIM, Documents, …) inside the guest. Without this
+        // bind the guest can only see the workspace and the app's private files, so an agent asked
+        // to scan a folder in phone storage fails with "no such file or directory" and quietly
+        // limits itself to the workspace. Bound under BOTH spellings — /sdcard (what users type)
+        // and /storage/emulated/0 (what tools and agents resolve) — so either absolute path works.
+        // The guest-side directories are created here rather than left to proot, because a bind
+        // target that proot cannot create aborts the whole spawn (terminal included).
+        sharedStorageBinds(rootfsPath)?.let { args.addAll(it) }
 
         // Working directory
         args.addAll(listOf("-w", workdir))
