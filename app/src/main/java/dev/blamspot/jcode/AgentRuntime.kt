@@ -57,9 +57,14 @@ object AgentRuntime {
         val rootfs = distroService.activeRootfsPath()
         val home = if (user == "root") "/root" else "/home/$user"
         val deepxScript = "$home/.qcode/deepx/deepx-lite-mcp.mjs"
+        // The guest is not a shell we can ask; the installer's output path is a fact on disk. If the
+        // binary is already there the pane skips the install card and goes straight to chat.
+        val agyInstalled = listOf("$home/.local/bin/agy", "/root/.local/bin/agy", "/usr/local/bin/agy")
+            .any { File(rootfs, it.trimStart('/')).isFile }
         val agyBackend = AgyAcpBackend(
             launcher = launcher,
             defaultWorkdir = distroService.environmentState.value.runtime.workdir,
+            cliInstalled = agyInstalled,
             mcpServers = {
                 // The extension manager's switch decides whether the agent gets the Flow tools at
                 // all; a disabled extension must not leave a dead server in every new session.
@@ -91,9 +96,9 @@ object AgentRuntime {
                     error("Setup failed: $reason")
                 }
             },
-            // Setup runs through exec(), not the stdio launcher, so the pane's card needs the backend
-            // to notice the requirement itself; a stale auth flag would keep the card after sign-in.
-            onSetupComplete = { agyBackend.resetProcess() },
+            // Setup runs through exec(), not the stdio launcher, so the backend tracks the outcome
+            // itself: install → sign-in card, sign-in → no card, and a fresh process either way.
+            onSetupComplete = { command -> agyBackend.onSetupFinished(command) },
             scope = scope,
             stores = mapOf(
                 AgentKind.CLAUDE to AgentChatStore(File(storeDir, "chat.json")),

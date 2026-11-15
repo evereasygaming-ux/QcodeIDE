@@ -15,8 +15,6 @@ import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.launch
@@ -53,6 +51,8 @@ class AgyAcpBackend(
     private val defaultWorkdir: String = "/root",
     private val cliPath: String = "agy",
     private val mcpServers: () -> List<AcpMcpServer> = { emptyList() },
+    /** Whether ~/.local/bin/agy already exists in the guest; false makes the pane offer an install. */
+    cliInstalled: Boolean = true,
 ) : AgentBackend {
 
     override val kind: AgentKind = AgentKind.AGY
@@ -94,29 +94,32 @@ class AgyAcpBackend(
     @Volatile
     private var promptKey: String? = null
 
-    /** Set when a turn was rejected because the CLI has no credentials; cleared by [clearAuthError]. */
+    /** Set when the CLI has no credentials: either a turn was rejected, or it was just installed. */
     private val _authError = MutableStateFlow(false)
-    val authError: StateFlow<Boolean> = _authError.asStateFlow()
+
+    @Volatile
+    private var installed = cliInstalled
 
     override fun availableModels(): List<AgentModel> = modelOptions
 
-    override fun setupRequirement(): AgentSetupRequirement = when {
-        // No credentials yet: the CLI exists (or is about to be installed), so the next thing it
-        // needs is a sign-in. `agy` prints the authorization link on stdout and waits.
+    override fun setupRequirement(): AgentSetupRequirement? = when {
+        // The CLI rejected a turn for missing credentials, or an install just finished: it exists,
+        // so the next step is a sign-in. `agy acp --login` prints an authorization URL and waits
+        // for the callback, which is the flow that works in a session with no browser to open.
         _authError.value -> AgentSetupRequirement(
             title = "Sign in to Antigravity",
-            detail = "One sign-in per Linux environment. QCODE opens a terminal running " +
-                "\"agy\", which prints a link — open it, approve, and the CLI stores the session " +
-                "for every chat after this.",
-            installCommand = "AGY=\"$HOME/.local/bin/agy\"; " +
+            detail = "One sign-in per Linux environment. QCODE runs `agy acp --login`; it " +
+                "prints an authorization link — open it, approve, and every chat reuses the " +
+                "saved session.",
+            installCommand = "AGY=\"\$HOME/.local/bin/agy\"; " +
                 "[ -x \"\$AGY\" ] || AGY=\$(command -v agy 2>/dev/null); " +
                 "[ -n \"\$AGY\" ] || { echo 'agy CLI not found — install it first' >&2; exit 127; }; " +
-                "exec \"\$AGY\"",
+                "exec \"\$AGY\" acp --login",
             installLabel = "Sign in",
-            hint = "A terminal opens with the agy CLI. Approve the link it prints, then return here.",
+            hint = "Open the link the CLI prints, approve the sign-in, then return here.",
         )
 
-        else -> AgentSetupRequirement(
+        !installed -> AgentSetupRequirement(
             title = "Antigravity is not installed",
             detail = "The Agent panel drives Google's agy CLI inside the Linux environment. " +
                 "QCODE can install it for you: it downloads the official installer and puts the " +
@@ -125,18 +128,21 @@ class AgyAcpBackend(
             installLabel = "Install agy",
             hint = "Installs the official CLI into the Linux environment (~100 MB download).",
         )
+
+        else -> null
     }
 
     /**
-     * The pane ran the install/sign-in command.
+     * The pane finished running a setup command.
      *
-     * The next turn must start a fresh `agy` process, so drop any half-started one now. Credentials
-     * live in the CLI's own config (outside the process), so a cleared requirement is a reasonable
-     * optimistic read; if the sign-in did not take, the next turn raises the card again.
+     * An install leaves the CLI present but unauthenticated, so the card moves straight to the
+     * sign-in step; a sign-in clears the requirement. Either way the next turn must start a fresh
+     * `agy` process, so drop any half-started one now.
      */
-    fun resetProcess() {
+    fun onSetupFinished(command: String) {
+        installed = true
+        _authError.value = command == AGY_INSTALL_COMMAND
         closeProcessLocked()
-        _authError.value = false
     }
 
     override fun resolvePermission(requestId: String, allow: Boolean) {
@@ -613,11 +619,26 @@ class AgyAcpBackend(
         }
     }
 
-    private fun processExitResponse(): JsonObject = buildJsonObject {
-        put("error", buildJsonObject {
-            put("code", -32000)
-            put("message", "Antigravity CLI exited")
-        })
+    private fun processExitResponse(): JsonObject {
+        val detail = synchronized(stderrTail) {
+            stderrTail.lineSequence().lastOrNull { it.isNotBlank() }
+        }
+        // A missing binary also exits the process. Keep that distinct from the ACP auth rejection:
+        // claiming -32000 here made every "agy not installed" launch look like a sign-in problem.
+        if (detail != null && detail.contains("auth", ignoreCase = true) &&
+            (detail.contains("required", ignoreCase = true) || detail.contains("login", ignoreCase = true))
+        ) {
+            _authError.value = true
+        }
+        return buildJsonObject {
+            put("error", buildJsonObject {
+                put("code", PROCESS_EXIT)
+                put(
+                    "message",
+                    detail?.let { "Antigravity CLI exited: $it" } ?: "Antigravity CLI exited",
+                )
+            })
+        }
     }
 
     private fun command(): String {
@@ -649,6 +670,9 @@ class AgyAcpBackend(
         const val SESSION_TIMEOUT_MS = 120_000L
         const val CONFIG_TIMEOUT_MS = 30_000L
         const val AUTH_REQUIRED = -32000L
+
+        /** Local failure (the process died or never started), not a protocol error from the CLI. */
+        const val PROCESS_EXIT = -32603L
         const val STDERR_LIMIT = 4_000
         const val STDERR_TAIL_CHARS = 600
         const val PROCESS_EXIT_METHOD = "\$/process_exit"

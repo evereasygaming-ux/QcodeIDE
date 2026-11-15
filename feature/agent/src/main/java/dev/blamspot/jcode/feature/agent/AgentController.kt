@@ -56,8 +56,8 @@ class AgentController(
      * nothing but the hint text, which is the right behaviour for a backend that ships no command.
      */
     private val setupRunner: (suspend (String, (String) -> Unit) -> Unit)? = null,
-    /** Called after a setup command finishes, so a backend can drop the process it failed to start. */
-    private val onSetupComplete: (() -> Unit)? = null,
+    /** Called with the command that just finished, so a backend can update its setup state. */
+    private val onSetupComplete: ((String) -> Unit)? = null,
 ) {
     init {
         require(backends.isNotEmpty()) { "AgentController needs at least one backend" }
@@ -67,6 +67,8 @@ class AgentController(
     val state: StateFlow<AgentUiState> = _state.asStateFlow()
 
     private var turn: Job? = null
+    /** The install/sign-in command, tracked apart from [turn] so a chat message cannot orphan it. */
+    private var setupJob: Job? = null
 
     private fun backend(): AgentBackend = backends.getValue(_state.value.kind)
 
@@ -139,7 +141,14 @@ class AgentController(
             } finally {
                 if (_state.value.kind == turnKind) {
                     finishStreaming(assistantId)
-                    _state.update { it.copy(isStreaming = false) }
+                    // A turn can be the first thing to discover that the CLI needs credentials;
+                    // re-read the requirement so the pane can offer the sign-in card immediately.
+                    _state.update {
+                        it.copy(
+                            isStreaming = false,
+                            setupRequirement = turnBackend.setupRequirement(),
+                        )
+                    }
                     persist()
                 }
             }
@@ -170,8 +179,8 @@ class AgentController(
     /**
      * Install or sign in to the selected backend's CLI, streaming its output into [AgentUiState.setupOutput].
      *
-     * The command runs in the Linux environment exactly as written, so an installer that needs a
-     * terminal (the agy sign-in flow prints a link and waits) behaves the way it would in a shell.
+     * The command runs in the Linux environment exactly as written; its output streams into the
+     * card, so an installer's progress and the agy sign-in link are visible without leaving the pane.
      */
     fun runSetup() {
         val state = _state.value
@@ -181,7 +190,7 @@ class AgentController(
         if (state.setupBusy) return
 
         _state.update { it.copy(setupBusy = true, setupOutput = null, error = null) }
-        turn = scope.launch {
+        setupJob = scope.launch {
             val lines = mutableListOf<String>()
             try {
                 runner(command) { line ->
@@ -190,9 +199,14 @@ class AgentController(
                     val tail = synchronized(lines) { lines.takeLast(20) }.joinToString("\n")
                     _state.update { it.copy(setupOutput = tail) }
                 }
-                onSetupComplete?.invoke()
+                onSetupComplete?.invoke(command)
                 _state.update {
-                    it.copy(setupBusy = false, setupOutput = "Setup finished.")
+                    it.copy(
+                        setupBusy = false,
+                        setupOutput = "Setup finished.",
+                        // Install → the card becomes "Sign in"; sign-in → it goes away.
+                        setupRequirement = backend().setupRequirement(),
+                    )
                 }
             } catch (cancelled: CancellationException) {
                 throw cancelled
@@ -210,6 +224,9 @@ class AgentController(
 
     /** The pane's "I've finished signing in" / dismiss: drop the card and let the next turn try. */
     fun dismissSetup() {
+        // A login flow can sit waiting for a browser callback forever; closing the card must stop it.
+        setupJob?.cancel()
+        setupJob = null
         _state.update { it.copy(setupRequirement = null, setupBusy = false, setupOutput = null) }
     }
 
