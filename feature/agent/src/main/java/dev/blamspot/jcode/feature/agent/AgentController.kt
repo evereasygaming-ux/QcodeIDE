@@ -22,6 +22,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.UUID
 
+/** How much of an interactive setup's output to keep; the agy URL alone is around 1 KB. */
+private const val SETUP_OUTPUT_LIMIT = 6000
+
 /** Everything the Agent pane renders. Immutable so recomposition is driven by one value. */
 data class AgentUiState(
     val kind: AgentKind = AgentKind.CLAUDE,
@@ -35,11 +38,27 @@ data class AgentUiState(
     /** Set when the selected backend cannot run until the user installs or signs in to its CLI. */
     val setupRequirement: AgentSetupRequirement? = null,
     val setupBusy: Boolean = false,
+    /** The setup command is waiting for a line from the user (the agy login code). */
+    val setupNeedsInput: Boolean = false,
     val setupOutput: String? = null,
     val sessionId: String? = null,
     val inputTokens: Long = 0,
     val outputTokens: Long = 0,
 )
+
+/**
+ * A running setup command that may ask for input.
+ *
+ * Installers are one-shot and finish on their own; `agy acp --login` prints an authorization URL
+ * and then reads the code from stdin, so the pane has to keep the process alive between the two.
+ */
+interface AgentSetupSession {
+    /** Send one line to the command's stdin. */
+    fun submit(text: String)
+
+    /** Stop the command; safe to call more than once. */
+    fun close()
+}
 
 /**
  * Drives one chat per provider. Owns the message list, the in-flight turn, the approval request
@@ -56,6 +75,15 @@ class AgentController(
      * nothing but the hint text, which is the right behaviour for a backend that ships no command.
      */
     private val setupRunner: (suspend (String, (String) -> Unit) -> Unit)? = null,
+    /**
+     * Starts an interactive setup command and returns the handle that can feed it stdin.
+     * [onExit] reports the process exit code (null when it was killed) so the pane can update.
+     */
+    private val setupSessionStarter: (
+        command: String,
+        onLine: (String) -> Unit,
+        onExit: (Int?) -> Unit,
+    ) -> AgentSetupSession? = null,
     /** Called with the command that just finished, so a backend can update its setup state. */
     private val onSetupComplete: ((String) -> Unit)? = null,
 ) {
@@ -69,6 +97,9 @@ class AgentController(
     private var turn: Job? = null
     /** The install/sign-in command, tracked apart from [turn] so a chat message cannot orphan it. */
     private var setupJob: Job? = null
+
+    /** The live stdin of an interactive setup command, if any. */
+    private var setupSession: AgentSetupSession? = null
 
     private fun backend(): AgentBackend = backends.getValue(_state.value.kind)
 
@@ -186,8 +217,14 @@ class AgentController(
         val state = _state.value
         val requirement = state.setupRequirement ?: return
         val command = requirement.installCommand ?: return
-        val runner = setupRunner ?: return
         if (state.setupBusy) return
+
+        if (requirement.interactive) {
+            runInteractiveSetup(command)
+            return
+        }
+
+        val runner = setupRunner ?: return
 
         _state.update { it.copy(setupBusy = true, setupOutput = null, error = null) }
         setupJob = scope.launch {
@@ -222,12 +259,83 @@ class AgentController(
         }
     }
 
+    private fun runInteractiveSetup(command: String) {
+        val starter = setupSessionStarter ?: return
+        val kind = _state.value.kind
+        _state.update {
+            it.copy(setupBusy = true, setupNeedsInput = false, setupOutput = null, error = null)
+        }
+
+        fun append(line: String) {
+            if (_state.value.kind != kind) return
+            _state.update { current ->
+                val merged = listOfNotNull(current.setupOutput?.takeIf { it.isNotBlank() }, line)
+                    .joinToString("\n")
+                current.copy(setupOutput = merged.takeLast(SETUP_OUTPUT_LIMIT))
+            }
+        }
+
+        val session = starter(
+            command,
+            ::append,
+        ) exit@{ code ->
+            if (_state.value.kind != kind) return@exit
+            val succeeded = code == 0
+            if (succeeded) onSetupComplete?.invoke(command)
+            val nextRequirement = if (succeeded) backend().setupRequirement() else _state.value.setupRequirement
+            _state.update {
+                it.copy(
+                    setupBusy = false,
+                    setupNeedsInput = false,
+                    setupOutput = when {
+                        succeeded -> "Sign-in finished."
+                        code == null -> "Sign-in command stopped."
+                        else -> "Sign-in command exited with code $code."
+                    },
+                    setupRequirement = nextRequirement,
+                    error = if (succeeded) it.error else "Sign-in did not finish. Try again.",
+                )
+            }
+            setupSession = null
+        }
+        setupSession = session
+        if (session == null) {
+            _state.update {
+                it.copy(setupBusy = false, error = "Could not start the sign-in command.")
+            }
+        } else {
+            _state.update { it.copy(setupNeedsInput = true) }
+        }
+    }
+
+    /** Feed the authorization code (or callback URL) the agy login prompt asked for. */
+    fun submitSetupInput(text: String) {
+        val session = setupSession ?: return
+        val line = text.trim()
+        if (line.isEmpty()) return
+        session.submit(line)
+        _state.update {
+            val log = listOfNotNull(it.setupOutput?.takeIf { out -> out.isNotBlank() }, "✓ Code submitted.")
+                .joinToString("\n")
+            it.copy(setupOutput = log.takeLast(SETUP_OUTPUT_LIMIT))
+        }
+    }
+
     /** The pane's "I've finished signing in" / dismiss: drop the card and let the next turn try. */
     fun dismissSetup() {
         // A login flow can sit waiting for a browser callback forever; closing the card must stop it.
+        setupSession?.close()
+        setupSession = null
         setupJob?.cancel()
         setupJob = null
-        _state.update { it.copy(setupRequirement = null, setupBusy = false, setupOutput = null) }
+        _state.update {
+            it.copy(
+                setupRequirement = null,
+                setupBusy = false,
+                setupNeedsInput = false,
+                setupOutput = null,
+            )
+        }
     }
 
     /** Re-read the backend's requirement (e.g. after the environment wizard provisioned the runtime). */

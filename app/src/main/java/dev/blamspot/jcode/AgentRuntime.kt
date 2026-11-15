@@ -11,7 +11,11 @@ import dev.blamspot.jcode.core.browserext.BundledBrowserExtensions
 import dev.blamspot.jcode.core.browserext.BundledExtensionPreferences
 import dev.blamspot.jcode.core.distro.DistroService
 import dev.blamspot.jcode.feature.agent.AgentController
+import dev.blamspot.jcode.feature.agent.AgentSetupSession
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlin.concurrent.thread
 import java.io.File
 
 /**
@@ -96,6 +100,20 @@ object AgentRuntime {
                     error("Setup failed: $reason")
                 }
             },
+            // `agy acp --login` keeps running after it prints the URL: it reads the authorization
+            // code from stdin. exec() has no stdin, so the login gets a real stdio process whose
+            // input the pane can feed while the output streams into the card.
+            setupSessionStarter = { command, onLine, onExit ->
+                val process = distroService.spawnStdioProcess(
+                    command = command,
+                    workdir = distroService.environmentState.value.runtime.workdir,
+                    extraPath = extraPath,
+                    owner = "agent-setup",
+                )
+                process?.let { live ->
+                    StdinSetupSession(live, scope, onLine, onExit)
+                }
+            },
             // Setup runs through exec(), not the stdio launcher, so the backend tracks the outcome
             // itself: install → sign-in card, sign-in → no card, and a fresh process either way.
             onSetupComplete = { command -> agyBackend.onSetupFinished(command) },
@@ -122,5 +140,55 @@ object AgentRuntime {
             ?.sortedByDescending { it.name }
             ?.firstOrNull { File(it, "bin/node").exists() }
             ?.let { "$home/.nvm/versions/node/${it.name}/bin/node" }
+    }
+}
+
+/**
+ * A setup command with a live stdin pipe.
+ *
+ * Setup commands normally complete by themselves; the agy login is the exception, because its
+ * second half is the authorization code. [onExit] fires only while the session is still open, so
+ * a dismissed card cannot resurrect itself when the killed process finally reaps.
+ */
+private class StdinSetupSession(
+    private val process: Process,
+    scope: CoroutineScope,
+    onLine: (String) -> Unit,
+    onExit: (Int?) -> Unit,
+) : AgentSetupSession {
+    private val alive = java.util.concurrent.atomic.AtomicBoolean(true)
+
+    init {
+        val stdout = thread(name = "agy-login-out", isDaemon = true) {
+            runCatching {
+                process.inputStream.bufferedReader().forEachLine { line ->
+                    if (alive.get()) onLine(line)
+                }
+            }
+        }
+        val stderr = thread(name = "agy-login-err", isDaemon = true) {
+            runCatching {
+                process.errorStream.bufferedReader().forEachLine { line ->
+                    if (alive.get()) onLine(line)
+                }
+            }
+        }
+        scope.launch(Dispatchers.IO) {
+            val code = runCatching { process.waitFor() }.getOrNull()
+            runCatching { stdout.join(2_000) }
+            runCatching { stderr.join(2_000) }
+            if (alive.get()) onExit(code)
+        }
+    }
+
+    override fun submit(text: String) {
+        runCatching {
+            process.outputStream.write((text.trimEnd() + "\n").toByteArray())
+            process.outputStream.flush()
+        }
+    }
+
+    override fun close() {
+        if (alive.compareAndSet(true, false)) runCatching { process.destroy() }
     }
 }

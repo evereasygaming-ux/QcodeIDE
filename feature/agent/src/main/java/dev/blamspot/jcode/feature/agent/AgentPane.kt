@@ -1,6 +1,11 @@
 package dev.blamspot.jcode.feature.agent
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,6 +15,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
@@ -35,6 +41,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
@@ -64,6 +72,7 @@ fun AgentPane(controller: AgentController, modifier: Modifier = Modifier) {
         modifier = modifier,
         onRunSetup = controller::runSetup,
         onDismissSetup = controller::dismissSetup,
+        onSubmitSetupInput = controller::submitSetupInput,
     )
 }
 
@@ -79,6 +88,7 @@ fun AgentPane(
     modifier: Modifier = Modifier,
     onRunSetup: (() -> Unit)? = null,
     onDismissSetup: (() -> Unit)? = null,
+    onSubmitSetupInput: ((String) -> Unit)? = null,
 ) {
     val listState = rememberLazyListState()
     LaunchedEffect(state.messages.size, state.messages.lastOrNull()?.text, state.messages.lastOrNull()?.thinking) {
@@ -129,9 +139,11 @@ fun AgentPane(
             SetupCard(
                 requirement = requirement,
                 busy = state.setupBusy,
+                needsInput = state.setupNeedsInput,
                 output = state.setupOutput,
                 canRun = onRunSetup != null && requirement.installCommand != null,
                 onRun = onRunSetup ?: {},
+                onSubmitInput = onSubmitSetupInput,
                 onDismiss = onDismissSetup ?: {},
             )
         }
@@ -239,16 +251,30 @@ private fun ModelPicker(
 /**
  * The "this backend cannot run yet" card: what is missing, the command that fixes it, and the
  * terminal output while it runs. Kept distinct from an error — nothing failed, the CLI is absent.
+ *
+ * The agy sign-in is interactive: the CLI prints a long authorization URL and then reads a code
+ * from stdin. The output is selectable and the URL also gets explicit Open/Copy actions, because
+ * selecting a wrapped URL on a phone is exactly the moment it stops being possible.
  */
 @Composable
 private fun SetupCard(
     requirement: AgentSetupRequirement,
     busy: Boolean,
+    needsInput: Boolean,
     output: String?,
     canRun: Boolean,
     onRun: () -> Unit,
+    onSubmitInput: ((String) -> Unit)?,
     onDismiss: () -> Unit,
 ) {
+    val context = LocalContext.current
+    val uriHandler = LocalUriHandler.current
+    var code by remember { mutableStateOf("") }
+    val link = remember(output) {
+        output?.let { LOG_URL.find(it)?.value }
+            ?.trimEnd('.', ',', ')', '"', '\'')
+    }
+
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -270,7 +296,7 @@ private fun SetupCard(
                 )
                 if (busy) {
                     Text(
-                        text = "Working…",
+                        text = if (needsInput) "Waiting for code" else "Working…",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -294,13 +320,47 @@ private fun SetupCard(
                     shape = RoundedCornerShape(10.dp),
                     color = MaterialTheme.colorScheme.background,
                 ) {
-                    Text(
-                        text = log,
-                        style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
-                        color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.padding(10.dp),
-                    )
+                    SelectionContainer {
+                        Text(
+                            text = log,
+                            style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier
+                                .heightIn(max = 170.dp)
+                                .verticalScroll(rememberScrollState())
+                                .padding(10.dp),
+                        )
+                    }
                 }
+            }
+            if (link != null) {
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    TextButton(onClick = { uriHandler.openUri(link) }) { Text("Open link") }
+                    TextButton(
+                        onClick = {
+                            context.getSystemService(ClipboardManager::class.java)
+                                ?.setPrimaryClip(ClipData.newPlainText("Sign-in link", link))
+                        },
+                    ) { Text("Copy link") }
+                }
+            }
+            if (needsInput && onSubmitInput != null) {
+                OutlinedTextField(
+                    value = code,
+                    onValueChange = { code = it },
+                    label = { Text(requirement.inputLabel) },
+                    textStyle = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
+                    minLines = 1,
+                    maxLines = 3,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Button(
+                    onClick = {
+                        onSubmitInput(code)
+                        code = ""
+                    },
+                    enabled = code.isNotBlank(),
+                ) { Text("Submit code") }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (canRun) {
@@ -308,13 +368,16 @@ private fun SetupCard(
                         Text(if (busy) "Running…" else requirement.installLabel)
                     }
                 }
-                if (!busy) {
-                    TextButton(onClick = onDismiss) { Text(if (canRun) "Dismiss" else "Close") }
+                if (!busy || needsInput) {
+                    TextButton(onClick = onDismiss) { Text(if (busy) "Cancel" else if (canRun) "Dismiss" else "Close") }
                 }
             }
         }
     }
 }
+
+/** The first http(s) URL in a setup log; the agy authorization link is the only one it prints. */
+private val LOG_URL = Regex("https?://\\S+")
 
 @Composable
 private fun EmptyHint() {

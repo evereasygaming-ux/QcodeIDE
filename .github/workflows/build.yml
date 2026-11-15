@@ -123,27 +123,27 @@ jobs:
 
       # The real signing key lives in the admin-only `release` environment, so the workflow cannot
       # produce the shipping APK. It can still produce an *installable* minified build by signing
-      # with the debug keystore: enough to verify on a device that R8 kept every extension-facing
+      # with the committed test key: enough to verify on a device that R8 kept every extension-facing
       # name, and otherwise throwaway.
-      - name: Sign the release build with the debug key for testing
+      #
+      # The test key is deliberately fixed rather than generated per run: Android only upgrades an
+      # installed app in place when the signature matches. A fresh key every run forced an uninstall,
+      # which wipes the provisioned Linux environment (~2.5 GB) before every on-device check.
+      - name: Sign the release build with the test key
         run: |
           set -eu
           apk="$(find app/build/outputs/apk/release -name '*.apk' ! -name '*test*' | head -1)"
           [ -n "$apk" ] || { echo "::error::no release APK produced"; exit 1; }
-          keystore=/tmp/qcode-release-test.keystore
-          # A keystore of our own rather than the runner's debug one: AGP only writes the debug
-          # keystore when it has to sign a debug variant, and relying on that side effect breaks
-          # the step the moment the debug build is cached or its signing changes.
-          keytool -genkeypair -noprompt \
-            -keystore "$keystore" -storepass android -keypass android \
-            -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 \
-            -dname "CN=QCODE Release Test,O=QCODE,C=US"
+          # Public test-only key (app/release-test.p12). Never use it for a distributed build; the
+          # shipping key is the admin-only `release` environment keystore.
+          keystore=app/release-test.p12
           aligned=app/build/outputs/apk/release/app-release-test-aligned.apk
           out=app/build/outputs/apk/release/app-release-test.apk
           "$ANDROID_HOME/build-tools/34.0.0/zipalign" -f -p 4 "$apk" "$aligned"
           "$ANDROID_HOME/build-tools/34.0.0/apksigner" sign \
-            --ks "$keystore" --ks-pass pass:android --key-pass pass:android \
-            --ks-key-alias androiddebugkey --out "$out" "$aligned"
+            --ks "$keystore" --ks-type PKCS12 \
+            --ks-pass pass:qcode-test --key-pass pass:qcode-test \
+            --ks-key-alias qcode-release-test --out "$out" "$aligned"
           "$ANDROID_HOME/build-tools/34.0.0/apksigner" verify --print-certs "$out" | head -4
           ls -l app/build/outputs/apk/debug/*.apk "$out"
 

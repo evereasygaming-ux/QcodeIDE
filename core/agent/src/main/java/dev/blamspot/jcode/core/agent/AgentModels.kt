@@ -127,4 +127,11 @@ data class AgentSetupRequirement(
     val installCommand: String? = null,
     val installLabel: String = "Install",
     val hint: String? = null,
+    /**
+     * True when [installCommand] stays alive and reads a line from stdin (the agy login code),
+     * so the pane has to offer an input field and keep the process running between steps.
+     */
+    val interactive: Boolean = false,
+    /** Label of the input field when [interactive]. */
+    val inputLabel: String = "Authorization code or callback URL",
 )

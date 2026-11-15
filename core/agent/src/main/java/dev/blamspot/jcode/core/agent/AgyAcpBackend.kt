@@ -115,8 +115,9 @@ class AgyAcpBackend(
                 "[ -x \"\$AGY\" ] || AGY=\$(command -v agy 2>/dev/null); " +
                 "[ -n \"\$AGY\" ] || { echo 'agy CLI not found — install it first' >&2; exit 127; }; " +
                 "exec \"\$AGY\" acp --login",
-            installLabel = "Sign in",
-            hint = "Open the link the CLI prints, approve the sign-in, then return here.",
+            installLabel = "Start sign-in",
+            hint = "Open the link below, approve the sign-in, then paste the code it gives you.",
+            interactive = true,
         )
 
         !installed -> AgentSetupRequirement(
