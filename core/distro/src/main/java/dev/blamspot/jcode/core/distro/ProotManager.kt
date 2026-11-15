@@ -340,9 +340,8 @@ class ProotManager(private val context: Context) {
     private fun sharedStorageBinds(rootfsPath: File): List<String>? {
         if (!hasAllFilesAccess()) return null
         if (Environment.getExternalStorageState() != Environment.MEDIA_MOUNTED) return null
-        val hostRoot = runCatching { Environment.getExternalStorageRootDirectory().absolutePath }
-            .getOrNull()
-            ?: return null
+        // /storage/emulated/0 — the shared volume the phone shows in Files.
+        val hostRoot = Environment.getExternalStorageDirectory().absolutePath
         // A bind whose host path cannot be read makes proot abort the whole spawn, so the shared
         // volume is only bound when it is actually reachable.
         val hostDir = File(hostRoot)
