@@ -307,9 +307,10 @@ class DeepXRuntime(
     /**
      * Drop this extension's entry from the guest's agent MCP config.
      *
-     * Only `deepx-flow` is touched: the file is the user's agent configuration and may hold other
-     * servers, which a bundled extension has no business editing. A missing file or entry is a
-     * no-op, so the disable path stays safe when the runtime never started.
+     * Only the CoreX keys are touched: the file is the user's agent configuration and may hold other
+     * servers, which a bundled extension has no business editing. `deepx-flow` is the name older
+     * builds wrote, so it is removed too. A missing file or entry is a no-op, so the disable path
+     * stays safe when the runtime never started.
      */
     private fun removeMcpConfig() {
         if (!distroService.isRuntimeReady()) return
@@ -319,7 +320,10 @@ class DeepXRuntime(
         if (!configFile.isFile) return
         val root = runCatching { JSONObject(configFile.readText()) }.getOrNull() ?: return
         val servers = root.optJSONObject("mcpServers") ?: return
-        if (servers.remove("deepx-flow") == null) return
+        val hadLegacy = servers.has("deepx-flow")
+        val removed = servers.remove("corex-flow")
+        servers.remove("deepx-flow")
+        if (removed == null && !hadLegacy) return
         val temp = File(configFile.parentFile, configFile.name + ".tmp")
         temp.writeText(root.toString(2))
         temp.setReadable(true, false)
@@ -352,8 +356,12 @@ class DeepXRuntime(
             }
         }
         val servers = root.optJSONObject("mcpServers") ?: JSONObject()
+        // Older builds and the standalone installer registered the bridge as `deepx-flow`. Rename
+        // that entry in place so the agent sees exactly one server and calls the product CoreX;
+        // the `deepx_*` tool ids inside the server are unchanged.
+        servers.remove("deepx-flow")
         servers.put(
-            "deepx-flow",
+            "corex-flow",
             JSONObject()
                 .put("command", "node")
                 .put("args", JSONArray().put(scriptGuestPath)),

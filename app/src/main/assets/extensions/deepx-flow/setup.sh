@@ -81,9 +81,11 @@ echo "✅ Global Plugin installed with active rules and skills across all worksp
 
 # 5. Install MCP Instructions for zero-latency AI recognition
 MCP_INST_DIRS=(
-  "$HOME/.gemini/antigravity/mcp/deepx-flow"
-  "$HOME/.gemini/antigravity-ide/mcp/deepx-flow"
+  "$HOME/.gemini/antigravity/mcp/corex-flow"
+  "$HOME/.gemini/antigravity-ide/mcp/corex-flow"
 )
+# Remove the folder name older installers used, or the agent still lists it as a second server.
+rm -rf "$HOME/.gemini/antigravity/mcp/deepx-flow" "$HOME/.gemini/antigravity-ide/mcp/deepx-flow"
 for idir in "${MCP_INST_DIRS[@]}"; do
   mkdir -p "$idir"
   if [ -f "$MCP_SERVER_DIR/instructions.md" ]; then
@@ -105,38 +107,37 @@ if [ ! -f "$MCP_CONFIG" ]; then
   cat << JSON_EOF > "$MCP_CONFIG"
 {
   "mcpServers": {
-    "deepx-flow": {
+    "corex-flow": {
       "command": "$ENTRY_CMD",
       "args": ["$ENTRY_ARG"]
     }
   }
 }
 JSON_EOF
-  echo "✅ Created $MCP_CONFIG with deepx-flow registered."
+  echo "✅ Created $MCP_CONFIG with corex-flow registered."
 else
-  # Check if deepx-flow is already registered
-  if grep -q "deepx-flow" "$MCP_CONFIG" 2>/dev/null; then
-    echo "ℹ️ deepx-flow is already registered in $MCP_CONFIG."
-  else
-    echo "Updating $MCP_CONFIG to add deepx-flow..."
-    node -e '
-      const fs = require("fs");
-      const path = process.argv[1];
-      const entryArg = process.argv[2];
-      try {
-        const cfg = JSON.parse(fs.readFileSync(path, "utf-8"));
-        if (!cfg.mcpServers) cfg.mcpServers = {};
-        cfg.mcpServers["deepx-flow"] = {
-          command: "node",
-          args: [entryArg]
-        };
-        fs.writeFileSync(path, JSON.stringify(cfg, null, 2), "utf-8");
-        console.log("✅ Successfully updated mcp_config.json.");
-      } catch (err) {
-        console.error("Warning: could not parse mcp_config.json:", err.message);
+  echo "Updating $MCP_CONFIG to register corex-flow..."
+  node -e '
+    const fs = require("fs");
+    const path = process.argv[1];
+    const entryArg = process.argv[2];
+    try {
+      const cfg = JSON.parse(fs.readFileSync(path, "utf-8"));
+      if (!cfg.mcpServers) cfg.mcpServers = {};
+      // Older installers wrote the same entry as deepx-flow. Rename it in place so the agent
+      // sees one server called CoreX (the deepx_* tool ids are unchanged).
+      const legacy = cfg.mcpServers["deepx-flow"];
+      if (legacy && !cfg.mcpServers["corex-flow"]) cfg.mcpServers["corex-flow"] = legacy;
+      delete cfg.mcpServers["deepx-flow"];
+      if (!cfg.mcpServers["corex-flow"]) {
+        cfg.mcpServers["corex-flow"] = { command: "node", args: [entryArg] };
       }
-    ' "$MCP_CONFIG" "$ENTRY_ARG"
-  fi
+      fs.writeFileSync(path, JSON.stringify(cfg, null, 2), "utf-8");
+      console.log("✅ Successfully updated mcp_config.json.");
+    } catch (err) {
+      console.error("Warning: could not parse mcp_config.json:", err.message);
+    }
+  ' "$MCP_CONFIG" "$ENTRY_ARG"
 fi
 
 # 7. Register Antigravity URL scheme (antigravity://) for 1-click launch from Chrome extension
