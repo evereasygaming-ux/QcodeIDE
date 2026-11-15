@@ -10,6 +10,7 @@ import dev.blamspot.jcode.core.agent.ClaudeAgentBackend
 import dev.blamspot.jcode.core.browserext.BundledBrowserExtensions
 import dev.blamspot.jcode.core.browserext.BundledExtensionPreferences
 import dev.blamspot.jcode.core.distro.DistroService
+import dev.blamspot.jcode.feature.agent.AgentAttachmentStore
 import dev.blamspot.jcode.feature.agent.AgentController
 import dev.blamspot.jcode.feature.agent.AgentSetupSession
 import kotlinx.coroutines.CoroutineScope
@@ -122,6 +123,9 @@ object AgentRuntime {
                 AgentKind.CLAUDE to AgentChatStore(File(storeDir, "chat.json")),
                 AgentKind.AGY to AgentChatStore(File(storeDir, "chat-agy.json")),
             ),
+            // Files picked in the chat are copied into the shared volume's .agent-uploads folder,
+            // which every guest sees at /sdcard/.agent-uploads — the agent can then open them.
+            attachmentStore = AgentAttachmentStore(context),
         )
     }
 

@@ -2,6 +2,9 @@ package dev.blamspot.jcode.feature.agent
 
 import android.content.ClipData
 import android.content.ClipboardManager
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -92,7 +95,7 @@ fun AgentPane(controller: AgentController, modifier: Modifier = Modifier) {
     val state by controller.state.collectAsState()
     AgentPane(
         state = state,
-        onSend = controller::send,
+        onSend = { prompt -> controller.send(prompt) },
         onStop = controller::stop,
         onApprove = controller::approvePending,
         onApproveAlways = controller::approvePendingAlways,
@@ -104,6 +107,8 @@ fun AgentPane(controller: AgentController, modifier: Modifier = Modifier) {
         onRunSetup = controller::runSetup,
         onDismissSetup = controller::dismissSetup,
         onSubmitSetupInput = controller::submitSetupInput,
+        onAddAttachments = { uris -> controller.addAttachments(uris) },
+        onRemoveAttachment = controller::removeAttachment,
     )
 }
 
@@ -122,6 +127,8 @@ fun AgentPane(
     onRunSetup: (() -> Unit)? = null,
     onDismissSetup: (() -> Unit)? = null,
     onSubmitSetupInput: ((String) -> Unit)? = null,
+    onAddAttachments: (List<Uri>) -> Unit = {},
+    onRemoveAttachment: (String) -> Unit = {},
 ) {
     val listState = rememberLazyListState()
     LaunchedEffect(state.messages.size, state.messages.lastOrNull()?.text, state.messages.lastOrNull()?.thinking) {
@@ -190,8 +197,14 @@ fun AgentPane(
 
         AgentComposer(
             streaming = state.isStreaming,
+            attachments = state.pendingAttachments,
+            autoApprove = state.autoApproveTools,
             onSend = onSend,
             onStop = onStop,
+            onNewChat = onNewChat,
+            onToggleAutoApprove = onToggleAutoApprove,
+            onAddAttachments = onAddAttachments,
+            onRemoveAttachment = onRemoveAttachment,
         )
     }
 }
@@ -1280,10 +1293,100 @@ private fun displayToolName(raw: String): String {
 }
 
 @Composable
-private fun AgentComposer(streaming: Boolean, onSend: (String) -> Unit, onStop: () -> Unit) {
+/**
+ * The command list the composer suggests on a leading `/`.
+ *
+ * `local` commands are handled by the app (clear/stop/auto/attach); the rest are typed through to
+ * the CLI, which owns their real grammar — an unknown one comes back with the CLI's own error
+ * instead of the app pretending to know the protocol.
+ */
+private data class AgentCommand(val name: String, val summary: String, val local: Boolean = false)
+
+private val AGENT_COMMANDS = listOf(
+    AgentCommand("/help", "What the agent can do — the CLI answers"),
+    AgentCommand("/init", "Scan the project and write AGENTS.md"),
+    AgentCommand("/compact", "Compress the session history to free context"),
+    AgentCommand("/model", "Show or switch the model"),
+    AgentCommand("/stats", "Token usage for this session"),
+    AgentCommand("/share", "Export this chat"),
+    AgentCommand("/clear", "Start a fresh chat", local = true),
+    AgentCommand("/stop", "Stop the running turn", local = true),
+    AgentCommand("/auto", "Toggle tool auto-approval", local = true),
+    AgentCommand("/attach", "Attach a file, image or document", local = true),
+)
+
+private fun AgentComposer(
+    streaming: Boolean,
+    attachments: List<AgentAttachment>,
+    autoApprove: Boolean,
+    onSend: (String) -> Unit,
+    onStop: () -> Unit,
+    onNewChat: () -> Unit,
+    onToggleAutoApprove: ((Boolean) -> Unit)?,
+    onAddAttachments: (List<Uri>) -> Unit,
+    onRemoveAttachment: (String) -> Unit,
+) {
     var input by remember { mutableStateOf("") }
     val enabled = input.isNotBlank()
+    // The document picker: any mime, multiple files. The controller copies each pick into the
+    // agent-visible uploads folder; the chips below appear as the copies land.
+    val pickLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenMultipleDocuments(),
+    ) { uris -> if (uris.isNotEmpty()) onAddAttachments(uris) }
+
+    // The `/` menu: shows while the input looks like a command name being typed.
+    val query = input.trim().substringBefore(' ')
+    val commandMatches = if (query.startsWith("/") && query.length <= 16) {
+        AGENT_COMMANDS.filter { it.name.startsWith(query, ignoreCase = true) }
+    } else {
+        emptyList()
+    }
+
     Column(modifier = Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, top = 4.dp, bottom = 10.dp)) {
+        if (attachments.isNotEmpty()) {
+            // Staged attachments: one removable chip each, above the input so they read as part
+            // of the next message, not as decoration.
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState())
+                    .padding(bottom = 6.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                attachments.forEach { attachment ->
+                    Surface(
+                        shape = RoundedCornerShape(9.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                        border = BorderStroke(
+                            1.dp,
+                            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                        ),
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(start = 9.dp, end = 3.dp, top = 4.dp, bottom = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = (if (attachment.isImage) "🖼 " else "📄 ") + attachment.name,
+                                style = MaterialTheme.typography.labelMedium,
+                                maxLines = 1,
+                                modifier = Modifier.widthIn(max = 170.dp),
+                            )
+                            Text(
+                                text = "✕",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                modifier = Modifier
+                                    .clip(CircleShape)
+                                    .clickable { onRemoveAttachment(attachment.id) }
+                                    .padding(horizontal = 6.dp, vertical = 2.dp),
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
         Surface(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(18.dp),
@@ -1322,7 +1425,7 @@ private fun AgentComposer(streaming: Boolean, onSend: (String) -> Unit, onStop: 
                         Box {
                             if (input.isEmpty()) {
                                 Text(
-                                    text = "Message CoreX…",
+                                    text = "Message CoreX…  (/ commands · 📎 attach)",
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.62f),
                                 )
@@ -1331,6 +1434,23 @@ private fun AgentComposer(streaming: Boolean, onSend: (String) -> Unit, onStop: 
                         }
                     },
                 )
+                Spacer(Modifier.width(6.dp))
+                // Attach: the + opens the phone's document picker (files, images, docs).
+                Box(
+                    modifier = Modifier
+                        .size(34.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f))
+                        .clickable { pickLauncher.launch(arrayOf("*/*")) },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = "＋",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
                 Spacer(Modifier.width(6.dp))
                 Box(
                     modifier = Modifier
@@ -1369,8 +1489,84 @@ private fun AgentComposer(streaming: Boolean, onSend: (String) -> Unit, onStop: 
                 }
             }
         }
+
+        if (commandMatches.isNotEmpty()) {
+            // The command menu: rises above the composer while a `/name` is being typed.
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 6.dp),
+                shape = RoundedCornerShape(13.dp),
+                color = MaterialTheme.colorScheme.surface,
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+            ) {
+                Column(
+                    modifier = Modifier
+                        .heightIn(max = 260.dp)
+                        .verticalScroll(rememberScrollState()),
+                ) {
+                    commandMatches.forEach { command ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    when {
+                                        command.name == "/clear" -> {
+                                            input = ""
+                                            onNewChat()
+                                        }
+                                        command.name == "/stop" -> {
+                                            input = ""
+                                            onStop()
+                                        }
+                                        command.name == "/auto" && onToggleAutoApprove != null -> {
+                                            input = ""
+                                            onToggleAutoApprove(!autoApprove)
+                                        }
+                                        command.name == "/attach" -> {
+                                            input = ""
+                                            pickLauncher.launch(arrayOf("*/*"))
+                                        }
+                                        else -> {
+                                            // Pass-through: hand the command to the CLI, which
+                                            // owns its arguments and grammar.
+                                            input = "${command.name} "
+                                        }
+                                    }
+                                }
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = command.name,
+                                style = MaterialTheme.typography.labelLarge.copy(
+                                    fontFamily = FontFamily.Monospace,
+                                ),
+                                color = if (command.local) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.onSurface,
+                                fontWeight = FontWeight.SemiBold,
+                            )
+                            Spacer(Modifier.width(10.dp))
+                            Text(
+                                text = command.summary,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.weight(1f),
+                            )
+                            Text(
+                                text = if (command.local) "APP" else "CLI",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                letterSpacing = 0.8.sp,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
         Text(
-            text = "Enter sends · tools ask before changing files",
+            text = "Enter sends · / for commands · ＋ attaches files & images",
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f),
             modifier = Modifier.padding(start = 16.dp, top = 5.dp),

@@ -12,6 +12,7 @@ import dev.blamspot.jcode.core.agent.AgentSetupRequirement
 import dev.blamspot.jcode.core.agent.AgentSavedChat
 import dev.blamspot.jcode.core.agent.AgentToolCall
 import dev.blamspot.jcode.core.agent.AgentToolStatus
+import android.net.Uri
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -42,6 +43,8 @@ data class AgentUiState(
     val setupNeedsInput: Boolean = false,
     /** When true, tool calls run without asking (the pane shows an "AUTO" badge). */
     val autoApproveTools: Boolean = false,
+    /** Files staged for the next send (the composer shows them as chips). */
+    val pendingAttachments: List<AgentAttachment> = emptyList(),
     val setupOutput: String? = null,
     val sessionId: String? = null,
     val inputTokens: Long = 0,
@@ -86,6 +89,11 @@ class AgentController(
     )? = null,
     /** Called with the command that just finished, so a backend can update its setup state. */
     private val onSetupComplete: ((String) -> Unit)? = null,
+    /**
+     * Copies picked documents into an agent-visible uploads folder. Null disables attachments —
+     * the pane simply does not show the 📎 button.
+     */
+    private val attachmentStore: AgentAttachmentStore? = null,
 ) {
     init {
         require(backends.isNotEmpty()) { "AgentController needs at least one backend" }
@@ -134,25 +142,61 @@ class AgentController(
     }
 
     /** Start a turn. Ignored while another turn is running or when [prompt] is blank. */
+    /**
+     * Stage picked documents for the next send. Copying happens off the caller's thread and the
+     * chips appear as each file lands; a file the provider will not stream is skipped, not fatal.
+     */
+    fun addAttachments(uris: List<Uri>) {
+        val store = attachmentStore
+        if (store == null) {
+            _state.update { it.copy(error = "Attachments are not available in this build.") }
+            return
+        }
+        scope.launch {
+            try {
+                val added = store.copyIn(uris)
+                _state.update {
+                    it.copy(pendingAttachments = it.pendingAttachments + added, error = null)
+                }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (failure: Throwable) {
+                _state.update { it.copy(error = "Could not attach: ${failure.message ?: failure}") }
+            }
+        }
+    }
+
+    /** Un-stage one attachment (the ✕ on its chip). The copied file is cleaned up on new chat. */
+    fun removeAttachment(id: String) {
+        _state.update { it.copy(pendingAttachments = it.pendingAttachments.filterNot { a -> a.id == id }) }
+    }
+
     fun send(prompt: String) {
         val text = prompt.trim()
         if (text.isEmpty() || _state.value.isStreaming) return
+
+        // Staged attachments become part of THIS turn: the user's visible message names them, and
+        // the prompt the backend receives carries the agent-visible paths so its tools can open them.
+        val attachments = _state.value.pendingAttachments
+        val shownText = if (attachments.isEmpty()) text else text + "\n\n" + attachmentLabels(attachments)
+        val effectivePrompt = composePrompt(text, attachments)
 
         val assistantId = UUID.randomUUID().toString()
         _state.update {
             it.copy(
                 messages = it.messages +
-                    AgentMessage(UUID.randomUUID().toString(), AgentRole.USER, text = text) +
+                    AgentMessage(UUID.randomUUID().toString(), AgentRole.USER, text = shownText) +
                     AgentMessage(assistantId, AgentRole.ASSISTANT, isStreaming = true),
                 isStreaming = true,
                 error = null,
                 pendingApproval = null,
+                pendingAttachments = emptyList(),
             )
         }
         persist()
 
         val request = AgentRequest(
-            prompt = text,
+            prompt = effectivePrompt,
             model = _state.value.model,
             resumeSessionId = _state.value.sessionId,
         )
@@ -381,6 +425,8 @@ class AgentController(
             )
         }
         stores[_state.value.kind]?.clear()
+        // A fresh chat should not keep dragging the last chat's uploads along on disk.
+        attachmentStore?.clear()
     }
 
     fun close() {
@@ -505,4 +551,28 @@ class AgentController(
     }
 
     private fun persistNow() = persist()
+}
+
+/** The chip line shown under the user's message: one plain marker per attachment. */
+private fun attachmentLabels(attachments: List<AgentAttachment>): String =
+    attachments.joinToString(" · ") { a -> "📎 ${a.name}" }
+
+/**
+ * The prompt the backend actually receives: the user's text plus an attachments block naming the
+ * agent-visible path of every staged file. The agent is a CLI with file tools, so the paths — not
+ * the bytes — are the interface; each tool call it needs to read them still goes through the
+ * normal approval flow.
+ */
+private fun composePrompt(text: String, attachments: List<AgentAttachment>): String {
+    if (attachments.isEmpty()) return text
+    return buildString {
+        appendLine(text)
+        appendLine()
+        appendLine("[Attached files]")
+        for (a in attachments) appendLine("- ${a.name} (${a.mime}) at ${a.guestPath}")
+        appendLine(
+            "Read every attached file with your tools before answering; " +
+                "for images, actually view the image, do not guess from the filename.",
+        )
+    }
 }
