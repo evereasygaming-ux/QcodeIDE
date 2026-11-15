@@ -168,6 +168,11 @@ jobs:
           grep -E '^> Task .* FAILED|^FAILURE:|Execution failed for task|^Caused by: ' "$log" | head -4 | while IFS= read -r line; do
             printf '::error::%s\n' "${line//'%'/'%25'}"
           done
+          # A lint crash (lintVitalAnalyze) prints no "e:" compiler line; its stack trace is the
+          # only signal. Surface the deepest Caused-by lines as annotations too.
+          grep -E '^Caused by: ' "$log" | tail -3 | while IFS= read -r line; do
+            printf '::error::%s\n' "${line//'%'/'%25'}"
+          done
           # Lint writes its findings to a text report next to the build; surface the fatal ones as
           # annotations too, so a lintVital failure is readable without a session on the run page.
           for report in \
