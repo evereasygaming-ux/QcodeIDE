@@ -1292,7 +1292,6 @@ private fun displayToolName(raw: String): String {
     return name
 }
 
-@Composable
 /**
  * The command list the composer suggests on a leading `/`.
  *
@@ -1315,6 +1314,7 @@ private val AGENT_COMMANDS = listOf(
     AgentCommand("/attach", "Attach a file, image or document", local = true),
 )
 
+@Composable
 private fun AgentComposer(
     streaming: Boolean,
     attachments: List<AgentAttachment>,
