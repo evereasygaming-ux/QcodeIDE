@@ -40,6 +40,8 @@ data class AgentUiState(
     val setupBusy: Boolean = false,
     /** The setup command is waiting for a line from the user (the agy login code). */
     val setupNeedsInput: Boolean = false,
+    /** When true, tool calls run without asking (the pane shows an "AUTO" badge). */
+    val autoApproveTools: Boolean = false,
     val setupOutput: String? = null,
     val sessionId: String? = null,
     val inputTokens: Long = 0,
@@ -121,7 +123,9 @@ class AgentController(
         if (kind == _state.value.kind || !backends.containsKey(kind)) return
         stop()
         persist()
-        _state.value = loadState(kind)
+        // Switching CLI keeps the auto-approval choice: the user's answer was about the work, not
+        // about which backend runs it.
+        _state.value = loadState(kind).copy(autoApproveTools = _state.value.autoApproveTools)
     }
 
     fun selectModel(id: String) {
@@ -203,6 +207,28 @@ class AgentController(
         }
         _state.update { it.copy(pendingApproval = null) }
         persist()
+    }
+
+    /**
+     * Allow the pending tool AND every later call to it, for the rest of this session.
+     *
+     * A video pipeline asks for the same dispatch tool once per shot; answering each prompt by
+     * hand is what made the flow unusable. The backend remembers the tool, so the next call runs
+     * without a prompt.
+     */
+    fun approvePendingAlways() {
+        val pending = _state.value.pendingApproval ?: return
+        backend().allowToolForSession(pending.call.name)
+        approvePending(true)
+    }
+
+    /**
+     * Turn blanket auto-approval on or off. When on, every tool call runs without a prompt — the
+     * escape hatch for long unattended runs, and the reason the pane shows a clear "AUTO" badge
+     * while it is active.
+     */
+    fun setAutoApproveTools(enabled: Boolean) {
+        _state.update { it.copy(autoApproveTools = enabled) }
     }
 
     /**
@@ -408,7 +434,13 @@ class AgentController(
                     }
                 }
                 updateTool(event.call.id) { it.copy(status = AgentToolStatus.PENDING) }
-                _state.update { it.copy(pendingApproval = event) }
+                if (_state.value.autoApproveTools) {
+                    // The user turned auto-approval on: run the tool, show no prompt.
+                    backend().resolvePermission(event.requestId, true)
+                    updateTool(event.call.id) { it.copy(status = AgentToolStatus.APPROVED) }
+                } else {
+                    _state.update { it.copy(pendingApproval = event) }
+                }
             }
 
             is AgentEvent.Session -> {

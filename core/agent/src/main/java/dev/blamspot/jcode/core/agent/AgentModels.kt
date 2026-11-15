@@ -98,6 +98,15 @@ interface AgentBackend {
     /** Answer a pending [AgentEvent.PermissionRequest] by its [requestId]. */
     fun resolvePermission(requestId: String, allow: Boolean)
 
+    /**
+     * Remember that [toolName] may run without asking again for the rest of this session.
+     *
+     * A long agent run — a video pipeline that dispatches a hundred tool calls, a refactor across
+     * many files — asks for the same tool over and over, and answering each one by hand is pure
+     * friction. Backends that cannot pre-approve simply ignore this.
+     */
+    fun allowToolForSession(toolName: String) {}
+
     /** Stop the in-flight turn, if any. The backend stays usable for the next turn. */
     fun cancel()
 

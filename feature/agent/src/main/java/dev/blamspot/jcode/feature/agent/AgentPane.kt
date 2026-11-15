@@ -95,6 +95,8 @@ fun AgentPane(controller: AgentController, modifier: Modifier = Modifier) {
         onSend = controller::send,
         onStop = controller::stop,
         onApprove = controller::approvePending,
+        onApproveAlways = controller::approvePendingAlways,
+        onToggleAutoApprove = controller::setAutoApproveTools,
         onSelectModel = controller::selectModel,
         onSelectKind = controller::selectKind,
         onNewChat = controller::clearChat,
@@ -111,6 +113,8 @@ fun AgentPane(
     onSend: (String) -> Unit,
     onStop: () -> Unit,
     onApprove: (Boolean) -> Unit,
+    onApproveAlways: (() -> Unit)? = null,
+    onToggleAutoApprove: ((Boolean) -> Unit)? = null,
     onSelectModel: (String) -> Unit,
     onSelectKind: (AgentKind) -> Unit,
     onNewChat: () -> Unit,
@@ -142,6 +146,7 @@ fun AgentPane(
             onSelectKind = onSelectKind,
             onSelectModel = onSelectModel,
             onNewChat = onNewChat,
+            onToggleAutoApprove = onToggleAutoApprove,
         )
         GradientRule()
 
@@ -166,7 +171,7 @@ fun AgentPane(
             }
         }
 
-        state.pendingApproval?.let { approval -> ApprovalCard(approval, onApprove) }
+        state.pendingApproval?.let { approval -> ApprovalCard(approval, onApprove, onApproveAlways) }
 
         // A backend that cannot run yet says so here, with the button that fixes it, rather than
         // letting every prompt fail with a protocol error the user cannot act on.
@@ -197,6 +202,7 @@ private fun AgentHeader(
     onSelectKind: (AgentKind) -> Unit,
     onSelectModel: (String) -> Unit,
     onNewChat: () -> Unit,
+    onToggleAutoApprove: ((Boolean) -> Unit)? = null,
 ) {
     Column(
         modifier = Modifier
@@ -231,6 +237,12 @@ private fun AgentHeader(
                 )
             }
             Spacer(Modifier.weight(1f))
+            if (onToggleAutoApprove != null) {
+                AutoApproveChip(
+                    enabled = state.autoApproveTools,
+                    onToggle = { onToggleAutoApprove(!state.autoApproveTools) },
+                )
+            }
             if (state.inputTokens > 0 || state.outputTokens > 0) {
                 Text(
                     text = "${compact(state.inputTokens)} in · ${compact(state.outputTokens)} out",
@@ -251,6 +263,53 @@ private fun AgentHeader(
             Spacer(Modifier.weight(1f))
             ModelPicker(state.models, state.model, onSelectModel)
         }
+    }
+}
+
+/**
+ * The "run tools without asking" switch.
+ *
+ * Long agent runs (a video pipeline, a wide refactor) ask for the same tool over and over; this
+ * badge turns the prompting off for the session, and stays visible while it is on so nothing runs
+ * unattended by accident.
+ */
+@Composable
+private fun AutoApproveChip(enabled: Boolean, onToggle: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(999.dp))
+            .background(
+                if (enabled) MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)
+                else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
+            )
+            .border(
+                1.dp,
+                if (enabled) MaterialTheme.colorScheme.primary.copy(alpha = 0.55f)
+                else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f),
+                RoundedCornerShape(999.dp),
+            )
+            .clickable(onClick = onToggle)
+            .padding(horizontal = 9.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(5.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(6.dp)
+                .background(
+                    if (enabled) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                    CircleShape,
+                ),
+        )
+        Text(
+            text = "AUTO",
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.SemiBold,
+            letterSpacing = 0.9.sp,
+            color = if (enabled) MaterialTheme.colorScheme.primary
+            else MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 
@@ -1079,7 +1138,7 @@ private fun ToolCard(call: AgentToolCall) {
                     )
                 }
                 Text(
-                    text = call.name,
+                    text = displayToolName(call.name),
                     style = MaterialTheme.typography.labelLarge,
                     fontFamily = FontFamily.Monospace,
                     fontWeight = FontWeight.SemiBold,
@@ -1153,7 +1212,11 @@ private fun ErrorNotice(error: String) {
 }
 
 @Composable
-private fun ApprovalCard(approval: AgentEvent.PermissionRequest, onApprove: (Boolean) -> Unit) {
+private fun ApprovalCard(
+    approval: AgentEvent.PermissionRequest,
+    onApprove: (Boolean) -> Unit,
+    onApproveAlways: (() -> Unit)? = null,
+) {
     Surface(
         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.32f),
         contentColor = MaterialTheme.colorScheme.onSurface,
@@ -1163,7 +1226,7 @@ private fun ApprovalCard(approval: AgentEvent.PermissionRequest, onApprove: (Boo
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
             Text(
-                text = "Allow ${approval.call.name}?",
+                text = "Allow ${displayToolName(approval.call.name)}?",
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.SemiBold,
             )
@@ -1186,11 +1249,34 @@ private fun ApprovalCard(approval: AgentEvent.PermissionRequest, onApprove: (Boo
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 TextButton(onClick = { onApprove(false) }) { Text("Deny") }
+                if (onApproveAlways != null) {
+                    TextButton(onClick = onApproveAlways) { Text("Allow always") }
+                }
                 Spacer(Modifier.width(4.dp))
                 Button(onClick = { onApprove(true) }) { Text("Allow") }
             }
         }
     }
+}
+
+/**
+ * The name a tool is shown under.
+ *
+ * The Flow bridge's tools keep their `deepx_` ids — that is the extension's ABI and cannot change
+ * — but the product is CoreX, so the pane shows "CoreX · generate_image" instead of leaking the
+ * old name into every tool card.
+ */
+private fun displayToolName(raw: String): String {
+    var name = raw
+    if (name.startsWith("mcp_")) {
+        // "mcp_<server>_<tool>" — the server segment goes away, the tool id stays.
+        name = name.removePrefix("mcp_").substringAfter('_', "")
+    }
+    if (name.startsWith("deepx_")) {
+        val verb = name.removePrefix("deepx_")
+        return if (verb.isBlank()) "CoreX" else "CoreX · $verb"
+    }
+    return name
 }
 
 @Composable

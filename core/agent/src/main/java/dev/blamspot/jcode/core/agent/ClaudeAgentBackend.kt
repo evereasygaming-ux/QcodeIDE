@@ -27,6 +27,8 @@ class ClaudeAgentBackend(
 
     private val approvals = ConcurrentHashMap<String, CompletableDeferred<Boolean>>()
     private val pendingCalls = ConcurrentHashMap<String, AgentToolCall>()
+    /** Tools the user allowed for the rest of the session — see [allowToolForSession]. */
+    private val alwaysAllowed = ConcurrentHashMap.newKeySet<String>()
 
     @Volatile
     private var activeProcess: Process? = null
@@ -40,6 +42,11 @@ class ClaudeAgentBackend(
 
     override fun resolvePermission(requestId: String, allow: Boolean) {
         approvals.computeIfAbsent(requestId) { CompletableDeferred() }.complete(allow)
+    }
+
+    /** Pre-approve [toolName] for the rest of this session (no more prompts for it). */
+    override fun allowToolForSession(toolName: String) {
+        alwaysAllowed.add(toolName)
     }
 
     override fun stream(request: AgentRequest): Flow<AgentEvent> = channelFlow {
@@ -87,8 +94,14 @@ class ClaudeAgentBackend(
                                 // Register before emitting so a fast approval cannot race the await.
                                 val deferred = approvals.computeIfAbsent(event.requestId) { CompletableDeferred() }
                                 pendingCalls[event.requestId] = event.call
-                                send(event)
-                                val allow = withTimeoutOrNull(APPROVAL_TIMEOUT_MS) { deferred.await() } ?: false
+                                // Pre-approved for this session: never ask, just answer.
+                                val preApproved = event.call.name in alwaysAllowed
+                                if (!preApproved) send(event)
+                                val allow = if (preApproved) {
+                                    true
+                                } else {
+                                    withTimeoutOrNull(APPROVAL_TIMEOUT_MS) { deferred.await() } ?: false
+                                }
                                 approvals.remove(event.requestId)
                                 val call = pendingCalls.remove(event.requestId)
                                 runCatching {

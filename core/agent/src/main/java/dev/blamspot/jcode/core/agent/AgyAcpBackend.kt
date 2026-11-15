@@ -64,6 +64,8 @@ class AgyAcpBackend(
     private val pending = ConcurrentHashMap<String, CompletableDeferred<JsonObject>>()
     private val incoming = Channel<JsonObject>(Channel.UNLIMITED)
     private val approvals = ConcurrentHashMap<String, AgyAcpProtocol.PermissionInfo>()
+    /** Tools the user allowed for the rest of the session — see [allowToolForSession]. */
+    private val alwaysAllowed = ConcurrentHashMap.newKeySet<String>()
     private val stderrTail = StringBuilder()
 
     @Volatile
@@ -144,6 +146,11 @@ class AgyAcpBackend(
         installed = true
         _authError.value = command == AGY_INSTALL_COMMAND
         closeProcessLocked()
+    }
+
+    /** Pre-approve [toolName] for the rest of this session (no more prompts for it). */
+    override fun allowToolForSession(toolName: String) {
+        alwaysAllowed.add(toolName)
     }
 
     override fun resolvePermission(requestId: String, allow: Boolean) {
@@ -429,6 +436,10 @@ class AgyAcpBackend(
                 val info = AgyAcpProtocol.permission(message)
                 if (info == null) {
                     message["id"]?.let { id -> scope.launch { runCatching { sendPermissionOutcome(id, null, emptyList()) } } }
+                } else if (info.call.name in alwaysAllowed) {
+                    // Pre-approved for this session: answer it right away instead of prompting.
+                    approvals[info.requestId] = info
+                    resolvePermission(info.requestId, true)
                 } else {
                     emit(AgentEvent.ToolUse(info.call))
                     approvals[info.requestId] = info

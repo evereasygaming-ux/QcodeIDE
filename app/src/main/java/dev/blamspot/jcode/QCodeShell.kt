@@ -209,6 +209,7 @@ import dev.blamspot.jcode.core.distro.SdkCatalogState
 import dev.blamspot.jcode.core.distro.adb.AdbBridgeState
 import dev.blamspot.jcode.core.term.TerminalSessionManager
 import dev.blamspot.jcode.core.term.TerminalView
+import dev.blamspot.jcode.core.term.visibleScreenText
 import dev.blamspot.jcode.design.ChromeControls
 import dev.blamspot.jcode.design.CommandPaletteSetting
 import dev.blamspot.jcode.design.CommandRegistry
@@ -239,6 +240,7 @@ import dev.blamspot.jcode.design.TerminalFontSizeSetting
 import dev.blamspot.jcode.design.LocalEditorWordWrapSetting
 import dev.blamspot.jcode.design.LocalMarkdownPreviewSetting
 import dev.blamspot.jcode.workbench.ExtensionDevState
+import dev.blamspot.jcode.workbench.FloatingConsole
 import dev.blamspot.jcode.workbench.LocalExtensionDevState
 import dev.blamspot.jcode.design.MarkdownPreviewSetting
 import dev.blamspot.jcode.design.ThemeMode
@@ -2594,6 +2596,20 @@ private fun QCodeShell(
     val terminalHasUnseen by remember {
         derivedStateOf { terminalSessionIds.any { it !in seenTerminalIds } }
     }
+    // The floating console: a live mirror of the active terminal that sits above everything else.
+    // Polling the parser's screen is cheap (a native row read) and keeps the mirror honest without
+    // another handshake; the drawer terminal keeps its own scrollback, this only shows the screen.
+    var floatingConsoleExpanded by rememberSaveable { mutableStateOf(false) }
+    var floatingConsoleText by remember { mutableStateOf("") }
+    LaunchedEffect(selectedTerminalSessionId) {
+        while (true) {
+            val session = terminalSessionManager.getSession(selectedTerminalSessionId)
+            floatingConsoleText = session?.visibleScreenText().orEmpty()
+            delay(800)
+        }
+    }
+    // The real terminal is on screen, so the mirror would only duplicate it.
+    val drawerShowsTerminal = rightSidebarVisible && rightPanelTab == RightPanelTab.Terminal
     val terminalInstances by remember {
         derivedStateOf {
             terminalSessionIds.mapIndexed { index, id ->
@@ -4323,6 +4339,34 @@ private fun QCodeShell(
             compact = usesModalWorkspace,
             onDismiss = { commandPaletteVisible = false },
         )
+
+        // The floating console: a small live mirror of the terminal that sits ON TOP of the
+        // workbench — over the modal right sheet and over the in-app browser. Opening the console
+        // sheet used to be the only way to watch a job, and on a phone that sheet covered the
+        // browser the Flow render was happening in. This stays out of the way (a pill) until it
+        // is tapped, and then it is a draggable card that never takes the screen.
+        if (terminalSessionIds.isNotEmpty() && (!drawerShowsTerminal || floatingConsoleExpanded)) {
+            FloatingConsole(
+                label = if (floatingConsoleExpanded) {
+                    terminalTitles[selectedTerminalSessionId]
+                        ?: terminalSessionManager.getSession(selectedTerminalSessionId)?.label
+                        ?: "console"
+                } else {
+                    "console"
+                },
+                text = floatingConsoleText,
+                expanded = floatingConsoleExpanded,
+                onToggleExpanded = { floatingConsoleExpanded = !floatingConsoleExpanded },
+                onOpenInDrawer = {
+                    selectRightPanelTab(RightPanelTab.Terminal)
+                    rightSidebarVisible = true
+                    floatingConsoleExpanded = false
+                },
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 12.dp, bottom = 92.dp),
+            )
+        }
 
         if (goToLineVisible) {
             val goToState = editorGroup.activeTab?.editorState
